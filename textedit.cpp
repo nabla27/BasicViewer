@@ -44,7 +44,9 @@ void TextEdit::changeCompleterModel()
     const qsizetype blockCount = blockTextList.size();                                      //行数
     const int currentBlockNumber = textCursor().blockNumber();                              //カーソル行の行数
     const int positionInBlock = textCursor().positionInBlock();                             //行頭からの位置
-    const QList<QString> textForwardCursor = blockTextList.at(currentBlockNumber).first(positionInBlock).split(' '); //カーソル行のカーソル以前の文字列(空白で区切ってコマンドごとに分割される)
+    const QList<QString> textForwardCursor = (blockTextList.at(currentBlockNumber).isEmpty())
+            ? QList<QString>()
+            : blockTextList.at(currentBlockNumber).first(positionInBlock).split(' ');       //カーソル行のカーソル以前の文字列(空白で区切ってコマンドごとに分割される)
     QList<QString> firstCmdBlock;                                                           //firstCmdを参照する行の文字列(コマンドごとに分割される)
 
     /* firstCmdを決定するために参照する行の文字列firstCmdBlockを決定する */
@@ -66,7 +68,7 @@ void TextEdit::changeCompleterModel()
     firstCmd = (firstCmdBlock.size() >= 2) ? firstCmdBlock.at(0) : "";
     const qsizetype currentCmdCount = textForwardCursor.size();
     beforeCmd = (currentCmdCount >= 2) ? textForwardCursor.at(currentCmdCount - 2) : "";
-    currentCmd = textForwardCursor.at(currentCmdCount - 1);
+    currentCmd = (currentCmdCount > 0) ? textForwardCursor.at(currentCmdCount - 1) : "";
 
     /* コメント中では予測変換を無効にする */
     const qsizetype commentsStartPoint = blockTextList.at(currentBlockNumber).indexOf('#'); //コメントのスタート位置
@@ -242,7 +244,7 @@ void TextEdit::keyPressEvent(QKeyEvent *e)
     if(!c || (ctr10rShift && e->text().isEmpty())) return;
 
     /* 予測変換候補を変更 */
-    changeCompleterModel();
+        changeCompleterModel();
 
     static QString eow("~!@#$%{}|:<>?,./;\\"); //入力された時に予測変換を非表示にする文字
     const bool hasModifier = (e->modifiers() != Qt::NoModifier) && !ctr10rShift;
