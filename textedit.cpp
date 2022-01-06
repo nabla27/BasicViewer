@@ -39,27 +39,34 @@ TextEdit::~TextEdit()
 
 void TextEdit::changeCompleterModel()
 {
-    const QString script = toPlainText().remove('\t');                                      //エディタの文字列をタブ文字を削除して取得
-    const QList<QString> blockTextList = script.split('\n');                                //各行ごとに文字列を取得(改行文字で分割)
-    const qsizetype blockCount = blockTextList.size();                                      //行数
-    const int currentBlockNumber = textCursor().blockNumber();                              //カーソル行の行数
-    const int positionInBlock = textCursor().positionInBlock();                             //行頭からの位置
-    const QList<QString> textForwardCursor = (blockTextList.at(currentBlockNumber).isEmpty())
+    firstCmd.clear(); beforeCmd.clear(); currentCmd.clear();
+
+    const QString script = toPlainText().remove('\t');                                          //エディタの文字列をタブ文字を削除して取得
+    const QList<QString> blockTextList = script.split('\n');                                    //各行ごとに文字列を取得(改行文字で分割)
+    const qsizetype blockCount = blockTextList.size();                                          //行数
+    const int currentBlockNumber = textCursor().blockNumber();                                  //カーソル行の行数
+    const QString currentBlockText = blockTextList.at(currentBlockNumber);                      //カーソル行の文字列
+    const int positionInBlock = qMin(textCursor().positionInBlock(), currentBlockText.size());  //行頭からの位置(タブを消去しているので調整する)
+    const QList<QString> textForwardCursor = (currentBlockText.isEmpty())
             ? QList<QString>()
-            : blockTextList.at(currentBlockNumber).first(positionInBlock).split(' ');       //カーソル行のカーソル以前の文字列(空白で区切ってコマンドごとに分割される)
-    QList<QString> firstCmdBlock;                                                           //firstCmdを参照する行の文字列(コマンドごとに分割される)
+            : currentBlockText.first(positionInBlock).split(' ');                               //カーソル行のカーソル以前の文字列(空白で区切ってコマンドごとに分割される)
+    QList<QString> firstCmdBlock;                                                               //firstCmdを参照する行の文字列(コマンドごとに分割される)
 
     /* firstCmdを決定するために参照する行の文字列firstCmdBlockを決定する */
-    if(blockCount == 1)                                                                     //エディタの行数が1のとき
-        firstCmdBlock = blockTextList.at(0).split(' ');                                     //firstCmdを参照する行数は一列目
+    if(blockCount == 1)                                                                         //エディタの行数が1のとき
+        firstCmdBlock = blockTextList.at(0).split(' ');                                         //firstCmdを参照する行数は一列目
     else
-        for(int block = currentBlockNumber - 1; block >= 0; --block)                        //カーソル行の手前の行から先頭まで順にさかのぼる
+        for(int block = currentBlockNumber - 1; block >= 0; --block)                            //カーソル行の手前の行から先頭まで順にさかのぼる
         {
-            if(blockTextList.at(block).size() == 0);                                        //空白行は無視して上の行に
-            else if(block == 0){                                                            //先頭行にたどり着いたら先頭行をfirstCmdBlockにする
-                firstCmdBlock = blockTextList.at(0).split(' '); break;
+            if(block == 0){                                                                     //先頭行にたどり着いたとき
+                if(blockTextList.at(0).size() != 0 && blockTextList.at(0).back() == '\\'){      //その行に改行コマンドがあれば
+                    firstCmdBlock = blockTextList.at(0).split(' '); break;                      //先頭行をfirstCmdBlockに
+                }
+                else{
+                    firstCmdBlock = blockTextList.at(1).split(' '); break;
+                }
             }
-            else if(blockTextList.at(block).back() != '\\'){                                //block行目の最後に改行コマンドがなければ、block+1行目をfirstCmdBlockにする
+            if(blockTextList.at(block).size() == 0 || blockTextList.at(block).back() != '\\'){  //block行目の最後に改行コマンドがなければ、block+1行目をfirstCmdBlockにする
                 firstCmdBlock = blockTextList.at(block + 1).split(' '); break;
             }
         }
@@ -71,7 +78,7 @@ void TextEdit::changeCompleterModel()
     currentCmd = (currentCmdCount > 0) ? textForwardCursor.at(currentCmdCount - 1) : "";
 
     /* コメント中では予測変換を無効にする */
-    const qsizetype commentsStartPoint = blockTextList.at(currentBlockNumber).indexOf('#'); //コメントのスタート位置
+    const qsizetype commentsStartPoint = currentBlockText.indexOf('#');                     //コメントのスタート位置
     if(commentsStartPoint != qsizetype(-1)){                                                //カーソル行にシャープ記号があれば
         if(positionInBlock >= commentsStartPoint){                                          //カーソル位置がコメントスタート位置より後であれば
             completer()->setModel(getEditCompleter_non()); return;                          //予測変換を無効に
@@ -103,7 +110,7 @@ void TextEdit::changeCompleterModel()
         completer()->setModel(getEditCompleter_first());
 
     /* カーソル行に空白を含むとき、一旦予測変換を無効にする */
-    if(blockTextList.at(currentBlockNumber).contains(' '))
+    if(currentBlockText.contains(' '))
         completer()->setModel(getEditCompleter_non());
 
     /* 先頭コマンドfirstCmdと直前のコマンドbeforeCmdをもとに予測変換を変更する */
@@ -212,7 +219,7 @@ void TextEdit::keyPressEvent(QKeyEvent *e)
     /* completer挿入時のカーソル移動数をリセット */
     if(!c->popup()->isVisible()) cursorMoveCount = 0;
 
-    if(c && c->popup()->isVisible())
+    if(c && c->popup()->isVisible() && c->popup()->currentIndex().row() >= 0)
     {
         /* 予測変換中で以下のキー入力ではeditorを変化させない */
         switch (e->key()) {
