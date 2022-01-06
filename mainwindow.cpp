@@ -1,24 +1,14 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <io/iofile.h>
-#include <qgraph/graphic3dbar.h>
+#include <numanalysis/formulaexp.h>
+#include <QElapsedTimer>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    QList<QList<QList<float> > > data =
-    {
-        {
-            {0, 1, 3}, {2, 4, 1}, {1, 5, 2}
-        }
-    };
-    Graphic3DBar *graph = new Graphic3DBar();
-    graph->setData(data);
-    graph->show();
-
-
 
     {//各レイアウト設定
         /* メインウィンドウ */
@@ -195,8 +185,11 @@ void MainWindow::on_pushButton_excute_released()
     ui->textEdit_editor->highlightLine();
 }
 
+/* cmdLineの実行 */
+void MainWindow::on_lineEdit_cmdline_returnPressed()
+{
 
-
+}
 
 
 

@@ -66,7 +66,7 @@ void Graphic3DBar::setData(const QList<QList<QList<float>>> &list)
         }
 
         series[i]->dataProxy()->resetArray(array);
-        graph->addSeries(series[i]);
+        graph->addSeries(series.at(i));
     }
 
     QList<QString> rowLabel, colLabel;

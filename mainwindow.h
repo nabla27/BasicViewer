@@ -35,6 +35,8 @@ private slots:
 
     void on_pushButton_excute_released();
 
+    void on_lineEdit_cmdline_returnPressed();
+
 private:
     Ui::MainWindow *ui;
     Gnuplot *gnuplot;
