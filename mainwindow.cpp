@@ -188,7 +188,7 @@ void MainWindow::on_pushButton_excute_released()
 /* cmdLineの実行 */
 void MainWindow::on_lineEdit_cmdline_returnPressed()
 {
-
+    const QList<QString> cmdList =  parseCmdLine(ui->lineEdit_cmdline->text());
 }
 
 

@@ -24,4 +24,21 @@ private:
     QCompleter *c = nullptr;
 };
 
+
+
+
+
+
+
+
+QList<QString> parseCmdLine(const QString& cmd);
+
+
+
+
+
+
+
+
+
 #endif // CMDLINE_H

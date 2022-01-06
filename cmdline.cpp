@@ -130,3 +130,65 @@ void CmdLine::keyPressEvent(QKeyEvent *e)
 
 
 
+QList<QString> parseCmdLine(const QString& cmd)
+{
+    bool inBracket = false;
+    bool inSingleQuo = false;
+    bool inDoubleQuo = false;
+    QList<QString> cmdList(1);
+    qsizetype index = 0;
+
+    for(const QChar& c : cmd)
+    {
+        if(c == ' '){
+            if(cmdList.at(index).isEmpty())
+                continue;
+            else if(!inBracket && !inSingleQuo && !inDoubleQuo){
+                index++;
+                cmdList.append("");
+                continue;
+            }
+            else if(inBracket)
+                continue;
+            else
+                cmdList[index] += c;
+        }
+        else if(c == '('){
+            inBracket = true;
+            cmdList[index] += c;
+        }
+        else if(c == ')'){
+            inBracket = false;
+            cmdList[index] += c;
+        }
+        else if(c == '\'')
+            inSingleQuo = !inSingleQuo;
+        else if(c == '"')
+            inDoubleQuo = !inDoubleQuo;
+        else
+            cmdList[index] += c;
+    }
+
+    if(cmdList.last().isEmpty())
+        cmdList.pop_back();
+
+    return cmdList;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
