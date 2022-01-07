@@ -31,6 +31,10 @@ TableWidget::TableWidget(QWidget *parent)
         QAction *actPaste = new QAction("paste", normalMenu);
         normalMenu->addAction(actPaste);
         connect(actPaste, &QAction::triggered, this, &TableWidget::pasteCell);
+        /* delete */
+        QAction *actDelete = new QAction("delete", normalMenu);
+        normalMenu->addAction(actDelete);
+        connect(actDelete, &QAction::triggered, this, &TableWidget::deleteCell);
         /* insert */
         QMenu *insertMenu = new QMenu(normalMenu);
         insertMenu->setTitle("insert");
