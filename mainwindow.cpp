@@ -1,8 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <io/iofile.h>
-#include <numanalysis/formulaexp.h>
-#include <QElapsedTimer>
+#include "io/iofile.h"
+#include "subwindow/imgdisplay.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
