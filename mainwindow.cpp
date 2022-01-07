@@ -156,7 +156,10 @@ void MainWindow::on_treeWidget_itemDoubleClicked(QTreeWidgetItem *item, int colu
 void MainWindow::on_pushButton_excute_released()
 {
     /* scriptが適切に選択されていなければ無効 */
-    if(ui->treeWidget->scriptIndex() < 0) return;
+    if(ui->treeWidget->scriptIndex() < 0){
+        ui->textBrowser_output->outMessage("script is not chosen.", "handling");
+        return;
+    }
 
     /* textEditorのエラー行番号リセット */
     ui->textEdit_editor->setErrorLineNumber(-1);
@@ -190,9 +193,9 @@ void MainWindow::on_lineEdit_cmdline_returnPressed()
 {
     const QList<QString> cmdList =  parseCmdLine(ui->lineEdit_cmdline->text());
 
-    if(cmdList.size() < 1) { return; }
+    if(cmdList.size() < 1) { return; }       //何も入力されず、Enterが押された場合は無効
 
-    const QString firstCmd = cmdList.at(0);
+    const QString firstCmd = cmdList.at(0);  //先頭コマンド
 
     if(firstCmd == "gnuplot")
     {
