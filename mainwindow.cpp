@@ -189,6 +189,41 @@ void MainWindow::on_pushButton_excute_released()
 void MainWindow::on_lineEdit_cmdline_returnPressed()
 {
     const QList<QString> cmdList =  parseCmdLine(ui->lineEdit_cmdline->text());
+
+    if(cmdList.size() < 1) { return; }
+
+    const QString firstCmd = cmdList.at(0);
+
+    if(firstCmd == "gnuplot")
+    {
+        /* もしscriptが選択されていなければ(=nullptr)、textBrowserにエラーメッセージを送る */
+        if(ui->treeWidget->currentScriptProcess() == nullptr){
+            ui->textBrowser_output->outMessage("script is not chosen.", "handling");
+            return;
+        }
+
+        if(cmdList.size() > 1)
+        {
+            const QString secondCmd = cmdList.at(1);
+            if(secondCmd == "close") { ui->treeWidget->currentScriptProcess()->close(); return; }
+            else if(secondCmd == "kill") { ui->treeWidget->currentScriptProcess()->kill(); return; }
+            else
+            {
+                QList<QString> plotCmd;  //gnuplotに実行させるコマンド列
+                QString cmd;             //stack
+
+                /* ; ごとにコマンドを区切る */
+                for(qsizetype i = 1; i < cmdList.size(); ++i){
+                    if(cmdList.at(i) == ";") { plotCmd << cmd + "\n"; cmd.clear(); }
+                    else { cmd += cmdList.at(i) + " "; }
+                }
+                if(!cmd.isEmpty()) { plotCmd << cmd + "\n"; }
+
+                /* 実行 */
+                gnuplot->exc(ui->treeWidget->currentScriptProcess(), plotCmd);
+            }
+        }
+    }
 }
 
 

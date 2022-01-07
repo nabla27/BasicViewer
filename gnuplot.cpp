@@ -8,6 +8,8 @@ Gnuplot::Gnuplot()
 
 void Gnuplot::exc(QProcess *process, const QList<QString>& cmdlist)
 {
+    if(process == nullptr) { return; }
+
     errorLineNumber = -1;  //エラー行。戻り値。エラーなしの0にリセット
 
     /* 標準出力 */
@@ -58,5 +60,5 @@ void Gnuplot::exc(QProcess *process, const QList<QString>& cmdlist)
 
     /* コマンドの実行 */
     for(const QString& cmd : cmdlist)
-        process->write(cmd.toUtf8().constData()); qDebug() << "pass";
+        process->write(cmd.toUtf8().constData());
 }

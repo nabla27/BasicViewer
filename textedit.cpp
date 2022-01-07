@@ -237,6 +237,7 @@ void TextEdit::keyPressEvent(QKeyEvent *e)
 
     const bool isShortcut = (e->modifiers().testFlag(Qt::ControlModifier) &&
                              e->key() == Qt::Key_E);
+
     /* 括弧類 [ ( ' " の補完 */
     if(!c || !isShortcut)
     {
