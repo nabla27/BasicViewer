@@ -51,14 +51,16 @@ QString readFileTxt(const QString& fileName)
 
 QList<QList<QString> > readFileCsv(const QString& fileName)
 {
-    const QString data = readFileTxt(fileName);
-    QList<QList<QString> > sheet(1);
-    qsizetype row = 0;
-    QString stack = "";
+    const QString data = readFileTxt(fileName);  //ファイルの内容(text)をQString型で保持
+    QList<QList<QString> > sheet(1);             //csvデータを2次元のQString型で返す
+    qsizetype row = 0;                           //行数
+    QString stack = "";                          //スタック
 
     for(const QChar& c : data)
     {
         if(c == '\n'){
+            sheet[row] << stack;
+            stack.clear();
             sheet.append(QList<QString>(0));
             row++;
         }
@@ -69,6 +71,7 @@ QList<QList<QString> > readFileCsv(const QString& fileName)
         else
             stack += c;
     }
+    sheet[row] << stack;
 
     return sheet;
 }
