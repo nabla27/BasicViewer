@@ -59,7 +59,24 @@ bool ImageDisplay::setImageFile(const QString& fullpath)
     return !img.isNull();          //画像が読み取れたらtrue,失敗したらfalseを返す
 }
 
+bool ImageDisplay::isValidExtension(const QString &ext)
+{
+    if(ext.compare("BMP", Qt::CaseInsensitive) != 0 &&
+       ext.compare("GIF", Qt::CaseInsensitive) != 0 &&
+       ext.compare("JPG", Qt::CaseInsensitive) != 0 &&
+       ext.compare("JPEG", Qt::CaseInsensitive) != 0 &&
+       ext.compare("PNG", Qt::CaseInsensitive) != 0 &&
+       ext.compare("PBM", Qt::CaseInsensitive) != 0 &&
+       ext.compare("PGM", Qt::CaseInsensitive) != 0 &&
+       ext.compare("PPM", Qt::CaseInsensitive) != 0 &&
+       ext.compare("XBM", Qt::CaseInsensitive) != 0 &&
+       ext.compare("XPM", Qt::CaseInsensitive) != 0)
+    {
+        return false;
+    }
 
+    return true;
+}
 
 
 

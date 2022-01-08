@@ -147,7 +147,21 @@ void MainWindow::on_treeWidget_itemDoubleClicked(QTreeWidgetItem *item, int colu
     }
     else if(parentTitle == "Other")
     {
+        ui->treeWidget->indexChange(item, column);                                //ダブルクリックによるfileTreeのインデックス変更
+        const QString fileName = ui->treeWidget->currentOtherName();              //ダブルクリックされたファイル名
+        const qsizetype extStartIndex = fileName.lastIndexOf('.');                //ドットのインデックス
 
+        if(extStartIndex != qsizetype(-1) && fileName.size() > extStartIndex + 1) //拡張子を含む(ドット以降に文字がある)
+        {
+            const QString extension = fileName.sliced(extStartIndex + 1);         //拡張子
+
+            /* 画像の表示 */
+            if(ImageDisplay::isValidExtension(extension)){
+                ImageDisplay *imageDisp = new ImageDisplay();
+                imageDisp->setImageFile(BasicSet::tmpDirectory + fileName);
+                imageDisp->show();
+            }
+        }
     }
 }
 

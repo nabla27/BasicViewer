@@ -38,6 +38,7 @@ public:
 
 public:
     bool setImageFile(const QString& fullpath);
+    static bool isValidExtension(const QString& ext);
 
 private:
     PaintImage *image;
