@@ -3,6 +3,7 @@
 #include "io/iofile.h"
 #include "subwindow/imgdisplay.h"
 
+#include "subwindow/graph2dseries.h"
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -239,6 +240,11 @@ void MainWindow::on_lineEdit_cmdline_returnPressed()
                 gnuplot->exc(ui->treeWidget->currentScriptProcess(), plotCmd);
             }
         }
+    }
+    else if(firstCmd == "Debug")
+    {
+        Graph2DSeries *graph = new Graph2DSeries(ui->tableWidget_table);
+        graph->show();
     }
 }
 

@@ -165,6 +165,7 @@ QList<QList<QList<float> > > TableWidget::selectedData() const
                         (item(row, col) != nullptr) ? item(row, col)->text().toFloat() : NULL;
             }
         }
+        index++;
     }
 
     return list;
