@@ -18,7 +18,7 @@ public:
 
 public:
     void initializeData(const QList<QList<QList<float> > >& data);
-    void updateData(QTableWidgetItem *changedItem);
+    void updateGraph(QTableWidgetItem *changedItem);
 
 private:
     QChart *graph;

@@ -61,7 +61,7 @@ Graph2DSeries::Graph2DSeries(TableWidget *table, QWidget *parent)
 
     /* tableに変更があればグラフを再描画 */
     connect(table, &TableWidget::itemChanged,
-            this, &Graph2DSeries::updateData);
+            this, &Graph2DSeries::updateGraph);
 
     /* ウィンドウが閉じられたら自動でdelete */
     setAttribute(Qt::WA_DeleteOnClose);
@@ -100,7 +100,7 @@ void Graph2DSeries::initializeData(const QList<QList<QList<float>>> &data)
             labelLayout->addWidget(labelNameEdit);
             connect(labelNameEdit, &QLineEdit::editingFinished, [i, labelNameEdit, this](){
                 labelName[i] = labelNameEdit->text();
-                updateData(nullptr);
+                updateGraph(nullptr);
             });
         }
         labelGroup->setLayout(labelLayout);
@@ -108,7 +108,7 @@ void Graph2DSeries::initializeData(const QList<QList<QList<float>>> &data)
 
 }
 
-void Graph2DSeries::updateData(QTableWidgetItem*)
+void Graph2DSeries::updateGraph(QTableWidgetItem*)
 {
     graph->removeAllSeries();
     qsizetype index = 0;
