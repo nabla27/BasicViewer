@@ -34,12 +34,7 @@ Graph2DSeries::Graph2DSeries(TableWidget *table, QWidget *parent)
 
     /* レイアウトのグラフ部分 */
     QChartView *graphView = new QChartView(graph);
-    graphView->setMinimumSize(640, 480);
-    //graphView->setFrameShape(QFrame::Box);
-    //graphView->setContentsMargins(0, 0, 0, 0);
-    //graph->setContentsMargins(0, 0, 0, 0);
-    //graph->setMargins(QMargins(0, 0, 0, 0));
-    //graph->setWindowFrameMargins(0, 0, 0, 0);
+    graphView->setMinimumSize(320, 240);
 
     /* メインのレイアウト。各Widgetが水平方向に配列される */
     QHBoxLayout *mainLayout = new QHBoxLayout(this);
