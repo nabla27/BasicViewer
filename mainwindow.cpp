@@ -52,6 +52,9 @@ MainWindow::MainWindow(QWidget *parent)
         /* tableWidgetのクリア */
         connect(ui->pushButton_sheet_clear, &QPushButton::released,
                 ui->tableWidget_table, &TableWidget::clear);
+        /* tableWidgetのファイル名設定 */
+        connect(ui->lineEdit_name_sheet, &QLineEdit::textChanged,
+                ui->tableWidget_table, &TableWidget::setSheetName);
         /* gnuplotの実行パス設定変更 */
         connect(ui->lineEdit_setG_p, &QLineEdit::textChanged, [this](){
             gnuplot->setExePath(ui->lineEdit_setG_p->text());
@@ -131,8 +134,8 @@ void MainWindow::on_treeWidget_itemDoubleClicked(QTreeWidgetItem *item, int colu
         }
         ui->treeWidget->indexChange(item, column);
         const QString afterName = BasicSet::tmpDirectory + ui->treeWidget->currentScriptName();
-        ui->textEdit_editor->setPlainText(readFileTxt(afterName));
         ui->lineEdit_name_script->setText(ui->treeWidget->currentScriptName());
+        ui->textEdit_editor->setPlainText(readFileTxt(afterName));
     }
     else if(parentTitle == "Sheet")
     {
@@ -142,9 +145,8 @@ void MainWindow::on_treeWidget_itemDoubleClicked(QTreeWidgetItem *item, int colu
         }
         ui->treeWidget->indexChange(item, column);
         const QString afterName = BasicSet::tmpDirectory + ui->treeWidget->currentSheetName();
-        ui->tableWidget_table->setData(readFileCsv(afterName));
         ui->lineEdit_name_sheet->setText(ui->treeWidget->currentSheetName());
-        (void)ui->tableWidget_table->getData<QString>();
+        ui->tableWidget_table->setData(readFileCsv(afterName));
     }
     else if(parentTitle == "Other")
     {

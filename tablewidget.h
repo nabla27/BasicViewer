@@ -19,6 +19,8 @@ public:
     template <class T> QList<QList<T> > getData() const;
     template <class T> QList<QList<QList<T> > > selectedData() const;
     void setGnuplot(Gnuplot *gnuplot) { this->gnuplot = gnuplot; }
+    void setSheetName(const QString& sheetName) { this->sheetName = sheetName; }
+    QString getSheetName() const { return sheetName; }
 public slots:
     void appendLineRow() { insertRow(rowCount()); }
     void removeLineRow() { removeRow(rowCount() - 1); }
@@ -26,6 +28,7 @@ public slots:
     void removeLineCol() { removeColumn(columnCount() - 1); }
 private:
     QString createPlotCmd(const QString& sheetName);
+    QString sheetName;
     QMenu *normalMenu;
     QProcess *process;
     QShortcut *scCtrC;

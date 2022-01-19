@@ -59,9 +59,16 @@ Graph2DSeries::Graph2DSeries(TableWidget *table, QWidget *parent)
     /* 選択されたデータを描写 */
     initializeData(table->selectedData<float>());
 
+    /* windowのタイトルをsheetの名前を設定 */
+    sheetName = table->getSheetName();
+    setWindowTitle(sheetName);
+
     /* tableに変更があればグラフを再描画 */
-    connect(table, &TableWidget::itemChanged,
-            this, &Graph2DSeries::updateGraph);
+    //ダブルクリック -> ファイルの保存 -> fileTreeのインデックス変更 -> sheet名の切り替え -> sheetの変更
+    connect(table, &TableWidget::itemChanged, [this](){
+        if(this->table->getSheetName() == sheetName)
+            updateGraph();
+    });
 
     /* ウィンドウが閉じられたら自動でdelete */
     setAttribute(Qt::WA_DeleteOnClose);

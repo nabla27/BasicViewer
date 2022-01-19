@@ -18,13 +18,14 @@ public:
 
 public:
     void initializeData(const QList<QList<QList<float> > >& data);
-    void updateGraph(QTableWidgetItem *changedItem);
+    void updateGraph(QTableWidgetItem *changedItem = nullptr);
 
 private:
     QChart *graph;
     QVBoxLayout *vLayout;
     TableWidget *table;
     QList<QTableWidgetSelectionRange> selectedRanges;
+    QString sheetName;
 
     /* レイアウト */
     QGroupBox *labelGroup;
