@@ -44,8 +44,18 @@ Graph2DSeries::Graph2DSeries(TableWidget *table, QWidget *parent)
 
     {//右側設定のレイアウト
         /* グラフのラベル設定項目 */
-        legendGroup = new QGroupBox("Label name");
+        legendBoxLayout = new QVBoxLayout;
+        QGroupBox *legendGroup = new QGroupBox("Label name");
+        legendGroup->setLayout(legendBoxLayout);
         vLayout->addWidget(legendGroup);
+        QCheckBox *checkBoxShowLegend = new QCheckBox("show legend");
+        checkBoxShowLegend->setChecked(true);
+        legendBoxLayout->addWidget(checkBoxShowLegend);
+        connect(checkBoxShowLegend, &QCheckBox::toggled, [this, checkBoxShowLegend](){
+             isVisibleLegend = checkBoxShowLegend->isChecked();
+             updateGraph();
+        });
+
         /* ポイントを表示するか */
         QGroupBox *labelGroup = new QGroupBox("Label");
         QVBoxLayout *labelBoxLayout = new QVBoxLayout;
@@ -119,17 +129,17 @@ void Graph2DSeries::initializeData(const QList<QList<QList<float>>> &data)
 
     /* 各レイアウトの設定 */
     {//ラベル設定
-        QVBoxLayout *labelBoxLayout = new QVBoxLayout;
+        //QVBoxLayout *labelBoxLayout = new QVBoxLayout;
         for(qsizetype i = 0; i < numData; ++i)
         {
             QLineEdit *labelNameEdit = new QLineEdit;
-            labelBoxLayout->addWidget(labelNameEdit);
+            legendBoxLayout->addWidget(labelNameEdit);
             connect(labelNameEdit, &QLineEdit::editingFinished, [i, labelNameEdit, this](){
                 legendName[i] = labelNameEdit->text();
                 updateGraph(nullptr);
             });
         }
-        legendGroup->setLayout(labelBoxLayout);
+        //legendGroup->setLayout(labelBoxLayout);
     }
 
 }
@@ -154,6 +164,8 @@ void Graph2DSeries::updateGraph(QTableWidgetItem*)
             series->append(table->item(row, startCol)->text().toFloat(),
                            table->item(row, startCol + 1)->text().toFloat());
         }
+
+        graph->legend()->setVisible(isVisibleLegend);
 
         series->setPointsVisible(isVisibleLabel);
         series->setPointLabelsVisible(isVisibleLabelPoints);

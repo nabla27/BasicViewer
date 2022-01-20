@@ -31,9 +31,11 @@ private:
     QMetaObject::Connection changedTableAction;
 
     /* レイアウト */
-    QGroupBox *legendGroup;
+    //QGroupBox *legendGroup;
+    QVBoxLayout *legendBoxLayout;
 
     /* 設定項目 */
+    bool isVisibleLegend = true;
     QList<QString> legendName;
     bool isVisibleLabel = false;
     bool isVisibleLabelPoints = false;
