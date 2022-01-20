@@ -34,57 +34,14 @@ Graph2DSeries::Graph2DSeries(TableWidget *table, QWidget *parent)
     : QWidget(parent), table(table)
 {
     graph = new QChart;
-    /* レイアウトの右側設定部分 */
-    vLayout = new QVBoxLayout;
-    vLayout->setAlignment(Qt::AlignTop);
-
-    /* レイアウトのグラフ部分 */
-    QChartView *graphView = new QChartView(graph);
-    graphView->setMinimumSize(320, 240);
-
-    /* メインのレイアウト。各Widgetが水平方向に配列される */
-    QHBoxLayout *mainLayout = new QHBoxLayout(this);
-    mainLayout->addWidget(graphView, Qt::AlignTop);
-    mainLayout->addLayout(vLayout);
-    setLayout(mainLayout);
-
-    {//右側設定のレイアウト
-        /* グラフのラベル設定項目 */
-        legendBoxLayout = new QVBoxLayout;
-        QGroupBox *legendGroup = new QGroupBox("Label name", this);
-        legendGroup->setLayout(legendBoxLayout);
-        vLayout->addWidget(legendGroup);
-        QCheckBox *checkBoxShowLegend = new QCheckBox("show legend", legendGroup);
-        checkBoxShowLegend->setChecked(true);
-        legendBoxLayout->addWidget(checkBoxShowLegend);
-        connect(checkBoxShowLegend, &QCheckBox::toggled, [this, checkBoxShowLegend](){
-             isVisibleLegend = checkBoxShowLegend->isChecked();
-             updateGraph();
-        });
-
-        /* ポイントを表示するか */
-        QGroupBox *labelGroup = new QGroupBox("Label", this);
-        QVBoxLayout *labelBoxLayout = new QVBoxLayout(labelGroup);
-        labelGroup->setLayout(labelBoxLayout);
-        vLayout->addWidget(labelGroup);
-        QCheckBox *checkBoxShowLabel = new QCheckBox("show label", labelGroup);
-        labelBoxLayout->addWidget(checkBoxShowLabel);
-        connect(checkBoxShowLabel, &QCheckBox::toggled, [this, checkBoxShowLabel](){
-            isVisibleLabel = checkBoxShowLabel->isChecked();
-            updateGraph();
-        });
-        QCheckBox *checkBoxShowLabelPoints = new QCheckBox("Show label points", labelGroup);
-        labelBoxLayout->addWidget(checkBoxShowLabelPoints);
-        connect(checkBoxShowLabelPoints, &QCheckBox::toggled, [this, checkBoxShowLabelPoints](){
-            isVisibleLabelPoints = checkBoxShowLabelPoints->isChecked();
-            updateGraph();
-        });
-    }
 
     /* tableWidgetの選択された範囲を保存 */
     selectedRanges = table->selectedRanges();
 
-    /* 選択されたデータを描写 */
+    /* レイアウトの初期化 */
+    initializeLayout();
+
+    /* 選択されたデータで初期化,描写 */
     initializeData(table->selectedData<float>());
 
     /* windowのタイトルをsheetの名前を設定 */
@@ -94,8 +51,7 @@ Graph2DSeries::Graph2DSeries(TableWidget *table, QWidget *parent)
     /* tableに変更があればグラフを再描画 */
     //ダブルクリック -> ファイルの保存 -> fileTreeのインデックス変更 -> sheet名の切り替え -> sheetの変更
     changedTableAction =  connect(table, &TableWidget::itemChanged, [this](){
-        if(this->table->getSheetName() == sheetName)
-            updateGraph();
+        if(this->table->getSheetName() == sheetName) updateGraph();
     });
 
     /* ウィンドウが閉じられたら自動でdelete */
@@ -136,7 +92,6 @@ void Graph2DSeries::initializeData(const QList<QList<QList<float>>> &data)
 
     /* 各レイアウトの設定 */
     {//ラベル設定
-        //QVBoxLayout *labelBoxLayout = new QVBoxLayout;
         for(qsizetype i = 0; i < numData; ++i)
         {
             QLineEdit *labelNameEdit = new QLineEdit;
@@ -146,9 +101,59 @@ void Graph2DSeries::initializeData(const QList<QList<QList<float>>> &data)
                 updateGraph(nullptr);
             });
         }
-        //legendGroup->setLayout(labelBoxLayout);
     }
+}
 
+void Graph2DSeries::initializeLayout()
+{
+    /* レイアウトのグラフ部分 */
+    QChartView *graphView = new QChartView(graph);
+    graphView->setMinimumSize(320, 240);
+
+    /* レイアウトの右側設定部分 */
+    vLayout = new QVBoxLayout;
+    vLayout->setAlignment(Qt::AlignTop);
+
+    /* メインのレイアウト。各Widget(vLayout,graphView)が水平方向に配列される */
+    QHBoxLayout *mainLayout = new QHBoxLayout(this);
+    mainLayout->addWidget(graphView, Qt::AlignTop);
+    mainLayout->addLayout(vLayout);
+    setLayout(mainLayout);
+
+    /* 右側の設定部分のレイアウト */
+    {
+        /* グラフのラベル設定項目 */
+        legendBoxLayout = new QVBoxLayout;
+        QGroupBox *legendGroup = new QGroupBox("Label name", this);
+        legendGroup->setLayout(legendBoxLayout);
+        vLayout->addWidget(legendGroup);
+        QCheckBox *checkBoxShowLegend = new QCheckBox("show legend", legendGroup);
+        checkBoxShowLegend->setChecked(true);
+        legendBoxLayout->addWidget(checkBoxShowLegend);
+        connect(checkBoxShowLegend, &QCheckBox::toggled, [this, checkBoxShowLegend](){
+             isVisibleLegend = checkBoxShowLegend->isChecked();
+             updateGraph();
+        });
+    }
+    {
+        /* ポイントを表示するか */
+        QGroupBox *labelGroup = new QGroupBox("Label", this);
+        QVBoxLayout *labelBoxLayout = new QVBoxLayout(labelGroup);
+        labelGroup->setLayout(labelBoxLayout);
+        vLayout->addWidget(labelGroup);
+        QCheckBox *checkBoxShowLabel = new QCheckBox("show label", labelGroup);
+        labelBoxLayout->addWidget(checkBoxShowLabel);
+        connect(checkBoxShowLabel, &QCheckBox::toggled, [this, checkBoxShowLabel](){
+            isVisibleLabel = checkBoxShowLabel->isChecked();
+            updateGraph();
+        });
+        QCheckBox *checkBoxShowLabelPoints = new QCheckBox("Show label points", labelGroup);
+        labelBoxLayout->addWidget(checkBoxShowLabelPoints);
+        connect(checkBoxShowLabelPoints, &QCheckBox::toggled, [this, checkBoxShowLabelPoints](){
+            isVisibleLabelPoints = checkBoxShowLabelPoints->isChecked();
+            updateGraph();
+        });
+    }
 }
 
 void Graph2DSeries::updateGraph(QTableWidgetItem*)

@@ -20,6 +20,7 @@ public:
 
 public:
     void initializeData(const QList<QList<QList<float> > >& data);
+    void initializeLayout();
     void updateGraph(QTableWidgetItem *changedItem = nullptr);
 
 private:
