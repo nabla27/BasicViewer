@@ -22,7 +22,13 @@
  *   * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *   *
  *                                                                     *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ *
+ * this ---|--- mainLayout
+ *         |--- legendGroup
+ *         |--- labelGroup
  */
+
 
 Graph2DSeries::Graph2DSeries(TableWidget *table, QWidget *parent)
     : QWidget(parent), table(table)
@@ -45,10 +51,10 @@ Graph2DSeries::Graph2DSeries(TableWidget *table, QWidget *parent)
     {//右側設定のレイアウト
         /* グラフのラベル設定項目 */
         legendBoxLayout = new QVBoxLayout;
-        QGroupBox *legendGroup = new QGroupBox("Label name");
+        QGroupBox *legendGroup = new QGroupBox("Label name", this);
         legendGroup->setLayout(legendBoxLayout);
         vLayout->addWidget(legendGroup);
-        QCheckBox *checkBoxShowLegend = new QCheckBox("show legend");
+        QCheckBox *checkBoxShowLegend = new QCheckBox("show legend", legendGroup);
         checkBoxShowLegend->setChecked(true);
         legendBoxLayout->addWidget(checkBoxShowLegend);
         connect(checkBoxShowLegend, &QCheckBox::toggled, [this, checkBoxShowLegend](){
@@ -57,17 +63,17 @@ Graph2DSeries::Graph2DSeries(TableWidget *table, QWidget *parent)
         });
 
         /* ポイントを表示するか */
-        QGroupBox *labelGroup = new QGroupBox("Label");
-        QVBoxLayout *labelBoxLayout = new QVBoxLayout;
+        QGroupBox *labelGroup = new QGroupBox("Label", this);
+        QVBoxLayout *labelBoxLayout = new QVBoxLayout(labelGroup);
         labelGroup->setLayout(labelBoxLayout);
         vLayout->addWidget(labelGroup);
-        QCheckBox *checkBoxShowLabel = new QCheckBox("show label", this);
+        QCheckBox *checkBoxShowLabel = new QCheckBox("show label", labelGroup);
         labelBoxLayout->addWidget(checkBoxShowLabel);
         connect(checkBoxShowLabel, &QCheckBox::toggled, [this, checkBoxShowLabel](){
             isVisibleLabel = checkBoxShowLabel->isChecked();
             updateGraph();
         });
-        QCheckBox *checkBoxShowLabelPoints = new QCheckBox("Show label points", this);
+        QCheckBox *checkBoxShowLabelPoints = new QCheckBox("Show label points", labelGroup);
         labelBoxLayout->addWidget(checkBoxShowLabelPoints);
         connect(checkBoxShowLabelPoints, &QCheckBox::toggled, [this, checkBoxShowLabelPoints](){
             isVisibleLabelPoints = checkBoxShowLabelPoints->isChecked();
@@ -100,6 +106,7 @@ Graph2DSeries::~Graph2DSeries()
 {
     delete graph;
     delete vLayout;
+    delete legendBoxLayout;
     disconnect(changedTableAction);
 }
 

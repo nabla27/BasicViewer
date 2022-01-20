@@ -31,7 +31,6 @@ private:
     QMetaObject::Connection changedTableAction;
 
     /* レイアウト */
-    //QGroupBox *legendGroup;
     QVBoxLayout *legendBoxLayout;
 
     /* 設定項目 */
