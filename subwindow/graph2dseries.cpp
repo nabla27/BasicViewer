@@ -44,8 +44,25 @@ Graph2DSeries::Graph2DSeries(TableWidget *table, QWidget *parent)
 
     {//右側設定のレイアウト
         /* グラフのラベル設定項目 */
-        labelGroup = new QGroupBox("Label name");
+        legendGroup = new QGroupBox("Label name");
+        vLayout->addWidget(legendGroup);
+        /* ポイントを表示するか */
+        QGroupBox *labelGroup = new QGroupBox("Label");
+        QVBoxLayout *labelBoxLayout = new QVBoxLayout;
+        labelGroup->setLayout(labelBoxLayout);
         vLayout->addWidget(labelGroup);
+        QCheckBox *checkBoxShowLabel = new QCheckBox("show label", this);
+        labelBoxLayout->addWidget(checkBoxShowLabel);
+        connect(checkBoxShowLabel, &QCheckBox::toggled, [this, checkBoxShowLabel](){
+            isVisibleLabel = checkBoxShowLabel->isChecked();
+            updateGraph();
+        });
+        QCheckBox *checkBoxShowLabelPoints = new QCheckBox("Show label points", this);
+        labelBoxLayout->addWidget(checkBoxShowLabelPoints);
+        connect(checkBoxShowLabelPoints, &QCheckBox::toggled, [this, checkBoxShowLabelPoints](){
+            isVisibleLabelPoints = checkBoxShowLabelPoints->isChecked();
+            updateGraph();
+        });
     }
 
     /* tableWidgetの選択された範囲を保存 */
@@ -98,21 +115,21 @@ void Graph2DSeries::initializeData(const QList<QList<QList<float>>> &data)
     graph->createDefaultAxes(); //軸と格子の表示
 
     /* 各初期設定 */
-    labelName.resize(numData, "");  //ラベル名の初期設定
+    legendName.resize(numData, "");  //ラベル名の初期設定
 
     /* 各レイアウトの設定 */
     {//ラベル設定
-        QVBoxLayout *labelLayout = new QVBoxLayout;
+        QVBoxLayout *labelBoxLayout = new QVBoxLayout;
         for(qsizetype i = 0; i < numData; ++i)
         {
             QLineEdit *labelNameEdit = new QLineEdit;
-            labelLayout->addWidget(labelNameEdit);
+            labelBoxLayout->addWidget(labelNameEdit);
             connect(labelNameEdit, &QLineEdit::editingFinished, [i, labelNameEdit, this](){
-                labelName[i] = labelNameEdit->text();
+                legendName[i] = labelNameEdit->text();
                 updateGraph(nullptr);
             });
         }
-        labelGroup->setLayout(labelLayout);
+        legendGroup->setLayout(labelBoxLayout);
     }
 
 }
@@ -129,7 +146,7 @@ void Graph2DSeries::updateGraph(QTableWidgetItem*)
         const int endRow = selected.bottomRow();
 
         QLineSeries *series = new QLineSeries;
-        series->setName(labelName.at(index));
+        series->setName(legendName.at(index));
 
         for(int row = startRow; row <= endRow; ++row)
         {
@@ -137,6 +154,10 @@ void Graph2DSeries::updateGraph(QTableWidgetItem*)
             series->append(table->item(row, startCol)->text().toFloat(),
                            table->item(row, startCol + 1)->text().toFloat());
         }
+
+        series->setPointsVisible(isVisibleLabel);
+        series->setPointLabelsVisible(isVisibleLabelPoints);
+        series->setPointLabelsClipping(false);
 
         graph->addSeries(series);
         index++;

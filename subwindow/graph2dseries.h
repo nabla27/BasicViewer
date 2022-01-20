@@ -8,7 +8,7 @@
 #include <QLineSeries>
 #include <QLineEdit>
 #include <QGroupBox>
-#include <QLabel>
+#include <QCheckBox>
 #include "tablewidget.h"
 
 class Graph2DSeries : public QWidget
@@ -31,10 +31,12 @@ private:
     QMetaObject::Connection changedTableAction;
 
     /* レイアウト */
-    QGroupBox *labelGroup;
+    QGroupBox *legendGroup;
 
     /* 設定項目 */
-    QList<QString> labelName;
+    QList<QString> legendName;
+    bool isVisibleLabel = false;
+    bool isVisibleLabelPoints = false;
 };
 
 #endif // GRAPH2DSERIES_H
