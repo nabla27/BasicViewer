@@ -60,13 +60,20 @@ Graph2DSeries::Graph2DSeries(TableWidget *table, QWidget *parent)
 
     /* tableに変更があればグラフを再描画 */
     //ダブルクリック -> ファイルの保存 -> fileTreeのインデックス変更 -> sheet名の切り替え -> sheetの変更
-    connect(table, &TableWidget::itemChanged, [this](){
+    changedTableAction =  connect(table, &TableWidget::itemChanged, [this](){
         if(this->table->getSheetName() == sheetName)
             updateGraph();
     });
 
     /* ウィンドウが閉じられたら自動でdelete */
     setAttribute(Qt::WA_DeleteOnClose);
+}
+
+Graph2DSeries::~Graph2DSeries()
+{
+    delete graph;
+    delete vLayout;
+    disconnect(changedTableAction);
 }
 
 

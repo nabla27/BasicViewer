@@ -8,6 +8,7 @@
 #include <QLineSeries>
 #include <QLineEdit>
 #include <QGroupBox>
+#include <QLabel>
 #include "tablewidget.h"
 
 class Graph2DSeries : public QWidget
@@ -15,6 +16,7 @@ class Graph2DSeries : public QWidget
     Q_OBJECT
 public:
     explicit Graph2DSeries(TableWidget *table, QWidget *parent = nullptr);
+    ~Graph2DSeries();
 
 public:
     void initializeData(const QList<QList<QList<float> > >& data);
@@ -26,6 +28,7 @@ private:
     TableWidget *table;
     QList<QTableWidgetSelectionRange> selectedRanges;
     QString sheetName;
+    QMetaObject::Connection changedTableAction;
 
     /* レイアウト */
     QGroupBox *labelGroup;
