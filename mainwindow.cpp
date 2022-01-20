@@ -128,6 +128,7 @@ void MainWindow::on_treeWidget_itemDoubleClicked(QTreeWidgetItem *item, int colu
 
     if(parentTitle == "Script")
     {
+        ui->tabWidget->setCurrentIndex(0);                                        //tabページをeditor(0ページ目)へ変更
         if(ui->treeWidget->scriptIndex() >= 0) {
             const QString beforeName = BasicSet::tmpDirectory + ui->treeWidget->currentScriptName();
             (void)toFileTxt(beforeName, ui->textEdit_editor->toPlainText());
@@ -139,6 +140,7 @@ void MainWindow::on_treeWidget_itemDoubleClicked(QTreeWidgetItem *item, int colu
     }
     else if(parentTitle == "Sheet")
     {
+        ui->tabWidget->setCurrentIndex(1);                                        //tabページをsheet(1ページ目)へ移動
         if(ui->treeWidget->sheetIndex() >= 0){
             const QString beforeName = BasicSet::tmpDirectory + ui->treeWidget->currentSheetName();
             (void)toFileCsv(beforeName, ui->tableWidget_table->getData<QString>());
