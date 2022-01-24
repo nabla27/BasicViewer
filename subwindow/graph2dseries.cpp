@@ -35,23 +35,21 @@ Graph2DSeries::Graph2DSeries(TableWidget *table, QWidget *parent)
 {
     graph = new QChart;
 
-    /* tableWidgetの選択された範囲を保存 */
-    selectedRanges = table->selectedRanges();
+    /* tableWidgetの選択範囲を設定 */
+    setTableSelectedIndex();
+    legendName.resize(plotTableRanges.size(), "");
 
-    /* レイアウトの初期化 */
-    initializeLayout();
+    /* グラフの初期化 */
+    initializeGraph();
 
-    /* 選択されたデータで初期化,描写 */
-    initializeData(table->selectedData<float>());
-
-    /* windowのタイトルをsheetの名前を設定 */
+    /* windowのタイトルをファイル名に設定 */
     sheetName = table->getSheetName();
     setWindowTitle(sheetName);
 
-    /* tableに変更があればグラフを再描画 */
+    /* tableの変更に従い、グラフを再描画 */
     //ダブルクリック -> ファイルの保存 -> fileTreeのインデックス変更 -> sheet名の切り替え -> sheetの変更
-    changedTableAction =  connect(table, &TableWidget::itemChanged, [this](){
-        if(this->table->getSheetName() == sheetName) updateGraph();
+    changedTableAction = connect(table, &TableWidget::itemChanged, [this](){
+        if(this->table->getSheetName() == sheetName) updateGraphData();
     });
 
     /* ウィンドウが閉じられたら自動でdelete */
@@ -66,45 +64,45 @@ Graph2DSeries::~Graph2DSeries()
     disconnect(changedTableAction);
 }
 
-
-void Graph2DSeries::initializeData(const QList<QList<QList<float>>> &data)
+void Graph2DSeries::setTableSelectedIndex()
 {
-    graph->removeAllSeries();
-    const qsizetype numData = data.size();
+    const QList<QTableWidgetSelectionRange> selectedRanges = table->selectedRanges();  //tableで選択されている範囲
+    const qsizetype rangeCount = selectedRanges.size();                                //選択範囲の数
+    qsizetype rangeIndex = 0;                                                          //どの選択範囲を指すかのインデックス
 
-    for(const QList<QList<float> >& list : data)
+    for(;;)
     {
-        QLineSeries *series = new QLineSeries;
+        const int startRow = selectedRanges.at(rangeIndex).topRow();
+        const int startCol = selectedRanges.at(rangeIndex).leftColumn();
+        const int endRow = selectedRanges.at(rangeIndex).bottomRow();
+        const int endCol = selectedRanges.at(rangeIndex).rightColumn();
 
-        for(const QList<float>& coord : list)
-        {
-            if(coord.size() < 2) { continue; }
-            series->append(coord.at(0), coord.at(1));
+        if(endCol - startCol == 0){  //選択範囲の列幅が1のとき、プロットするxy座標の値は別々の選択範囲で指定されている
+            if(rangeIndex + 1 >= rangeCount) { return; }
+            plotTableRanges.append(plotTableRange(startRow, endRow, startCol, selectedRanges.at(rangeIndex + 1).leftColumn()));
+            rangeIndex += 2;
+        }
+        else{  //選択範囲の列幅が2より大きいとき、プロットするxy座標の値は同じ選択範囲で連続した列で指定されている
+            plotTableRanges.append(plotTableRange(startRow, endRow, startCol, startCol + 1));
+            rangeIndex += 1;
         }
 
-        graph->addSeries(series);
-    }
-
-    graph->createDefaultAxes(); //軸と格子の表示
-
-    /* 各初期設定 */
-    legendName.resize(numData, "");  //ラベル名の初期設定
-
-    /* 各レイアウトの設定 */
-    {//ラベル設定
-        for(qsizetype i = 0; i < numData; ++i)
-        {
-            QLineEdit *labelNameEdit = new QLineEdit;
-            legendBoxLayout->addWidget(labelNameEdit);
-            connect(labelNameEdit, &QLineEdit::editingFinished, [i, labelNameEdit, this](){
-                legendName[i] = labelNameEdit->text();
-                updateGraph(nullptr);
-            });
-        }
+        if(rangeIndex >= rangeCount) { return; } //選択範囲が終了
     }
 }
 
-void Graph2DSeries::initializeLayout()
+void Graph2DSeries::initializeGraph()
+{
+    /* レイアウトの初期化 */
+    initializeGraphLayout();
+
+    /* データをセット */
+    graph->removeAllSeries();   //データを初期化
+    setGraphSeries();           //データのセット
+    graph->createDefaultAxes(); //軸と格子の表示
+}
+
+void Graph2DSeries::initializeGraphLayout()
 {
     /* レイアウトのグラフ部分 */
     QChartView *graphView = new QChartView(graph);
@@ -124,6 +122,15 @@ void Graph2DSeries::initializeLayout()
     {
         /* グラフのラベル設定項目 */
         legendBoxLayout = new QVBoxLayout;
+        for(qsizetype i = 0; i < plotTableRanges.size(); ++i)
+        {
+            QLineEdit *labelNameEdit = new QLineEdit;
+            legendBoxLayout->addWidget(labelNameEdit);
+            connect(labelNameEdit, &QLineEdit::editingFinished, [i, labelNameEdit, this](){
+                legendName[i] = labelNameEdit->text();
+                updateGraphLayout();
+            });
+        }
         QGroupBox *legendGroup = new QGroupBox("Label name", this);
         legendGroup->setLayout(legendBoxLayout);
         vLayout->addWidget(legendGroup);
@@ -132,11 +139,11 @@ void Graph2DSeries::initializeLayout()
         legendBoxLayout->addWidget(checkBoxShowLegend);
         connect(checkBoxShowLegend, &QCheckBox::toggled, [this, checkBoxShowLegend](){
              isVisibleLegend = checkBoxShowLegend->isChecked();
-             updateGraph();
+             updateGraphLayout();
         });
     }
     {
-        /* ポイントを表示するか */
+        /* グラフのポイント表示設定項目 */
         QGroupBox *labelGroup = new QGroupBox("Label", this);
         QVBoxLayout *labelBoxLayout = new QVBoxLayout(labelGroup);
         labelGroup->setLayout(labelBoxLayout);
@@ -145,47 +152,60 @@ void Graph2DSeries::initializeLayout()
         labelBoxLayout->addWidget(checkBoxShowLabel);
         connect(checkBoxShowLabel, &QCheckBox::toggled, [this, checkBoxShowLabel](){
             isVisibleLabel = checkBoxShowLabel->isChecked();
-            updateGraph();
+            updateGraphLayout();
         });
         QCheckBox *checkBoxShowLabelPoints = new QCheckBox("Show label points", labelGroup);
         labelBoxLayout->addWidget(checkBoxShowLabelPoints);
         connect(checkBoxShowLabelPoints, &QCheckBox::toggled, [this, checkBoxShowLabelPoints](){
             isVisibleLabelPoints = checkBoxShowLabelPoints->isChecked();
-            updateGraph();
+            updateGraphLayout();
         });
     }
 }
 
-void Graph2DSeries::updateGraph(QTableWidgetItem*)
+void Graph2DSeries::setGraphSeries()
 {
-    graph->removeAllSeries();
-    qsizetype index = 0;
-
-    for(const QTableWidgetSelectionRange& selected : selectedRanges)
+    for(const plotTableRange& selectedRange : plotTableRanges)
     {
-        const int startRow = selected.topRow();
-        const int startCol = selected.leftColumn();
-        const int endRow = selected.bottomRow();
-
         QLineSeries *series = new QLineSeries;
-        series->setName(legendName.at(index));
 
-        for(int row = startRow; row <= endRow; ++row)
+        for(int row = selectedRange.startRow; row <= selectedRange.endRow; ++row)
         {
-            if(table->item(row, startCol) == nullptr || table->item(row, startCol + 1) == nullptr) continue;
-            series->append(table->item(row, startCol)->text().toFloat(),
-                           table->item(row, startCol + 1)->text().toFloat());
+            if(table->item(row, selectedRange.colX) == nullptr || table->item(row, selectedRange.colY) == nullptr) continue;
+            series->append(table->item(row, selectedRange.colX)->text().toFloat(),
+                           table->item(row, selectedRange.colY)->text().toFloat());
         }
 
-        graph->legend()->setVisible(isVisibleLegend);
-
-        series->setPointsVisible(isVisibleLabel);
-        series->setPointLabelsVisible(isVisibleLabelPoints);
-        series->setPointLabelsClipping(false);
-
         graph->addSeries(series);
-        index++;
     }
+}
+
+void Graph2DSeries::updateGraphData()
+{
+    graph->removeAllSeries();
+
+    setGraphSeries();
 
     graph->createDefaultAxes();
 }
+
+void Graph2DSeries::updateGraphLayout()
+{
+    /* 凡例の表示有無 */
+    graph->legend()->setVisible(isVisibleLegend);
+
+    qsizetype index = 0;
+
+    for(QAbstractSeries *series : graph->series())
+    {
+        /* 凡例のテキスト設定 */
+        series->setName(legendName.at(index));
+
+        qobject_cast<QXYSeries*>(series)->setPointsVisible(isVisibleLabel);            //ラベル(点)の表示の有無
+        qobject_cast<QXYSeries*>(series)->setPointLabelsVisible(isVisibleLabelPoints); //ラベル(点)の座標表示の有無
+        qobject_cast<QXYSeries*>(series)->setPointLabelsClipping(false);
+
+        index++;
+    }
+}
+

@@ -18,18 +18,31 @@ public:
     explicit Graph2DSeries(TableWidget *table, QWidget *parent = nullptr);
     ~Graph2DSeries();
 
-public:
-    void initializeData(const QList<QList<QList<float> > >& data);
-    void initializeLayout();
-    void updateGraph(QTableWidgetItem *changedItem = nullptr);
+private:
+    void setTableSelectedIndex();
+    void initializeGraph();
+    void initializeGraphLayout();
+    void setGraphSeries();
+    void updateGraphLayout();
+    void updateGraphData();
 
 private:
     QChart *graph;
     QVBoxLayout *vLayout;
     TableWidget *table;
-    QList<QTableWidgetSelectionRange> selectedRanges;
     QString sheetName;
     QMetaObject::Connection changedTableAction;
+
+    struct plotTableRange
+    {
+        plotTableRange(int startRow, int endRow, int colX, int colY)
+            : startRow(startRow), endRow(endRow), colX(colX), colY(colY) {}
+        int startRow = 0;
+        int endRow = 0;
+        int colX = 0 ;
+        int colY = 0;
+    };
+    QList<plotTableRange> plotTableRanges;
 
     /* レイアウト */
     QVBoxLayout *legendBoxLayout;
