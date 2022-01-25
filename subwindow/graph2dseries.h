@@ -48,8 +48,10 @@ private:
     QVBoxLayout *legendBoxLayout;
 
     /* 設定項目 */
-    bool isVisibleLegend = true;
+    bool isVisibleTitle = false;
+    bool isVisibleLegend = false;
     QList<QString> legendName;
+    QList<QLineEdit*> legendNameEdit;
     bool isVisibleLabel = false;
     bool isVisibleLabelPoints = false;
 };

@@ -38,6 +38,7 @@ Graph2DSeries::Graph2DSeries(TableWidget *table, QWidget *parent)
     /* tableWidgetの選択範囲を設定 */
     setTableSelectedIndex();
     legendName.resize(plotTableRanges.size(), "");
+    legendNameEdit.resize(plotTableRanges.size());
 
     /* グラフの初期化 */
     initializeGraph();
@@ -120,42 +121,56 @@ void Graph2DSeries::initializeGraphLayout()
 
     /* 右側の設定部分のレイアウト */
     {
+        /* グラフのタイトル設定項目 */
+        QGroupBox *titleGroup = new QGroupBox("Title", this);
+        QVBoxLayout *titleBoxLayout = new QVBoxLayout(titleGroup);
+        QLineEdit *titleEdit = new QLineEdit(titleGroup);
+        vLayout->addWidget(titleGroup);
+        titleGroup->setLayout(titleBoxLayout);
+        titleBoxLayout->addWidget(titleEdit);
+        connect(titleEdit, &QLineEdit::editingFinished, [this, titleEdit](){
+             graph->setTitle(titleEdit->text());
+        });
+    }
+    {
         /* グラフのラベル設定項目 */
+        QGroupBox *legendGroup = new QGroupBox("Legend name", this);
         legendBoxLayout = new QVBoxLayout;
+        QCheckBox *checkBoxShowLegend = new QCheckBox("show legend", legendGroup); graph->legend()->setVisible(false);
+        vLayout->addWidget(legendGroup);
+        legendGroup->setLayout(legendBoxLayout);
+        legendBoxLayout->addWidget(checkBoxShowLegend);
         for(qsizetype i = 0; i < plotTableRanges.size(); ++i)
         {
-            QLineEdit *labelNameEdit = new QLineEdit;
-            legendBoxLayout->addWidget(labelNameEdit);
-            connect(labelNameEdit, &QLineEdit::editingFinished, [i, labelNameEdit, this](){
-                legendName[i] = labelNameEdit->text();
+            legendNameEdit[i]= new QLineEdit(legendGroup);
+            legendBoxLayout->addWidget(legendNameEdit.at(i));
+            connect(legendNameEdit.at(i), &QLineEdit::editingFinished, [i, this](){
+                legendName[i] = legendNameEdit.at(i)->text();
                 updateGraphLayout();
             });
+            legendNameEdit[i]->setVisible(false);
         }
-        QGroupBox *legendGroup = new QGroupBox("Label name", this);
-        legendGroup->setLayout(legendBoxLayout);
-        vLayout->addWidget(legendGroup);
-        QCheckBox *checkBoxShowLegend = new QCheckBox("show legend", legendGroup);
-        checkBoxShowLegend->setChecked(true);
-        legendBoxLayout->addWidget(checkBoxShowLegend);
         connect(checkBoxShowLegend, &QCheckBox::toggled, [this, checkBoxShowLegend](){
              isVisibleLegend = checkBoxShowLegend->isChecked();
              updateGraphLayout();
+             for(qsizetype i = 0; i < plotTableRanges.size(); ++i)
+                 legendNameEdit[i]->setVisible(isVisibleLegend);
         });
     }
     {
         /* グラフのポイント表示設定項目 */
         QGroupBox *labelGroup = new QGroupBox("Label", this);
         QVBoxLayout *labelBoxLayout = new QVBoxLayout(labelGroup);
+        QCheckBox *checkBoxShowLabel = new QCheckBox("show label", labelGroup);
+        QCheckBox *checkBoxShowLabelPoints = new QCheckBox("Show label points", labelGroup);
         labelGroup->setLayout(labelBoxLayout);
         vLayout->addWidget(labelGroup);
-        QCheckBox *checkBoxShowLabel = new QCheckBox("show label", labelGroup);
         labelBoxLayout->addWidget(checkBoxShowLabel);
+        labelBoxLayout->addWidget(checkBoxShowLabelPoints);
         connect(checkBoxShowLabel, &QCheckBox::toggled, [this, checkBoxShowLabel](){
             isVisibleLabel = checkBoxShowLabel->isChecked();
             updateGraphLayout();
         });
-        QCheckBox *checkBoxShowLabelPoints = new QCheckBox("Show label points", labelGroup);
-        labelBoxLayout->addWidget(checkBoxShowLabelPoints);
         connect(checkBoxShowLabelPoints, &QCheckBox::toggled, [this, checkBoxShowLabelPoints](){
             isVisibleLabelPoints = checkBoxShowLabelPoints->isChecked();
             updateGraphLayout();
