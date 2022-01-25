@@ -9,6 +9,7 @@
 #include <QLineEdit>
 #include <QGroupBox>
 #include <QCheckBox>
+#include <QToolBox>
 #include "tablewidget.h"
 
 class Graph2DSeries : public QWidget
@@ -23,7 +24,6 @@ private:
     void initializeGraph();
     void initializeGraphLayout();
     void setGraphSeries();
-    void updateGraphLayout();
     void updateGraphData();
 
 private:
@@ -46,14 +46,11 @@ private:
 
     /* レイアウト */
     QVBoxLayout *legendBoxLayout;
-
-    /* 設定項目 */
-    bool isVisibleTitle = false;
-    bool isVisibleLegend = false;
-    QList<QString> legendName;
     QList<QLineEdit*> legendNameEdit;
-    bool isVisibleLabel = false;
-    bool isVisibleLabelPoints = false;
+
+private slots:
+    void changeLegendVisible(bool visible);
 };
+
 
 #endif // GRAPH2DSERIES_H
