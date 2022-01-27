@@ -1,32 +1,43 @@
 #include "graph2dseries.h"
 
-/* * * * * * * * * * * * * * * * window* * * * * * * * * * * * * * * * *
- *                                                                     *
- *   * * * * * * * * * * * * * mainLayout* * * * * * * * * * * * * *   *
- *   *                                                             *   *
- *   *   * * * * * * * * GraphView * * * * * * * * * *vLayout* *   *   *
- *   *   *                                       * *           *   *   *
- *   *   *                                       * *           *   *   *
- *   *   *                                       * *           *   *   *
- *   *   *                                       * *           *   *   *
- *   *   *                                       * *           *   *   *
- *   *   *                                       * *           *   *   *
- *   *   *                                       * *           *   *   *
- *   *   *                                       * *           *   *   *
- *   *   *                                       * *           *   *   *
- *   *   *                                       * *           *   *   *
- *   *   *                                       * *           *   *   *
- *   *   *                                       * *           *   *   *
- *   *   * * * * * * * * * * * * * * * * * * * * * * * * * * * *   *   *
- *   *                                                             *   *
- *   * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *   *
- *                                                                     *
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+/*
  *
  *
- * this ---|--- mainLayout
- *         |--- legendGroup
- *         |--- labelGroup
+ *
+ *
+ * * * * * * * * * * * * * * * * * * * * * window* * * * * * * * * * * * * * * * * * * * *
+ *                                                                                       *
+ *   * * * * * * * * * * * * * * * * * * mainLayout* * * * * * * * * * * * * * * * * *   *
+ *   *                                                                               *   *
+ *   *   * * * * * * * * GraphView * * * * * * * * * * * * *scrollArea * * * * * *   *   *
+ *   *   *                                       * * * * * areaContents* * * * * *   *   *
+ *   *   *                                       * * * * * * vLayout * * * * * * *   *   *
+ *   *   *                                       * *                         * * *   *   *
+ *   *   *                                       * *          Combo          * * *   *   *
+ *   *   *                                       * *                         * * *   *   *
+ *   *   *                                       * *                         * * *   *   *
+ *   *   *                                       * *       StackWidget       * * *   *   *
+ *   *   *                                       * *                         * * *   *   *
+ *   *   *                                       * *                         * * *   *   *
+ *   *   *                                       * *                         * * *   *   *
+ *   *   *                                       * *                         * * *   *   *
+ *   *   *                                       * *                         * * *   *   *
+ *   *   *                                       * *                         * * *   *   *
+ *   *   *                                       * *                         * * *   *   *
+ *   *   *                                       * *                         * * *   *   *
+ *   *   *                                       * *                         * * *   *   *
+ *   *   *                                       * * * * * * * * * * * * * * * * *   *   *
+ *   *   *                                       * * * * * * * * * * * * * * * * *   *   *
+ *   *   * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *   *   *
+ *   *                                                                               *   *
+ *   * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *   *
+ *                                                                                       *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ *
+ *
+ *
+ *
  */
 
 
@@ -59,16 +70,16 @@ Graph2DSeries::Graph2DSeries(TableWidget *table, QWidget *parent)
 Graph2DSeries::~Graph2DSeries()
 {
     delete graph;
-    //delete vLayout;
-    //delete legendBoxLayout;
     disconnect(changedTableAction);
 }
 
 void Graph2DSeries::setTableSelectedIndex()
-{
+{    
     const QList<QTableWidgetSelectionRange> selectedRanges = table->selectedRanges();  //tableで選択されている範囲
     const qsizetype rangeCount = selectedRanges.size();                                //選択範囲の数
     qsizetype rangeIndex = 0;                                                          //どの選択範囲を指すかのインデックス
+
+    if(rangeCount == 0) { return; }                                                    //選択範囲がなければ無効
 
     for(;;)
     {
@@ -237,11 +248,13 @@ void Graph2DSeries::initializeGraphLayout()
         minXEdit->setMaximumWidth(30);
         maxXLabel->setMinimumWidth(labelWidth);
         maxXEdit->setMaximumWidth(30);
-        minXEdit->setText(QString::number(qobject_cast<QValueAxis*>(graph->axes(Qt::Horizontal).constLast())->min()));
-        maxXEdit->setText(QString::number(qobject_cast<QValueAxis*>(graph->axes(Qt::Horizontal).constLast())->max()));
-        connect(minXEdit, &QLineEdit::textEdited, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setMin);
-        connect(maxXEdit, &QLineEdit::textEdited, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setMax);
-        connect(xAxisNameEdit, &QLineEdit::textEdited, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setTitleText);
+        if(plotTableRanges.size() > 0){
+            minXEdit->setText(QString::number(qobject_cast<QValueAxis*>(graph->axes(Qt::Horizontal).constLast())->min()));
+            maxXEdit->setText(QString::number(qobject_cast<QValueAxis*>(graph->axes(Qt::Horizontal).constLast())->max()));
+            connect(minXEdit, &QLineEdit::textEdited, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setMin);
+            connect(maxXEdit, &QLineEdit::textEdited, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setMax);
+            connect(xAxisNameEdit, &QLineEdit::textEdited, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setTitleText);
+        }
         /* y軸 */
         QVBoxLayout *yAxisLayout = new QVBoxLayout(yAxisGroupBox);
         QHBoxLayout *rangeMinYLayout = new QHBoxLayout();
@@ -271,11 +284,13 @@ void Graph2DSeries::initializeGraphLayout()
         minYEdit->setMaximumWidth(30);
         maxYLabel->setMinimumWidth(labelWidth);
         maxYEdit->setMaximumWidth(30);
-        minYEdit->setText(QString::number(qobject_cast<QValueAxis*>(graph->axes(Qt::Vertical).constLast())->min()));
-        maxYEdit->setText(QString::number(qobject_cast<QValueAxis*>(graph->axes(Qt::Vertical).constLast())->max()));
-        connect(minYEdit, &QLineEdit::textEdited, graph->axes(Qt::Vertical).constLast(), &QAbstractAxis::setMin);
-        connect(maxYEdit, &QLineEdit::textEdited, graph->axes(Qt::Vertical).constLast(), &QAbstractAxis::setMax);
-        connect(yAxisNameEdit, &QLineEdit::textEdited, graph->axes(Qt::Vertical).constLast(), &QAbstractAxis::setTitleText);
+        if(plotTableRanges.size() > 0){
+            minYEdit->setText(QString::number(qobject_cast<QValueAxis*>(graph->axes(Qt::Vertical).constLast())->min()));
+            maxYEdit->setText(QString::number(qobject_cast<QValueAxis*>(graph->axes(Qt::Vertical).constLast())->max()));
+            connect(minYEdit, &QLineEdit::textEdited, graph->axes(Qt::Vertical).constLast(), &QAbstractAxis::setMin);
+            connect(maxYEdit, &QLineEdit::textEdited, graph->axes(Qt::Vertical).constLast(), &QAbstractAxis::setMax);
+            connect(yAxisNameEdit, &QLineEdit::textEdited, graph->axes(Qt::Vertical).constLast(), &QAbstractAxis::setTitleText);
+        }
     }
 }
 
