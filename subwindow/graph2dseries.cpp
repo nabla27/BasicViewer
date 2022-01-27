@@ -222,16 +222,17 @@ void Graph2DSeries::initializeGraphLayout()
         const int labelWidth = 54;
         QVBoxLayout *xAxisLayout = new QVBoxLayout(xAxisGroupBox);
         QHBoxLayout *rangeMinXLayout = new QHBoxLayout();
-        QLabel *minXLabel = new QLabel("min", xAxisGroupBox);
+        QLabel *minXLabel = new QLabel("Min", xAxisGroupBox);
         QLineEdit *minXEdit = new QLineEdit(xAxisGroupBox);
         QSpacerItem *horizontalMinXSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
         QHBoxLayout *rangeMaxXLayout = new QHBoxLayout();
-        QLabel *maxXLabel = new QLabel("max", xAxisGroupBox); maxXLabel->setFrameShadow(QFrame::Plain);
+        QLabel *maxXLabel = new QLabel("Max", xAxisGroupBox); maxXLabel->setFrameShadow(QFrame::Plain);
         QLineEdit *maxXEdit = new QLineEdit(xAxisGroupBox);
         QSpacerItem *horizontalMaxXSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
         QHBoxLayout *xAxisNameLayout = new QHBoxLayout();
         QLabel *xAxisNameLabel = new QLabel("Axis name", yAxisGroupBox);
         QLineEdit *xAxisNameEdit = new QLineEdit(xAxisGroupBox);
+        QCheckBox *checkShowAxisHorizontalGrid = new QCheckBox("Show horizontal grid", xAxisGroupBox);
         xAxisGroupBox->setLayout(xAxisLayout);
         xAxisLayout->addLayout(rangeMinXLayout);
         rangeMinXLayout->addWidget(minXLabel);
@@ -244,30 +245,34 @@ void Graph2DSeries::initializeGraphLayout()
         xAxisLayout->addLayout(xAxisNameLayout);
         xAxisNameLayout->addWidget(xAxisNameLabel);
         xAxisNameLayout->addWidget(xAxisNameEdit);
+        xAxisLayout->addWidget(checkShowAxisHorizontalGrid);
         minXLabel->setMinimumWidth(labelWidth);
         minXEdit->setMaximumWidth(30);
         maxXLabel->setMinimumWidth(labelWidth);
         maxXEdit->setMaximumWidth(30);
+        checkShowAxisHorizontalGrid->setChecked(true);
         if(plotTableRanges.size() > 0){
             minXEdit->setText(QString::number(qobject_cast<QValueAxis*>(graph->axes(Qt::Horizontal).constLast())->min()));
             maxXEdit->setText(QString::number(qobject_cast<QValueAxis*>(graph->axes(Qt::Horizontal).constLast())->max()));
             connect(minXEdit, &QLineEdit::textEdited, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setMin);
             connect(maxXEdit, &QLineEdit::textEdited, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setMax);
             connect(xAxisNameEdit, &QLineEdit::textEdited, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setTitleText);
+            connect(checkShowAxisHorizontalGrid, &QCheckBox::toggled, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setGridLineVisible);
         }
         /* y軸 */
         QVBoxLayout *yAxisLayout = new QVBoxLayout(yAxisGroupBox);
         QHBoxLayout *rangeMinYLayout = new QHBoxLayout();
-        QLabel *minYLabel = new QLabel("min", yAxisGroupBox);
+        QLabel *minYLabel = new QLabel("Min", yAxisGroupBox);
         QLineEdit *minYEdit = new QLineEdit(yAxisGroupBox);
         QSpacerItem *horizontalMinYSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
         QHBoxLayout *rangeMaxYLayout = new QHBoxLayout();
-        QLabel *maxYLabel = new QLabel("max", yAxisGroupBox);
+        QLabel *maxYLabel = new QLabel("Max", yAxisGroupBox);
         QLineEdit *maxYEdit = new QLineEdit(yAxisGroupBox);
         QSpacerItem *horizontalMaxYSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
         QHBoxLayout *yAxisNameLayout = new QHBoxLayout();
         QLabel *yAxisNameLabel = new QLabel("Axis name", yAxisGroupBox);
         QLineEdit *yAxisNameEdit = new QLineEdit(yAxisGroupBox);
+        QCheckBox *checkShowAxisVerticalGrid = new QCheckBox("Show vertical grid", xAxisGroupBox);
         yAxisGroupBox->setLayout(yAxisLayout);
         yAxisLayout->addLayout(rangeMinYLayout);
         rangeMinYLayout->addWidget(minYLabel);
@@ -281,15 +286,18 @@ void Graph2DSeries::initializeGraphLayout()
         yAxisNameLayout->addWidget(yAxisNameLabel);
         yAxisNameLayout->addWidget(yAxisNameEdit);
         minYLabel->setMinimumWidth(labelWidth);
+        yAxisLayout->addWidget(checkShowAxisVerticalGrid);
         minYEdit->setMaximumWidth(30);
         maxYLabel->setMinimumWidth(labelWidth);
         maxYEdit->setMaximumWidth(30);
+        checkShowAxisVerticalGrid->setChecked(true);
         if(plotTableRanges.size() > 0){
             minYEdit->setText(QString::number(qobject_cast<QValueAxis*>(graph->axes(Qt::Vertical).constLast())->min()));
             maxYEdit->setText(QString::number(qobject_cast<QValueAxis*>(graph->axes(Qt::Vertical).constLast())->max()));
             connect(minYEdit, &QLineEdit::textEdited, graph->axes(Qt::Vertical).constLast(), &QAbstractAxis::setMin);
             connect(maxYEdit, &QLineEdit::textEdited, graph->axes(Qt::Vertical).constLast(), &QAbstractAxis::setMax);
             connect(yAxisNameEdit, &QLineEdit::textEdited, graph->axes(Qt::Vertical).constLast(), &QAbstractAxis::setTitleText);
+            connect(checkShowAxisVerticalGrid, &QCheckBox::toggled, graph->axes(Qt::Vertical).constLast(), &QAbstractAxis::setGridLineVisible);
         }
     }
 }
