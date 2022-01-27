@@ -10,6 +10,12 @@
 #include <QGroupBox>
 #include <QCheckBox>
 #include <QToolBox>
+#include <QLabel>
+#include <QSizePolicy>
+#include <QStackedWidget>
+#include <QComboBox>
+#include <QSpacerItem>
+#include <QValueAxis>
 #include "tablewidget.h"
 
 class Graph2DSeries : public QWidget
@@ -28,7 +34,8 @@ private:
 
 private:
     QChart *graph;
-    QVBoxLayout *vLayout;
+    //QVBoxLayout *vLayout;
+    //QStackedWidget *settingWidget;
     TableWidget *table;
     QString sheetName;
     QMetaObject::Connection changedTableAction;

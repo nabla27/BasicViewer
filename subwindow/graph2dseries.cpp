@@ -59,8 +59,8 @@ Graph2DSeries::Graph2DSeries(TableWidget *table, QWidget *parent)
 Graph2DSeries::~Graph2DSeries()
 {
     delete graph;
-    delete vLayout;
-    delete legendBoxLayout;
+    //delete vLayout;
+    //delete legendBoxLayout;
     disconnect(changedTableAction);
 }
 
@@ -98,6 +98,9 @@ void Graph2DSeries::initializeGraph()
     setGraphSeries();           //データのセット
     graph->createDefaultAxes(); //軸と格子の表示
 
+    /* グラフの初期設定 */
+    graph->legend()->setVisible(false);
+
     /* レイアウトの初期化 */
     initializeGraphLayout();
 }
@@ -109,64 +112,139 @@ void Graph2DSeries::initializeGraphLayout()
     graphView->setMinimumSize(320, 240);
 
     /* レイアウトの右側設定部分 */
-    vLayout = new QVBoxLayout;
-    vLayout->setAlignment(Qt::AlignTop);
+    QScrollArea *settingScrollArea = new QScrollArea(this);
+    QWidget *settingScrollAreaContents = new QWidget(settingScrollArea);
+    QVBoxLayout *vLayout = new QVBoxLayout(settingScrollAreaContents);
+    QComboBox *selectPageCombo = new QComboBox(settingScrollAreaContents);
+    QStackedWidget *settingStackWidget = new QStackedWidget(settingScrollAreaContents);
+    settingScrollArea->setWidget(settingScrollAreaContents);
+    settingScrollArea->setWidgetResizable(true);
+    settingScrollAreaContents->setLayout(vLayout);
+    vLayout->addWidget(selectPageCombo);
+    vLayout->addWidget(settingStackWidget);
 
     /* メインのレイアウト。各Widget(vLayout,graphView)が水平方向に配列される */
     QHBoxLayout *mainLayout = new QHBoxLayout(this);
     mainLayout->addWidget(graphView, Qt::AlignTop);
-    mainLayout->addLayout(vLayout);
+    mainLayout->addWidget(settingScrollArea);
     setLayout(mainLayout);
 
     /* 右側の設定部分のレイアウト */
     {
-        /* グラフのタイトル設定項目 */
-        QGroupBox *titleGroup = new QGroupBox("Title", this);
-        QVBoxLayout *titleBoxLayout = new QVBoxLayout(titleGroup);
-        QLineEdit *titleEdit = new QLineEdit(titleGroup);
-        vLayout->addWidget(titleGroup);
-        titleGroup->setLayout(titleBoxLayout);
-        titleBoxLayout->addWidget(titleEdit);
+        selectPageCombo->addItem("Title");
+        selectPageCombo->addItem("Legend");
+        selectPageCombo->addItem("Label");
+        selectPageCombo->addItem("Range");
+        connect(selectPageCombo, &QComboBox::activated, settingStackWidget, &QStackedWidget::setCurrentIndex);
+    }
+    {
+        /* グラフタイトルの設定項目 */
+        QWidget *titleSettingWidget = new QWidget(this);
+        QVBoxLayout *titleSettingLayout = new QVBoxLayout(titleSettingWidget);
+        QLineEdit *titleEdit = new QLineEdit(titleSettingWidget);
+        QSpacerItem *verticalSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+        settingStackWidget->addWidget(titleSettingWidget);
+        titleSettingWidget->setLayout(titleSettingLayout);
+        titleSettingLayout->addWidget(titleEdit, Qt::AlignTop);
+        titleSettingLayout->addItem(verticalSpacer);
         connect(titleEdit, &QLineEdit::textEdited, graph, &QChart::setTitle);
     }
     {
-        /* グラフのラベル設定項目 */
-        QGroupBox *legendGroup = new QGroupBox("Legend name", this);
-        legendBoxLayout = new QVBoxLayout;
-        QCheckBox *checkBoxShowLegend = new QCheckBox("show legend", legendGroup); graph->legend()->setVisible(false);
-        vLayout->addWidget(legendGroup);
-        legendGroup->setLayout(legendBoxLayout);
-        legendBoxLayout->addWidget(checkBoxShowLegend);
+        /* グラフ凡例の設定項目 */
+        QWidget *legendSettingWidget = new QWidget(this);
+        QVBoxLayout *legendSettingLayout = new QVBoxLayout(legendSettingWidget);
+        QCheckBox *checkBoxShowLegend = new QCheckBox("show legend", legendSettingWidget);
+        QLabel *legendTextEditLabel = new QLabel("・text", legendSettingWidget);
+        settingStackWidget->addWidget(legendSettingWidget);
+        legendSettingWidget->setLayout(legendSettingLayout);
+        legendSettingLayout->addWidget(checkBoxShowLegend);
+        legendSettingLayout->addWidget(legendTextEditLabel);
         connect(checkBoxShowLegend, &QCheckBox::toggled, this, &Graph2DSeries::changeLegendVisible);
-        for(qsizetype i = 0; i < plotTableRanges.size(); ++i)
-        {
-            legendNameEdit[i]= new QLineEdit(legendGroup);
-            legendBoxLayout->addWidget(legendNameEdit.at(i));
+        connect(checkBoxShowLegend, &QCheckBox::toggled, legendTextEditLabel, &QLabel::setVisible);
+        for(qsizetype i = 0; i < plotTableRanges.size(); ++i){
+            legendNameEdit[i] = new QLineEdit(legendSettingWidget);
+            legendSettingLayout->addWidget(legendNameEdit.at(i));
             connect(legendNameEdit.at(i), &QLineEdit::textEdited, graph->series().at(i), &QAbstractSeries::setName);
-            legendNameEdit[i]->setVisible(false);
+            legendNameEdit.at(i)->setVisible(false);
         }
+        QSpacerItem *verticalSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+        legendSettingLayout->addItem(verticalSpacer);
     }
-    {   //ラベルの設定項目
-        QGroupBox *labelGroup = new QGroupBox("Label", this);
-        QVBoxLayout *labelBoxLayout = new QVBoxLayout;
-        QToolBox *labelToolBox = new QToolBox(labelGroup);
-        vLayout->addWidget(labelGroup);
-        labelGroup->setLayout(labelBoxLayout);
-        labelBoxLayout->addWidget(labelToolBox);
+    {
+        /* グラフラベルの設定項目 */
+        QWidget *labelSettingWidget = new QWidget(this);
+        QVBoxLayout *labelSettingLayout = new QVBoxLayout(labelSettingWidget);
+        QToolBox *labelToolBox = new QToolBox(labelSettingWidget);
+        settingStackWidget->addWidget(labelSettingWidget);
+        labelSettingWidget->setLayout(labelSettingLayout);
+        labelSettingLayout->addWidget(labelToolBox);
         for(qsizetype i = 0; i < plotTableRanges.size(); ++i)
         {
             QWidget *toolBoxWidget = new QWidget(labelToolBox);
-            QVBoxLayout *toolBoxLayout = new QVBoxLayout;
+            QVBoxLayout *toolBoxLayout = new QVBoxLayout(toolBoxWidget);
             QCheckBox *checkLabelVisible = new QCheckBox("Show label", toolBoxWidget);
             QCheckBox *checkLabelPointsVisible = new QCheckBox("Show label points", toolBoxWidget);
-            labelToolBox->addItem(toolBoxWidget, "series" + QString::number(i));
+            QSpacerItem *verticalSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+            labelToolBox->addItem(toolBoxWidget, "series " + QString::number(i));
             toolBoxWidget->setLayout(toolBoxLayout);
             toolBoxLayout->addWidget(checkLabelVisible);
             toolBoxLayout->addWidget(checkLabelPointsVisible);
+            toolBoxLayout->addItem(verticalSpacer);
             connect(checkLabelVisible, &QCheckBox::toggled, qobject_cast<QXYSeries*>(graph->series().at(i)), &QXYSeries::setPointsVisible);
             connect(checkLabelPointsVisible, &QCheckBox::toggled, qobject_cast<QXYSeries*>(graph->series().at(i)), &QXYSeries::setPointLabelsVisible);
             qobject_cast<QXYSeries*>(graph->series().at(i))->setPointLabelsClipping(false);
         }
+    }
+    {
+        /* グラフ軸の設定項目 */
+        QWidget *axisSettingWidget = new QWidget(this);
+        QVBoxLayout *axisSettingLayout = new QVBoxLayout(axisSettingWidget);
+        QGroupBox *xAxisGroupBox = new QGroupBox("X Axis", axisSettingWidget);
+        QGroupBox *yAxisGroupBox = new QGroupBox("Y Axis", axisSettingWidget);
+        QSpacerItem *verticalSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+        settingStackWidget->addWidget(axisSettingWidget);
+        axisSettingWidget->setLayout(axisSettingLayout);
+        axisSettingLayout->addWidget(xAxisGroupBox);
+        axisSettingLayout->addWidget(yAxisGroupBox);
+        axisSettingLayout->addItem(verticalSpacer);
+        /* x軸 */
+        QVBoxLayout *xAxisLayout = new QVBoxLayout(xAxisGroupBox);
+        QHBoxLayout *rangeXLayout = new QHBoxLayout();
+        QLabel *minXLabel = new QLabel("min", xAxisGroupBox);
+        QLineEdit *minXEdit = new QLineEdit(xAxisGroupBox);
+        QLabel *maxXLabel = new QLabel("max", xAxisGroupBox);
+        QLineEdit *maxXEdit = new QLineEdit(xAxisGroupBox);
+        xAxisGroupBox->setLayout(xAxisLayout);
+        xAxisLayout->addLayout(rangeXLayout);
+        rangeXLayout->addWidget(minXLabel);
+        rangeXLayout->addWidget(minXEdit);
+        rangeXLayout->addWidget(maxXLabel);
+        rangeXLayout->addWidget(maxXEdit);
+        minXEdit->setMaximumWidth(30);
+        minXEdit->setText(QString::number(qobject_cast<QValueAxis*>(graph->axes(Qt::Horizontal).constLast())->min()));
+        maxXEdit->setMaximumWidth(30);
+        maxXEdit->setText(QString::number(qobject_cast<QValueAxis*>(graph->axes(Qt::Horizontal).constLast())->max()));
+        connect(minXEdit, &QLineEdit::textEdited, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setMin);
+        connect(maxXEdit, &QLineEdit::textEdited, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setMax);
+        /* y軸 */
+        QVBoxLayout *yAxisLayout = new QVBoxLayout(yAxisGroupBox);
+        QHBoxLayout *rangeYLayout = new QHBoxLayout();
+        QLabel *minYLabel = new QLabel("min", yAxisGroupBox);
+        QLineEdit *minYEdit = new QLineEdit(yAxisGroupBox);
+        QLabel *maxYLabel = new QLabel("max", yAxisGroupBox);
+        QLineEdit *maxYEdit = new QLineEdit(yAxisGroupBox);
+        yAxisGroupBox->setLayout(yAxisLayout);
+        yAxisLayout->addLayout(rangeYLayout);
+        rangeYLayout->addWidget(minYLabel);
+        rangeYLayout->addWidget(minYEdit);
+        rangeYLayout->addWidget(maxYLabel);
+        rangeYLayout->addWidget(maxYEdit);
+        minYEdit->setMaximumWidth(30);
+        minYEdit->setText(QString::number(qobject_cast<QValueAxis*>(graph->axes(Qt::Vertical).constLast())->min()));
+        maxYEdit->setMaximumWidth(30);
+        maxYEdit->setText(QString::number(qobject_cast<QValueAxis*>(graph->axes(Qt::Vertical).constLast())->max()));
+        connect(minYEdit, &QLineEdit::textEdited, graph->axes(Qt::Vertical).constLast(), &QAbstractAxis::setMin);
+        connect(maxYEdit, &QLineEdit::textEdited, graph->axes(Qt::Vertical).constLast(), &QAbstractAxis::setMax);
     }
 }
 
