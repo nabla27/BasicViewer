@@ -277,6 +277,8 @@ void Graph2DSeries::initializeGraphLayout()
         QLineEdit *xAxisNameEdit = new QLineEdit(xAxisGroupBox);
         QSpacerItem *xAxisNameSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
 
+        QCheckBox *checkHorizontalLabelVisible = new QCheckBox("Show label", yAxisGroupBox);
+
         QHBoxLayout *horizontalLabelAngleLayout = new QHBoxLayout();
         QLabel *horizontalLabelAngleLabel = new QLabel("Label angle", xAxisGroupBox);
         QLineEdit *horizontalLabelAngleEdit = new QLineEdit(xAxisGroupBox);
@@ -312,6 +314,8 @@ void Graph2DSeries::initializeGraphLayout()
         xAxisNameLayout->addWidget(xAxisNameEdit);
         xAxisNameLayout->addItem(xAxisNameSpacer);
 
+        xAxisLayout->addWidget(checkHorizontalLabelVisible);
+
         xAxisLayout->addLayout(horizontalLabelAngleLayout);
         horizontalLabelAngleLayout->addWidget(horizontalLabelAngleLabel);
         horizontalLabelAngleLayout->addWidget(horizontalLabelAngleEdit);
@@ -334,7 +338,9 @@ void Graph2DSeries::initializeGraphLayout()
         maxXLabel->setMinimumWidth(LabelWidth);
         maxXEdit->setMaximumWidth(EditWidth1);
         xAxisNameLabel->setMinimumWidth(LabelWidth);
+        checkHorizontalLabelVisible->setChecked(true);
         horizontalLabelAngleEdit->setText("0");
+        horizontalLabelAngleEdit->setMaximumWidth(EditWidth1);
         horizontalLabelAngleLabel->setMinimumWidth(LabelWidth);
         horizontalLabelColorLabel->setMinimumWidth(LabelWidth);
         horizontalLabelColorCombo->insertItems(0, colorNameList);
@@ -356,6 +362,11 @@ void Graph2DSeries::initializeGraphLayout()
             connect(this, &Graph2DSeries::updateGraphSeries, setMinXEdit);
             connect(this, &Graph2DSeries::updateGraphSeries, setMaxXEdit);
             connect(xAxisNameEdit, &QLineEdit::textEdited, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setTitleText);
+            connect(checkHorizontalLabelVisible, &QCheckBox::toggled, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setLabelsVisible);
+            connect(checkHorizontalLabelVisible, &QCheckBox::toggled, horizontalLabelAngleLabel, &QLabel::setVisible);
+            connect(checkHorizontalLabelVisible, &QCheckBox::toggled, horizontalLabelAngleEdit, &QLineEdit::setVisible);
+            connect(checkHorizontalLabelVisible, &QCheckBox::toggled, horizontalLabelColorLabel, &QLabel::setVisible);
+            connect(checkHorizontalLabelVisible, &QCheckBox::toggled, horizontalLabelColorCombo, &QComboBox::setVisible);
             connect(horizontalLabelAngleEdit, &QLineEdit::textEdited, [this, horizontalLabelAngleEdit](){
                 graph->axes(Qt::Horizontal).constLast()->setLabelsAngle(horizontalLabelAngleEdit->text().toInt());
             });
@@ -386,6 +397,8 @@ void Graph2DSeries::initializeGraphLayout()
         QLabel *yAxisNameLabel = new QLabel("Axis name", yAxisGroupBox);
         QLineEdit *yAxisNameEdit = new QLineEdit(yAxisGroupBox);
         QSpacerItem *yAxisNameSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
+
+        QCheckBox *checkVerticalLabelVisible = new QCheckBox("Show label", yAxisGroupBox);
 
         QHBoxLayout *verticalLabelAngleLayout = new QHBoxLayout();
         QLabel *verticalLabelAngleLabel = new QLabel("Label angle", yAxisGroupBox);
@@ -421,6 +434,8 @@ void Graph2DSeries::initializeGraphLayout()
         yAxisNameLayout->addWidget(yAxisNameEdit);
         yAxisNameLayout->addItem(yAxisNameSpacer);
 
+        yAxisLayout->addWidget(checkVerticalLabelVisible);
+
         yAxisLayout->addLayout(verticalLabelAngleLayout);
         verticalLabelAngleLayout->addWidget(verticalLabelAngleLabel);
         verticalLabelAngleLayout->addWidget(verticalLabelAngleEdit);
@@ -443,8 +458,10 @@ void Graph2DSeries::initializeGraphLayout()
         maxYLabel->setMinimumWidth(LabelWidth);
         maxYEdit->setMaximumWidth(EditWidth1);
         yAxisNameLabel->setMinimumWidth(LabelWidth);
+        checkVerticalLabelVisible->setChecked(true);
         verticalLabelAngleLabel->setMinimumWidth(LabelWidth);
         verticalLabelAngleEdit->setText("0");
+        verticalLabelAngleEdit->setMaximumWidth(EditWidth1);
         verticalLabelColorLabel->setMinimumWidth(LabelWidth);
         verticalLabelColorCombo->insertItems(0, colorNameList);
         verticalLabelColorCombo->setCurrentIndex(2);              //black
@@ -465,6 +482,11 @@ void Graph2DSeries::initializeGraphLayout()
             connect(this, &Graph2DSeries::updateGraphSeries, setMinYEdit);
             connect(this, &Graph2DSeries::updateGraphSeries, setMaxYEdit);
             connect(yAxisNameEdit, &QLineEdit::textEdited, graph->axes(Qt::Vertical).constLast(), &QAbstractAxis::setTitleText);
+            connect(checkVerticalLabelVisible, &QCheckBox::toggled, graph->axes(Qt::Vertical).constLast(), &QAbstractAxis::setVisible);
+            connect(checkVerticalLabelVisible, &QCheckBox::toggled, verticalLabelAngleLabel, &QLabel::setVisible);
+            connect(checkVerticalLabelVisible, &QCheckBox::toggled, verticalLabelAngleEdit, &QLineEdit::setVisible);
+            connect(checkVerticalLabelVisible, &QCheckBox::toggled, verticalLabelColorLabel, &QLabel::setVisible);
+            connect(checkVerticalLabelVisible, &QCheckBox::toggled, verticalLabelColorCombo, &QComboBox::setVisible);
             connect(verticalLabelAngleEdit, &QLineEdit::textEdited, [this, verticalLabelAngleEdit](){
                 graph->axes(Qt::Vertical).constLast()->setLabelsAngle(verticalLabelAngleEdit->text().toInt());
             });
@@ -479,8 +501,6 @@ void Graph2DSeries::initializeGraphLayout()
             });
         }
         //graph->axes(Qt::Vertical).constLast()->setShadesVisible(true);
-        //graph->axes(Qt::Vertical).constLast()->setLabelsAngle(20);
-        //graph->axes(Qt::Vertical).constLast()->setLabelsColor(Qt::red);
     }
 }
 
