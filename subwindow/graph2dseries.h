@@ -16,6 +16,7 @@
 #include <QComboBox>
 #include <QSpacerItem>
 #include <QValueAxis>
+#include <QSpinBox>
 #include "tablewidget.h"
 
 class Graph2DSeries : public QWidget
