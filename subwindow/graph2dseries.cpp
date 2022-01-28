@@ -141,7 +141,8 @@ void Graph2DSeries::initializeGraphLayout()
     setLayout(mainLayout);
 
     /* 右側の設定部分のレイアウト */
-    const int labelWidth = 54;
+#define LabelWidth 60
+#define EditWidth1 35
     {
         selectPageCombo->addItem("Graph");
         selectPageCombo->addItem("Legend");
@@ -153,30 +154,36 @@ void Graph2DSeries::initializeGraphLayout()
         /* グラフの設定項目 */
         QWidget *graphSettingWidget = new QWidget(this);
         QVBoxLayout *graphSettingLayout = new QVBoxLayout(graphSettingWidget);
+
         QHBoxLayout *titleEditLayout = new QHBoxLayout();
         QLabel *titleEditLabel = new QLabel("Title", graphSettingWidget);
         QLineEdit *titleEdit = new QLineEdit(graphSettingWidget);
         QSpacerItem *horizontalTitleEditSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
+
         QHBoxLayout *themeSetLayout = new QHBoxLayout();
         QLabel *themeSetLabel = new QLabel("Theme", graphSettingWidget);
         QComboBox *themeSetCombo = new QComboBox(graphSettingWidget);
         QSpacerItem *horizontalThemeSetSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
+
         QSpacerItem *verticalSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
         settingStackWidget->addWidget(graphSettingWidget);
         graphSettingWidget->setLayout(graphSettingLayout);
+
         graphSettingLayout->addLayout(titleEditLayout);
         titleEditLayout->addWidget(titleEditLabel);
         titleEditLayout->addWidget(titleEdit);
         titleEditLayout->addItem(horizontalTitleEditSpacer);
+
         graphSettingLayout->addLayout(themeSetLayout);
         themeSetLayout->addWidget(themeSetLabel);
         themeSetLayout->addWidget(themeSetCombo);
         themeSetLayout->addItem(horizontalThemeSetSpacer);
+
         graphSettingLayout->addItem(verticalSpacer);
 
-        titleEditLabel->setMinimumWidth(labelWidth);
-        themeSetLabel->setMinimumWidth(labelWidth);
+        titleEditLabel->setMinimumWidth(LabelWidth);
+        themeSetLabel->setMinimumWidth(LabelWidth);
         themeSetCombo->insertItems(0, themeNameList);
 
         connect(titleEdit, &QLineEdit::textEdited, graph, &QChart::setTitle);
@@ -254,49 +261,74 @@ void Graph2DSeries::initializeGraphLayout()
         axisSettingLayout->addItem(verticalSpacer);
         /* x軸 */
         QVBoxLayout *xAxisLayout = new QVBoxLayout(xAxisGroupBox);
+
         QHBoxLayout *rangeMinXLayout = new QHBoxLayout();
         QLabel *minXLabel = new QLabel("Min", xAxisGroupBox);
         QLineEdit *minXEdit = new QLineEdit(xAxisGroupBox);
         QSpacerItem *horizontalMinXSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
+
         QHBoxLayout *rangeMaxXLayout = new QHBoxLayout();
         QLabel *maxXLabel = new QLabel("Max", xAxisGroupBox); maxXLabel->setFrameShadow(QFrame::Plain);
         QLineEdit *maxXEdit = new QLineEdit(xAxisGroupBox);
         QSpacerItem *horizontalMaxXSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
+
         QHBoxLayout *xAxisNameLayout = new QHBoxLayout();
         QLabel *xAxisNameLabel = new QLabel("Axis name", yAxisGroupBox);
         QLineEdit *xAxisNameEdit = new QLineEdit(xAxisGroupBox);
+        QSpacerItem *xAxisNameSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
+
+        QHBoxLayout *horizontalLabelAngleLayout = new QHBoxLayout();
+        QLabel *horizontalLabelAngleLabel = new QLabel("Label angle", xAxisGroupBox);
+        QLineEdit *horizontalLabelAngleEdit = new QLineEdit(xAxisGroupBox);
+        QSpacerItem *horizontalLabelAngleSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
+
         QCheckBox *checkShowAxisHorizontalGrid = new QCheckBox("Show horizontal grid", xAxisGroupBox);
+
         QHBoxLayout *horizontalGridColorLayout = new QHBoxLayout();
         QLabel *horizontalGridColorLabel = new QLabel("Grid color", xAxisGroupBox);
         QComboBox *horizontalGridColorCombo = new QComboBox(xAxisGroupBox);
         QSpacerItem *horizontalGridColorSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
 
         xAxisGroupBox->setLayout(xAxisLayout);
+
         xAxisLayout->addLayout(rangeMinXLayout);
         rangeMinXLayout->addWidget(minXLabel);
         rangeMinXLayout->addWidget(minXEdit);
         rangeMinXLayout->addItem(horizontalMinXSpacer);
+
         xAxisLayout->addLayout(rangeMaxXLayout);
         rangeMaxXLayout->addWidget(maxXLabel);
         rangeMaxXLayout->addWidget(maxXEdit);
         rangeMaxXLayout->addItem(horizontalMaxXSpacer);
+
         xAxisLayout->addLayout(xAxisNameLayout);
         xAxisNameLayout->addWidget(xAxisNameLabel);
         xAxisNameLayout->addWidget(xAxisNameEdit);
+        xAxisNameLayout->addItem(xAxisNameSpacer);
+
+        xAxisLayout->addLayout(horizontalLabelAngleLayout);
+        horizontalLabelAngleLayout->addWidget(horizontalLabelAngleLabel);
+        horizontalLabelAngleLayout->addWidget(horizontalLabelAngleEdit);
+        horizontalLabelAngleLayout->addItem(horizontalLabelAngleSpacer);
+
         xAxisLayout->addWidget(checkShowAxisHorizontalGrid);
+
         xAxisLayout->addLayout(horizontalGridColorLayout);
         horizontalGridColorLayout->addWidget(horizontalGridColorLabel);
         horizontalGridColorLayout->addWidget(horizontalGridColorCombo);
         horizontalGridColorLayout->addItem(horizontalGridColorSpacer);
 
-        minXLabel->setMinimumWidth(labelWidth);
-        minXEdit->setMaximumWidth(30);
-        maxXLabel->setMinimumWidth(labelWidth);
-        maxXEdit->setMaximumWidth(30);
-        checkShowAxisHorizontalGrid->setChecked(true);
-        horizontalGridColorLabel->setMinimumWidth(labelWidth);
+        minXLabel->setMinimumWidth(LabelWidth);
+        minXEdit->setMaximumWidth(EditWidth1);
+        maxXLabel->setMinimumWidth(LabelWidth);
+        maxXEdit->setMaximumWidth(EditWidth1);
+        xAxisNameLabel->setMinimumWidth(LabelWidth);
+        horizontalGridColorLabel->setMinimumWidth(LabelWidth);
         horizontalGridColorCombo->insertItems(0, colorNameList);
         horizontalGridColorCombo->setCurrentIndex(6);
+        horizontalLabelAngleEdit->setText("0");
+        horizontalLabelAngleLabel->setMinimumWidth(LabelWidth);
+        checkShowAxisHorizontalGrid->setChecked(true);
 
         if(plotTableRanges.size() > 0){
             auto setMinXEdit = [minXEdit, this](){ minXEdit->setText(QString::number(qobject_cast<QValueAxis*>(graph->axes(Qt::Horizontal).constLast())->min())); };
@@ -310,7 +342,12 @@ void Graph2DSeries::initializeGraphLayout()
             connect(this, &Graph2DSeries::updateGraphSeries, setMinXEdit);
             connect(this, &Graph2DSeries::updateGraphSeries, setMaxXEdit);
             connect(xAxisNameEdit, &QLineEdit::textEdited, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setTitleText);
+            connect(horizontalLabelAngleEdit, &QLineEdit::textEdited, [this, horizontalLabelAngleEdit](){
+                graph->axes(Qt::Horizontal).constLast()->setLabelsAngle(horizontalLabelAngleEdit->text().toInt());
+            });
             connect(checkShowAxisHorizontalGrid, &QCheckBox::toggled, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setGridLineVisible);
+            connect(checkShowAxisHorizontalGrid, &QCheckBox::toggled, horizontalGridColorLabel, &QLabel::setVisible);
+            connect(checkShowAxisHorizontalGrid, &QCheckBox::toggled, horizontalGridColorCombo, &QComboBox::setVisible);
             connect(horizontalGridColorCombo, &QComboBox::currentIndexChanged, [this, horizontalGridColorCombo](){
                 graph->axes(Qt::Horizontal).constLast()->setGridLineColor(Qt::GlobalColor(horizontalGridColorCombo->currentIndex()));
             });
@@ -328,6 +365,10 @@ void Graph2DSeries::initializeGraphLayout()
         QHBoxLayout *yAxisNameLayout = new QHBoxLayout();
         QLabel *yAxisNameLabel = new QLabel("Axis name", yAxisGroupBox);
         QLineEdit *yAxisNameEdit = new QLineEdit(yAxisGroupBox);
+        QHBoxLayout *verticalLabelAngleLayout = new QHBoxLayout();
+        QLabel *verticalLabelAngleLabel = new QLabel("Label angle", yAxisGroupBox);
+        QLineEdit *verticalLabelAngleEdit = new QLineEdit(yAxisGroupBox);
+        QSpacerItem *verticalLabelAngleSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
         QCheckBox *checkShowAxisVerticalGrid = new QCheckBox("Show vertical grid", xAxisGroupBox);
         QHBoxLayout *verticalGridColorLayout = new QHBoxLayout();
         QLabel *verticalGridColorLabel = new QLabel("Grid color", yAxisGroupBox);
@@ -346,18 +387,25 @@ void Graph2DSeries::initializeGraphLayout()
         yAxisLayout->addLayout(yAxisNameLayout);
         yAxisNameLayout->addWidget(yAxisNameLabel);
         yAxisNameLayout->addWidget(yAxisNameEdit);
+        yAxisLayout->addLayout(verticalLabelAngleLayout);
+        verticalLabelAngleLayout->addWidget(verticalLabelAngleLabel);
+        verticalLabelAngleLayout->addWidget(verticalLabelAngleEdit);
+        verticalLabelAngleLayout->addItem(verticalLabelAngleSpacer);
+        yAxisLayout->addWidget(checkShowAxisVerticalGrid);
         yAxisLayout->addLayout(verticalGridColorLayout);
         verticalGridColorLayout->addWidget(verticalGridColorLabel);
         verticalGridColorLayout->addWidget(verticalGridColorCombo);
         verticalGridColorLayout->addItem(verticalGridColorSpacer);
 
-        minYLabel->setMinimumWidth(labelWidth);
-        yAxisLayout->addWidget(checkShowAxisVerticalGrid);
-        minYEdit->setMaximumWidth(30);
-        maxYLabel->setMinimumWidth(labelWidth);
-        maxYEdit->setMaximumWidth(30);
+        minYLabel->setMinimumWidth(LabelWidth);
+        minYEdit->setMaximumWidth(EditWidth1);
+        maxYLabel->setMinimumWidth(LabelWidth);
+        maxYEdit->setMaximumWidth(EditWidth1);
+        yAxisNameLabel->setMinimumWidth(LabelWidth);
+        verticalLabelAngleLabel->setMinimumWidth(LabelWidth);
+        verticalLabelAngleEdit->setText("0");
         checkShowAxisVerticalGrid->setChecked(true);
-        verticalGridColorLabel->setMinimumWidth(labelWidth);
+        verticalGridColorLabel->setMinimumWidth(LabelWidth);
         verticalGridColorCombo->insertItems(0, colorNameList);
         verticalGridColorCombo->setCurrentIndex(6);
 
@@ -373,7 +421,12 @@ void Graph2DSeries::initializeGraphLayout()
             connect(this, &Graph2DSeries::updateGraphSeries, setMinYEdit);
             connect(this, &Graph2DSeries::updateGraphSeries, setMaxYEdit);
             connect(yAxisNameEdit, &QLineEdit::textEdited, graph->axes(Qt::Vertical).constLast(), &QAbstractAxis::setTitleText);
+            connect(verticalLabelAngleEdit, &QLineEdit::textEdited, [this, verticalLabelAngleEdit](){
+                graph->axes(Qt::Vertical).constLast()->setLabelsAngle(verticalLabelAngleEdit->text().toInt());
+            });
             connect(checkShowAxisVerticalGrid, &QCheckBox::toggled, graph->axes(Qt::Vertical).constLast(), &QAbstractAxis::setGridLineVisible);
+            connect(checkShowAxisVerticalGrid, &QCheckBox::toggled, verticalGridColorLabel, &QLabel::setVisible);
+            connect(checkShowAxisVerticalGrid, &QCheckBox::toggled, verticalGridColorCombo, &QComboBox::setVisible);
             connect(verticalGridColorCombo, &QComboBox::currentIndexChanged, [this, verticalGridColorCombo](){
                 graph->axes(Qt::Vertical).constLast()->setGridLineColor(Qt::GlobalColor(verticalGridColorCombo->currentIndex()));
             });
