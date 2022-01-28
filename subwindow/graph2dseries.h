@@ -59,6 +59,9 @@ private:
 
 private slots:
     void changeLegendVisible(bool visible);
+
+signals:
+    void updateGraphSeries();
 };
 
 
