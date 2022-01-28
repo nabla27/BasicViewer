@@ -134,14 +134,14 @@ void Graph2DSeries::initializeGraphLayout()
     vLayout->addWidget(selectPageCombo);
     vLayout->addWidget(settingStackWidget);
 
-    /* メインのレイアウト。各Widget(vLayout,graphView)が水平方向に配列される */
+    /* メインのレイアウト。各Widget(graphView, settingScrollArea)が水平方向に配列される */
     QHBoxLayout *mainLayout = new QHBoxLayout(this);
     mainLayout->addWidget(graphView, Qt::AlignTop);
     mainLayout->addWidget(settingScrollArea);
     setLayout(mainLayout);
 
     /* 右側の設定部分のレイアウト */
-#define LabelWidth 60
+#define LabelWidth 80
 #define EditWidth1 35
     {
         selectPageCombo->addItem("Graph");
@@ -277,6 +277,11 @@ void Graph2DSeries::initializeGraphLayout()
         QLineEdit *xAxisNameEdit = new QLineEdit(xAxisGroupBox);
         QSpacerItem *xAxisNameSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
 
+        QHBoxLayout *xAxisNameSizeLayout = new QHBoxLayout();
+        QLabel *xAxisNameSizeLabel = new QLabel("Axis name size", yAxisGroupBox);
+        QSpinBox *xAxisNameSizeSpin = new QSpinBox(yAxisGroupBox);
+        QSpacerItem *xAxisNameSizeSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
+
         QCheckBox *checkHorizontalLabelVisible = new QCheckBox("Show label", yAxisGroupBox);
 
         QHBoxLayout *horizontalLabelAngleLayout = new QHBoxLayout();
@@ -318,6 +323,11 @@ void Graph2DSeries::initializeGraphLayout()
         xAxisNameLayout->addWidget(xAxisNameEdit);
         xAxisNameLayout->addItem(xAxisNameSpacer);
 
+        xAxisLayout->addLayout(xAxisNameSizeLayout);
+        xAxisNameSizeLayout->addWidget(xAxisNameSizeLabel);
+        xAxisNameSizeLayout->addWidget(xAxisNameSizeSpin);
+        xAxisNameSizeLayout->addItem(xAxisNameSizeSpacer);
+
         xAxisLayout->addWidget(checkHorizontalLabelVisible);
 
         xAxisLayout->addLayout(horizontalLabelAngleLayout);
@@ -347,6 +357,7 @@ void Graph2DSeries::initializeGraphLayout()
         maxXLabel->setMinimumWidth(LabelWidth);
         maxXEdit->setMaximumWidth(EditWidth1);
         xAxisNameLabel->setMinimumWidth(LabelWidth);
+        xAxisNameSizeLabel->setMinimumWidth(LabelWidth);
         checkHorizontalLabelVisible->setChecked(true);
         horizontalLabelAngleEdit->setText("0");
         horizontalLabelAngleEdit->setMaximumWidth(EditWidth1);
@@ -365,6 +376,7 @@ void Graph2DSeries::initializeGraphLayout()
             auto setMaxXEdit = [maxXEdit, this](){ maxXEdit->setText(QString::number(qobject_cast<QValueAxis*>(graph->axes(Qt::Horizontal).constLast())->max())); };
             setMinXEdit();
             setMaxXEdit();
+            xAxisNameSizeSpin->setValue(graph->axes(Qt::Horizontal).constLast()->titleFont().pointSize());
             horizontalLabelSizeSpin->setValue(graph->axes(Qt::Horizontal).constLast()->labelsFont().pointSize());
 
             connect(minXEdit, &QLineEdit::textEdited, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setMin);
@@ -374,6 +386,10 @@ void Graph2DSeries::initializeGraphLayout()
             connect(this, &Graph2DSeries::updateGraphSeries, setMinXEdit);
             connect(this, &Graph2DSeries::updateGraphSeries, setMaxXEdit);
             connect(xAxisNameEdit, &QLineEdit::textEdited, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setTitleText);
+            connect(xAxisNameSizeSpin, &QSpinBox::valueChanged, [this, xAxisNameSizeSpin](){
+                QFont xAxisNameFont; xAxisNameFont.setPointSize(xAxisNameSizeSpin->value());
+                graph->axes(Qt::Horizontal).constLast()->setTitleFont(xAxisNameFont);
+            });
             connect(checkHorizontalLabelVisible, &QCheckBox::toggled, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setLabelsVisible);
             connect(checkHorizontalLabelVisible, &QCheckBox::toggled, horizontalLabelAngleLabel, &QLabel::setVisible);
             connect(checkHorizontalLabelVisible, &QCheckBox::toggled, horizontalLabelAngleEdit, &QLineEdit::setVisible);
@@ -416,6 +432,11 @@ void Graph2DSeries::initializeGraphLayout()
         QLineEdit *yAxisNameEdit = new QLineEdit(yAxisGroupBox);
         QSpacerItem *yAxisNameSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
 
+        QHBoxLayout *yAxisNameSizeLayout = new QHBoxLayout();
+        QLabel *yAxisNameSizeLabel = new QLabel("Axis name size", yAxisGroupBox);
+        QSpinBox *yAxisNameSizeSpin = new QSpinBox(yAxisGroupBox);
+        QSpacerItem *yAxisNameSizeSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
+
         QCheckBox *checkVerticalLabelVisible = new QCheckBox("Show label", yAxisGroupBox);
 
         QHBoxLayout *verticalLabelAngleLayout = new QHBoxLayout();
@@ -457,6 +478,11 @@ void Graph2DSeries::initializeGraphLayout()
         yAxisNameLayout->addWidget(yAxisNameEdit);
         yAxisNameLayout->addItem(yAxisNameSpacer);
 
+        yAxisLayout->addLayout(yAxisNameSizeLayout);
+        yAxisNameSizeLayout->addWidget(yAxisNameSizeLabel);
+        yAxisNameSizeLayout->addWidget(yAxisNameSizeSpin);
+        yAxisNameSizeLayout->addItem(yAxisNameSizeSpacer);
+
         yAxisLayout->addWidget(checkVerticalLabelVisible);
 
         yAxisLayout->addLayout(verticalLabelAngleLayout);
@@ -486,6 +512,7 @@ void Graph2DSeries::initializeGraphLayout()
         maxYLabel->setMinimumWidth(LabelWidth);
         maxYEdit->setMaximumWidth(EditWidth1);
         yAxisNameLabel->setMinimumWidth(LabelWidth);
+        yAxisNameSizeLabel->setMinimumWidth(LabelWidth);
         checkVerticalLabelVisible->setChecked(true);
         verticalLabelAngleLabel->setMinimumWidth(LabelWidth);
         verticalLabelAngleEdit->setText("0");
@@ -504,6 +531,7 @@ void Graph2DSeries::initializeGraphLayout()
             auto setMaxYEdit = [this, maxYEdit](){ maxYEdit->setText(QString::number(qobject_cast<QValueAxis*>(graph->axes(Qt::Vertical).constLast())->max())); };
             setMinYEdit();
             setMaxYEdit();
+            yAxisNameSizeSpin->setValue(graph->axes(Qt::Vertical).constLast()->titleFont().pointSize());
             verticalLabelSizeSpin->setValue(graph->axes(Qt::Vertical).constLast()->labelsFont().pointSize());
 
             connect(minYEdit, &QLineEdit::textEdited, graph->axes(Qt::Vertical).constLast(), &QAbstractAxis::setMin);
@@ -513,6 +541,10 @@ void Graph2DSeries::initializeGraphLayout()
             connect(this, &Graph2DSeries::updateGraphSeries, setMinYEdit);
             connect(this, &Graph2DSeries::updateGraphSeries, setMaxYEdit);
             connect(yAxisNameEdit, &QLineEdit::textEdited, graph->axes(Qt::Vertical).constLast(), &QAbstractAxis::setTitleText);
+            connect(yAxisNameSizeSpin, &QSpinBox::valueChanged, [this, yAxisNameSizeSpin](){
+                QFont yAxisNameFont; yAxisNameFont.setPointSize(yAxisNameSizeSpin->value());
+                graph->axes(Qt::Vertical).constLast()->setTitleFont(yAxisNameFont);
+            });
             connect(checkVerticalLabelVisible, &QCheckBox::toggled, graph->axes(Qt::Vertical).constLast(), &QAbstractAxis::setVisible);
             connect(checkVerticalLabelVisible, &QCheckBox::toggled, verticalLabelAngleLabel, &QLabel::setVisible);
             connect(checkVerticalLabelVisible, &QCheckBox::toggled, verticalLabelAngleEdit, &QLineEdit::setVisible);
