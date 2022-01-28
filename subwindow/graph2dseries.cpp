@@ -141,6 +141,7 @@ void Graph2DSeries::initializeGraphLayout()
     setLayout(mainLayout);
 
     /* 右側の設定部分のレイアウト */
+    const int labelWidth = 54;
     {
         selectPageCombo->addItem("Graph");
         selectPageCombo->addItem("Legend");
@@ -149,16 +150,39 @@ void Graph2DSeries::initializeGraphLayout()
         connect(selectPageCombo, &QComboBox::activated, settingStackWidget, &QStackedWidget::setCurrentIndex);
     }
     {
-        /* グラフタイトルの設定項目 */
-        QWidget *titleSettingWidget = new QWidget(this);
-        QVBoxLayout *titleSettingLayout = new QVBoxLayout(titleSettingWidget);
-        QLineEdit *titleEdit = new QLineEdit(titleSettingWidget);
+        /* グラフの設定項目 */
+        QWidget *graphSettingWidget = new QWidget(this);
+        QVBoxLayout *graphSettingLayout = new QVBoxLayout(graphSettingWidget);
+        QHBoxLayout *titleEditLayout = new QHBoxLayout();
+        QLabel *titleEditLabel = new QLabel("Title", graphSettingWidget);
+        QLineEdit *titleEdit = new QLineEdit(graphSettingWidget);
+        QSpacerItem *horizontalTitleEditSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
+        QHBoxLayout *themeSetLayout = new QHBoxLayout();
+        QLabel *themeSetLabel = new QLabel("Theme", graphSettingWidget);
+        QComboBox *themeSetCombo = new QComboBox(graphSettingWidget);
+        QSpacerItem *horizontalThemeSetSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
         QSpacerItem *verticalSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
-        settingStackWidget->addWidget(titleSettingWidget);
-        titleSettingWidget->setLayout(titleSettingLayout);
-        titleSettingLayout->addWidget(titleEdit, Qt::AlignTop);
-        titleSettingLayout->addItem(verticalSpacer);
+
+        settingStackWidget->addWidget(graphSettingWidget);
+        graphSettingWidget->setLayout(graphSettingLayout);
+        graphSettingLayout->addLayout(titleEditLayout);
+        titleEditLayout->addWidget(titleEditLabel);
+        titleEditLayout->addWidget(titleEdit);
+        titleEditLayout->addItem(horizontalTitleEditSpacer);
+        graphSettingLayout->addLayout(themeSetLayout);
+        themeSetLayout->addWidget(themeSetLabel);
+        themeSetLayout->addWidget(themeSetCombo);
+        themeSetLayout->addItem(horizontalThemeSetSpacer);
+        graphSettingLayout->addItem(verticalSpacer);
+
+        titleEditLabel->setMinimumWidth(labelWidth);
+        themeSetLabel->setMinimumWidth(labelWidth);
+        themeSetCombo->insertItems(0, themeNameList);
+
         connect(titleEdit, &QLineEdit::textEdited, graph, &QChart::setTitle);
+        connect(themeSetCombo, &QComboBox::currentIndexChanged, [this, themeSetCombo](){
+            graph->setTheme(QChart::ChartTheme(themeSetCombo->currentIndex()));
+        });
     }
     {
         /* グラフ凡例の設定項目 */
@@ -166,18 +190,22 @@ void Graph2DSeries::initializeGraphLayout()
         QVBoxLayout *legendSettingLayout = new QVBoxLayout(legendSettingWidget);
         QCheckBox *checkBoxShowLegend = new QCheckBox("show legend", legendSettingWidget);
         QLabel *legendTextEditLabel = new QLabel("・text", legendSettingWidget);
+
         settingStackWidget->addWidget(legendSettingWidget);
         legendSettingWidget->setLayout(legendSettingLayout);
         legendSettingLayout->addWidget(checkBoxShowLegend);
         legendSettingLayout->addWidget(legendTextEditLabel);
+
         connect(checkBoxShowLegend, &QCheckBox::toggled, this, &Graph2DSeries::changeLegendVisible);
         connect(checkBoxShowLegend, &QCheckBox::toggled, legendTextEditLabel, &QLabel::setVisible);
+
         for(qsizetype i = 0; i < plotTableRanges.size(); ++i){
             legendNameEdit[i] = new QLineEdit(legendSettingWidget);
             legendSettingLayout->addWidget(legendNameEdit.at(i));
             connect(legendNameEdit.at(i), &QLineEdit::textEdited, graph->series().at(i), &QAbstractSeries::setName);
             legendNameEdit.at(i)->setVisible(false);
         }
+
         QSpacerItem *verticalSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
         legendSettingLayout->addItem(verticalSpacer);
     }
@@ -186,9 +214,11 @@ void Graph2DSeries::initializeGraphLayout()
         QWidget *labelSettingWidget = new QWidget(this);
         QVBoxLayout *labelSettingLayout = new QVBoxLayout(labelSettingWidget);
         QToolBox *labelToolBox = new QToolBox(labelSettingWidget);
+
         settingStackWidget->addWidget(labelSettingWidget);
         labelSettingWidget->setLayout(labelSettingLayout);
         labelSettingLayout->addWidget(labelToolBox);
+
         for(qsizetype i = 0; i < plotTableRanges.size(); ++i)
         {
             QWidget *toolBoxWidget = new QWidget(labelToolBox);
@@ -196,13 +226,16 @@ void Graph2DSeries::initializeGraphLayout()
             QCheckBox *checkLabelVisible = new QCheckBox("Show label", toolBoxWidget);
             QCheckBox *checkLabelPointsVisible = new QCheckBox("Show label points", toolBoxWidget);
             QSpacerItem *verticalSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+
             labelToolBox->addItem(toolBoxWidget, "series " + QString::number(i));
             toolBoxWidget->setLayout(toolBoxLayout);
             toolBoxLayout->addWidget(checkLabelVisible);
             toolBoxLayout->addWidget(checkLabelPointsVisible);
             toolBoxLayout->addItem(verticalSpacer);
+
             connect(checkLabelVisible, &QCheckBox::toggled, qobject_cast<QXYSeries*>(graph->series().at(i)), &QXYSeries::setPointsVisible);
             connect(checkLabelPointsVisible, &QCheckBox::toggled, qobject_cast<QXYSeries*>(graph->series().at(i)), &QXYSeries::setPointLabelsVisible);
+
             qobject_cast<QXYSeries*>(graph->series().at(i))->setPointLabelsClipping(false);
         }
     }
@@ -213,13 +246,13 @@ void Graph2DSeries::initializeGraphLayout()
         QGroupBox *xAxisGroupBox = new QGroupBox("X Axis", axisSettingWidget);
         QGroupBox *yAxisGroupBox = new QGroupBox("Y Axis", axisSettingWidget);
         QSpacerItem *verticalSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+
         settingStackWidget->addWidget(axisSettingWidget);
         axisSettingWidget->setLayout(axisSettingLayout);
         axisSettingLayout->addWidget(xAxisGroupBox);
         axisSettingLayout->addWidget(yAxisGroupBox);
         axisSettingLayout->addItem(verticalSpacer);
         /* x軸 */
-        const int labelWidth = 54;
         QVBoxLayout *xAxisLayout = new QVBoxLayout(xAxisGroupBox);
         QHBoxLayout *rangeMinXLayout = new QHBoxLayout();
         QLabel *minXLabel = new QLabel("Min", xAxisGroupBox);
@@ -396,5 +429,17 @@ const QList<QString> Graph2DSeries::colorNameList =
     "darkMagenta",
     "darkYello",
     "transparent"
+};
+
+const QList<QString> Graph2DSeries::themeNameList =
+{
+    "light",
+    "blueCerulean",
+    "dark",
+    "brownSand",
+    "blueNcs",
+    "highContrast",
+    "blueIcy",
+    "qt"
 };
 

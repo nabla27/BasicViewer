@@ -55,6 +55,7 @@ private:
     QVBoxLayout *legendBoxLayout;
     QList<QLineEdit*> legendNameEdit;
     static const QList<QString> colorNameList;
+    static const QList<QString> themeNameList;
 
 private slots:
     void changeLegendVisible(bool visible);
