@@ -272,6 +272,8 @@ void Graph2DSeries::initializeGraphLayout()
         QLineEdit *maxXEdit = new QLineEdit(xAxisGroupBox);
         QSpacerItem *horizontalMaxXSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
 
+        QCheckBox *checkXAxisNameVisible = new QCheckBox("Show axis name", xAxisGroupBox);
+
         QHBoxLayout *xAxisNameLayout = new QHBoxLayout();
         QLabel *xAxisNameLabel = new QLabel("Axis name", yAxisGroupBox);
         QLineEdit *xAxisNameEdit = new QLineEdit(xAxisGroupBox);
@@ -318,6 +320,8 @@ void Graph2DSeries::initializeGraphLayout()
         rangeMaxXLayout->addWidget(maxXEdit);
         rangeMaxXLayout->addItem(horizontalMaxXSpacer);
 
+        xAxisLayout->addWidget(checkXAxisNameVisible);
+
         xAxisLayout->addLayout(xAxisNameLayout);
         xAxisNameLayout->addWidget(xAxisNameLabel);
         xAxisNameLayout->addWidget(xAxisNameEdit);
@@ -356,6 +360,7 @@ void Graph2DSeries::initializeGraphLayout()
         minXEdit->setMaximumWidth(EditWidth1);
         maxXLabel->setMinimumWidth(LabelWidth);
         maxXEdit->setMaximumWidth(EditWidth1);
+        checkXAxisNameVisible->setChecked(true);
         xAxisNameLabel->setMinimumWidth(LabelWidth);
         xAxisNameSizeLabel->setMinimumWidth(LabelWidth);
         checkHorizontalLabelVisible->setChecked(true);
@@ -385,6 +390,11 @@ void Graph2DSeries::initializeGraphLayout()
             connect(qobject_cast<QValueAxis*>(graph->axes(Qt::Horizontal).constLast()), &QValueAxis::maxChanged, setMaxXEdit);
             connect(this, &Graph2DSeries::updateGraphSeries, setMinXEdit);
             connect(this, &Graph2DSeries::updateGraphSeries, setMaxXEdit);
+            connect(checkXAxisNameVisible, &QCheckBox::toggled, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setTitleVisible);
+            connect(checkXAxisNameVisible, &QCheckBox::toggled, xAxisNameLabel, &QLabel::setVisible);
+            connect(checkXAxisNameVisible, &QCheckBox::toggled, xAxisNameEdit, &QLineEdit::setVisible);
+            connect(checkXAxisNameVisible, &QCheckBox::toggled, xAxisNameSizeLabel, &QLabel::setVisible);
+            connect(checkXAxisNameVisible, &QCheckBox::toggled, xAxisNameSizeSpin, &QSpinBox::setVisible);
             connect(xAxisNameEdit, &QLineEdit::textEdited, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setTitleText);
             connect(xAxisNameSizeSpin, &QSpinBox::valueChanged, [this, xAxisNameSizeSpin](){
                 QFont xAxisNameFont; xAxisNameFont.setPointSize(xAxisNameSizeSpin->value());
@@ -426,6 +436,8 @@ void Graph2DSeries::initializeGraphLayout()
         QLabel *maxYLabel = new QLabel("Max", yAxisGroupBox);
         QLineEdit *maxYEdit = new QLineEdit(yAxisGroupBox);
         QSpacerItem *horizontalMaxYSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
+
+        QCheckBox *checkYAxisNameVisible = new QCheckBox("Show axis name", yAxisGroupBox);
 
         QHBoxLayout *yAxisNameLayout = new QHBoxLayout();
         QLabel *yAxisNameLabel = new QLabel("Axis name", yAxisGroupBox);
@@ -473,6 +485,8 @@ void Graph2DSeries::initializeGraphLayout()
         rangeMaxYLayout->addWidget(maxYEdit);
         rangeMaxYLayout->addItem(horizontalMaxYSpacer);
 
+        yAxisLayout->addWidget(checkYAxisNameVisible);
+
         yAxisLayout->addLayout(yAxisNameLayout);
         yAxisNameLayout->addWidget(yAxisNameLabel);
         yAxisNameLayout->addWidget(yAxisNameEdit);
@@ -511,6 +525,7 @@ void Graph2DSeries::initializeGraphLayout()
         minYEdit->setMaximumWidth(EditWidth1);
         maxYLabel->setMinimumWidth(LabelWidth);
         maxYEdit->setMaximumWidth(EditWidth1);
+        checkYAxisNameVisible->setChecked(true);
         yAxisNameLabel->setMinimumWidth(LabelWidth);
         yAxisNameSizeLabel->setMinimumWidth(LabelWidth);
         checkVerticalLabelVisible->setChecked(true);
@@ -540,6 +555,11 @@ void Graph2DSeries::initializeGraphLayout()
             connect(qobject_cast<QValueAxis*>(graph->axes(Qt::Vertical).constLast()), &QValueAxis::maxChanged, setMaxYEdit);
             connect(this, &Graph2DSeries::updateGraphSeries, setMinYEdit);
             connect(this, &Graph2DSeries::updateGraphSeries, setMaxYEdit);
+            connect(checkYAxisNameVisible, &QCheckBox::toggled, graph->axes(Qt::Vertical).constLast(), &QAbstractAxis::setTitleVisible);
+            connect(checkYAxisNameVisible, &QCheckBox::toggled, yAxisNameLabel, &QLabel::setVisible);
+            connect(checkYAxisNameVisible, &QCheckBox::toggled, yAxisNameEdit, &QLineEdit::setVisible);
+            connect(checkYAxisNameVisible, &QCheckBox::toggled, yAxisNameSizeLabel, &QLabel::setVisible);
+            connect(checkYAxisNameVisible, &QCheckBox::toggled, yAxisNameSizeSpin, &QSpinBox::setVisible);
             connect(yAxisNameEdit, &QLineEdit::textEdited, graph->axes(Qt::Vertical).constLast(), &QAbstractAxis::setTitleText);
             connect(yAxisNameSizeSpin, &QSpinBox::valueChanged, [this, yAxisNameSizeSpin](){
                 QFont yAxisNameFont; yAxisNameFont.setPointSize(yAxisNameSizeSpin->value());
