@@ -23,6 +23,7 @@
 #include <QInputDialog>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QColor>
 #include "tablewidget.h"
 
 class Graph2DSeries : public QWidget
@@ -63,6 +64,7 @@ private:
     static const QList<QString> colorNameList;
     static const QList<QString> themeNameList;
     static const QList<QString> imgFormatList();
+    static const QColor rgbStrToColor(QString str);
 
 private slots:
     void changeLegendVisible(bool visible);
@@ -71,5 +73,47 @@ signals:
     void graphSeriesUpdated();
 };
 
+
+
+
+
+
+
+
+
+
+
+class RGBEditLayout : public QHBoxLayout
+{
+    Q_OBJECT
+
+public:
+    RGBEditLayout(QWidget *parent = nullptr);
+
+public:
+    void setLabelMinimumWidth(const int width) { label->setMinimumWidth(width); }
+    void setEditMaximumWidth(const int width) { rEdit->setMaximumWidth(width);
+                                                gEdit->setMaximumWidth(width);
+                                                bEdit->setMaximumWidth(width); }
+
+public slots:
+    void setColor(const QColor& color);
+    void setColor(int eNum);
+    void setVisible(bool visible);
+    void setReadOnly(bool readOnly);
+
+signals:
+    void colorEdited(const QColor& color);
+
+private:
+    QColor getColor() { return QColor(rEdit->text().toInt(), gEdit->text().toInt(), bEdit->text().toInt()); }
+
+private:
+    QLabel *label;
+    QLineEdit *rEdit;
+    QLineEdit *gEdit;
+    QLineEdit *bEdit;
+    QSpacerItem *spacer;
+};
 
 #endif // GRAPH2DSERIES_H

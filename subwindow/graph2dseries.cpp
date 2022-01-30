@@ -210,27 +210,45 @@ void Graph2DSeries::initializeGraphLayout()
 
         for(qsizetype i = 0; i < plotTableRanges.size(); ++i)
         {
-            QWidget *toolBoxWidget = new QWidget(seriesSettingTab);
-            QVBoxLayout *toolBoxLayout = new QVBoxLayout(toolBoxWidget);
-            QSpacerItem *toolBoxSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+            QWidget *tabWidget = new QWidget(seriesSettingTab);
+            QVBoxLayout *tabWidgetLayout = new QVBoxLayout(tabWidget);
+            QSpacerItem *tabSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
             QHBoxLayout *seriesLineColorLayout = new QHBoxLayout();
-            QLabel *seriesLineColorLabel = new QLabel("Line color", toolBoxWidget);
-            QComboBox *seriesLineColorCombo = new QComboBox(toolBoxWidget);
+            QLabel *seriesLineColorLabel = new QLabel("Line color", tabWidget);
+            QComboBox *seriesLineColorCombo = new QComboBox(tabWidget);
             QSpacerItem *seriesLineColorSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
 
-            seriesSettingTab->addTab(toolBoxWidget, "series " + QString::number(i));
-            toolBoxWidget->setLayout(toolBoxLayout);
+            RGBEditLayout *seriesLineColorCustomLayout = new RGBEditLayout(tabWidget);
 
-            toolBoxLayout->addLayout(seriesLineColorLayout);
+            seriesSettingTab->addTab(tabWidget, "series " + QString::number(i));
+            tabWidget->setLayout(tabWidgetLayout);
+
+            tabWidgetLayout->addLayout(seriesLineColorLayout);
             seriesLineColorLayout->addWidget(seriesLineColorLabel);
             seriesLineColorLayout->addWidget(seriesLineColorCombo);
             seriesLineColorLayout->addItem(seriesLineColorSpacer);
 
-            toolBoxLayout->addItem(toolBoxSpacer);
+            tabWidgetLayout->addLayout(seriesLineColorCustomLayout);
+
+            tabWidgetLayout->addItem(tabSpacer);
 
             seriesLineColorLabel->setMinimumWidth(LabelWidth);
             seriesLineColorCombo->insertItems(0, colorNameList);
+            seriesLineColorCustomLayout->setLabelMinimumWidth(LabelWidth);
+            seriesLineColorCustomLayout->setEditMaximumWidth(EditWidth1 - 10);
+            seriesLineColorCustomLayout->setReadOnly(true);
+            seriesLineColorCustomLayout->setColor(qobject_cast<QXYSeries*>(graph->series().at(i))->color());
+
+            connect(seriesLineColorCombo, &QComboBox::currentIndexChanged, [=](){
+                const int index = seriesLineColorCombo->currentIndex();
+                if(index > 19) { seriesLineColorCustomLayout->setReadOnly(false); return; }
+                qobject_cast<QXYSeries*>(graph->series().at(i))->setColor(Qt::GlobalColor(index));
+                seriesLineColorCustomLayout->setColor(index);
+                seriesLineColorCustomLayout->setReadOnly(true);
+            });
+            connect(seriesLineColorCustomLayout, &RGBEditLayout::colorEdited,
+                    qobject_cast<QXYSeries*>(graph->series().at(i)), &QXYSeries::setColor);
         }
     }
     {
@@ -757,26 +775,27 @@ void Graph2DSeries::changeLegendVisible(bool visible)
 
 const QList<QString> Graph2DSeries::colorNameList =
 {
-    "color0",
+    "color0",        //0
     "color1",
     "black",
     "white",
     "darkGray",
-    "gray",
+    "gray",          //5
     "lightGray",
     "red",
     "green",
     "blue",
-    "cyan",
+    "cyan",          //10
     "magenta",
     "yellow",
     "darkRed",
     "darkGreen",
-    "darkBlue",
+    "darkBlue",      //15
     "darkCyan",
     "darkMagenta",
     "darkYello",
-    "transparent"
+    "transparent",
+    "custom",        //20
 };
 
 const QList<QString> Graph2DSeries::themeNameList =
@@ -801,3 +820,96 @@ const QList<QString> Graph2DSeries::imgFormatList()
 
     return imgFormatList;
 }
+
+const QColor Graph2DSeries::rgbStrToColor(QString str)
+{
+    const QStringList rgbList = str.remove(' ').split(";");
+    const qsizetype count = rgbList.size();
+
+    const int red = (count > 0) ? rgbList.at(0).toInt() : 0;
+    const int green = (count > 1) ? rgbList.at(1).toInt() : 0;
+    const int blue = (count > 2) ? rgbList.at(1).toInt() : 0;
+
+    return QColor(red, green, blue);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+RGBEditLayout::RGBEditLayout(QWidget *parent)
+{
+    label = new QLabel(parent);
+    rEdit = new QLineEdit(parent);
+    gEdit = new QLineEdit(parent);
+    bEdit = new QLineEdit(parent);
+    spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
+
+    addWidget(label);
+    addWidget(rEdit);
+    addWidget(gEdit);
+    addWidget(bEdit);
+    addItem(spacer);
+
+    connect(rEdit, &QLineEdit::textEdited, [this](){ emit colorEdited(getColor()); });
+    connect(gEdit, &QLineEdit::textEdited, [this](){ emit colorEdited(getColor()); });
+    connect(bEdit, &QLineEdit::textEdited, [this](){ emit colorEdited(getColor()); });
+}
+
+void RGBEditLayout::setColor(const QColor& color)
+{
+    rEdit->setText(QString::number(color.red()));
+    gEdit->setText(QString::number(color.green()));
+    bEdit->setText(QString::number(color.blue()));
+}
+
+void RGBEditLayout::setColor(int eNum)
+{
+    QColor color = Qt::GlobalColor(eNum);
+    rEdit->setText(QString::number(color.red()));
+    gEdit->setText(QString::number(color.green()));
+    bEdit->setText(QString::number(color.blue()));
+}
+
+void RGBEditLayout::setVisible(bool visible)
+{
+    label->setVisible(visible);
+    rEdit->setVisible(visible);
+    gEdit->setVisible(visible);
+    bEdit->setVisible(visible);
+}
+
+void RGBEditLayout::setReadOnly(bool readOnly)
+{
+    rEdit->setReadOnly(readOnly);
+    gEdit->setReadOnly(readOnly);
+    bEdit->setReadOnly(readOnly);
+}
+
+
+
+
+
+
+
+
+
+
+
