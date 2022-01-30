@@ -118,9 +118,10 @@ void Graph2DSeries::initializeGraph()
 
 void Graph2DSeries::initializeGraphLayout()
 {
+    setGeometry(0, 0, 620, 240);
+
     /* レイアウトのグラフ部分 */
-    graphView = new QChartView(graph);
-    graphView->setMinimumSize(320, 240);
+    graphView = new QChartView(graph);   //graphViewのウィンドウサイズは4:3がいい感じ
 
     /* レイアウトの右側設定部分 */
     QScrollArea *settingScrollArea = new QScrollArea(this);
