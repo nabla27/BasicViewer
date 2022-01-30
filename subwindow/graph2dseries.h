@@ -22,6 +22,7 @@
 #include <QImageWriter>
 #include <QInputDialog>
 #include <QFileDialog>
+#include <QMessageBox>
 #include "tablewidget.h"
 
 class Graph2DSeries : public QWidget
@@ -65,7 +66,6 @@ private:
 
 private slots:
     void changeLegendVisible(bool visible);
-    void exportGraphImage();
 
 signals:
     void updateGraphSeries();

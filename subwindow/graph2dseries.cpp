@@ -664,6 +664,17 @@ void Graph2DSeries::initializeGraphLayout()
 
             imageFormatLabel->setMinimumWidth(LabelWidth);
             imageFormatCombo->insertItems(0, imgFormatList());
+
+            connect(imageExportButton, &QPushButton::released, [=](){
+                const QString direcotryPath = QFileDialog::getExistingDirectory(this);
+                const QString imageFormat = imageFormatCombo->currentText();
+
+                QImage img = graphView->grab().toImage();
+                const bool success = img.save(direcotryPath + "/" + exportFileNameEdit->text() + "." + imageFormat, imageFormat.toLocal8Bit().constData());
+                if(!success){
+                    QMessageBox::critical(this, "Error", "Failed to save.                                            ");
+                }
+            });
         }
     }
 }
@@ -702,23 +713,6 @@ void Graph2DSeries::changeLegendVisible(bool visible)
     for(qsizetype i = 0; i < plotTableRanges.size(); ++i)
         legendNameEdit[i]->setVisible(visible);
 }
-
-void Graph2DSeries::exportGraphImage()
-{
-    bool ok = false;
-    QInputDialog::getItem(this, "export image", "select the image format", imgFormatList(), 0, false, &ok);
-
-    if(!ok) return;
-
-    const QString directoryPath = QFileDialog::getExistingDirectory(this);
-
-    QPixmap graphPixmap = graphView->grab();
-    QImage graphImage = graphPixmap.toImage();
-    qDebug() << graphImage.format();
-}
-
-
-
 
 const QList<QString> Graph2DSeries::colorNameList =
 {
