@@ -17,6 +17,11 @@
 #include <QSpacerItem>
 #include <QValueAxis>
 #include <QSpinBox>
+#include <QPushButton>
+#include <QPixmap>
+#include <QImageWriter>
+#include <QInputDialog>
+#include <QFileDialog>
 #include "tablewidget.h"
 
 class Graph2DSeries : public QWidget
@@ -35,8 +40,7 @@ private:
 
 private:
     QChart *graph;
-    //QVBoxLayout *vLayout;
-    //QStackedWidget *settingWidget;
+    QChartView *graphView;
     TableWidget *table;
     QString sheetName;
     QMetaObject::Connection changedTableAction;
@@ -57,9 +61,11 @@ private:
     QList<QLineEdit*> legendNameEdit;
     static const QList<QString> colorNameList;
     static const QList<QString> themeNameList;
+    static const QList<QString> imgFormatList();
 
 private slots:
     void changeLegendVisible(bool visible);
+    void exportGraphImage();
 
 signals:
     void updateGraphSeries();

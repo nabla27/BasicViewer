@@ -119,7 +119,7 @@ void Graph2DSeries::initializeGraph()
 void Graph2DSeries::initializeGraphLayout()
 {
     /* レイアウトのグラフ部分 */
-    QChartView *graphView = new QChartView(graph);
+    graphView = new QChartView(graph);
     graphView->setMinimumSize(320, 240);
 
     /* レイアウトの右側設定部分 */
@@ -148,11 +148,12 @@ void Graph2DSeries::initializeGraphLayout()
         selectPageCombo->addItem("Legend");
         selectPageCombo->addItem("Label");
         selectPageCombo->addItem("Axis");
+        selectPageCombo->addItem("Export");
         connect(selectPageCombo, &QComboBox::activated, settingStackWidget, &QStackedWidget::setCurrentIndex);
     }
     {
         /* グラフの設定項目 */
-        QWidget *graphSettingWidget = new QWidget(this);
+        QWidget *graphSettingWidget = new QWidget(settingStackWidget);
         QVBoxLayout *graphSettingLayout = new QVBoxLayout(graphSettingWidget);
 
         QHBoxLayout *titleEditLayout = new QHBoxLayout();
@@ -193,7 +194,7 @@ void Graph2DSeries::initializeGraphLayout()
     }
     {
         /* グラフ凡例の設定項目 */
-        QWidget *legendSettingWidget = new QWidget(this);
+        QWidget *legendSettingWidget = new QWidget(settingStackWidget);
         QVBoxLayout *legendSettingLayout = new QVBoxLayout(legendSettingWidget);
         QCheckBox *checkBoxShowLegend = new QCheckBox("show legend", legendSettingWidget);
         QLabel *legendTextEditLabel = new QLabel("・text", legendSettingWidget);
@@ -218,7 +219,7 @@ void Graph2DSeries::initializeGraphLayout()
     }
     {
         /* グラフラベルの設定項目 */
-        QWidget *labelSettingWidget = new QWidget(this);
+        QWidget *labelSettingWidget = new QWidget(settingStackWidget);
         QVBoxLayout *labelSettingLayout = new QVBoxLayout(labelSettingWidget);
         QToolBox *labelToolBox = new QToolBox(labelSettingWidget);
 
@@ -248,7 +249,7 @@ void Graph2DSeries::initializeGraphLayout()
     }
     {
         /* グラフ軸の設定項目 */
-        QWidget *axisSettingWidget = new QWidget(this);
+        QWidget *axisSettingWidget = new QWidget(settingStackWidget);
         QVBoxLayout *axisSettingLayout = new QVBoxLayout(axisSettingWidget);
         QGroupBox *xAxisGroupBox = new QGroupBox("X Axis", axisSettingWidget);
         QGroupBox *yAxisGroupBox = new QGroupBox("Y Axis", axisSettingWidget);
@@ -591,6 +592,80 @@ void Graph2DSeries::initializeGraphLayout()
         }
         //graph->axes(Qt::Vertical).constLast()->setShadesVisible(true);
     }
+    {   /* グラフの出力設定項目 */
+        QWidget *exportSettingWidget = new QWidget(settingStackWidget);
+        QVBoxLayout *exportSettingLayout = new QVBoxLayout(exportSettingWidget);
+
+        QHBoxLayout *exportFileNameLayout = new QHBoxLayout();
+        QLabel *exportFileNameLabel = new QLabel("File name", exportSettingWidget);
+        QLineEdit *exportFileNameEdit = new QLineEdit("file", exportSettingWidget);
+        QSpacerItem *exportFileNameSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
+
+        QHBoxLayout *exportTypeLayout = new QHBoxLayout();
+        QLabel *exportTypeLabel = new QLabel("Export to", exportSettingWidget);
+        QComboBox *exportTypeCombo = new QComboBox(exportSettingWidget);
+        QSpacerItem *exportTypeSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
+
+        QStackedWidget *exportStackWidget = new QStackedWidget(exportSettingWidget);
+
+        QSpacerItem *exportSettingSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+
+        settingStackWidget->addWidget(exportSettingWidget);
+        exportSettingWidget->setLayout(exportSettingLayout);
+
+        exportSettingLayout->addLayout(exportFileNameLayout);
+        exportFileNameLayout->addWidget(exportFileNameLabel);
+        exportFileNameLayout->addWidget(exportFileNameEdit);
+        exportFileNameLayout->addItem(exportFileNameSpacer);
+
+        exportSettingLayout->addLayout(exportTypeLayout);
+        exportTypeLayout->addWidget(exportTypeLabel);
+        exportTypeLayout->addWidget(exportTypeCombo);
+        exportTypeLayout->addItem(exportTypeSpacer);
+
+        exportSettingLayout->addWidget(exportStackWidget);
+
+        exportSettingLayout->addItem(exportSettingSpacer);
+
+        exportFileNameLabel->setMinimumWidth(LabelWidth);
+        exportTypeLabel->setMinimumWidth(LabelWidth);
+        exportTypeCombo->insertItems(0, QStringList() << "Image");
+
+        connect(exportTypeCombo, &QComboBox::currentIndexChanged, exportStackWidget, &QStackedWidget::setCurrentIndex);
+
+        { /* Image */
+            QGroupBox *exportImageWidget = new QGroupBox("Image", exportStackWidget);
+            QVBoxLayout *exportImageLayout = new QVBoxLayout(exportImageWidget);
+
+            QHBoxLayout *imageFormatLayout = new QHBoxLayout();
+            QLabel *imageFormatLabel = new QLabel("Format", exportImageWidget);
+            QComboBox *imageFormatCombo = new QComboBox(exportImageWidget);
+            QSpacerItem *imageFormatSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
+
+            QSpacerItem *imageExportFixedSpacer = new QSpacerItem(0, 40, QSizePolicy::Minimum, QSizePolicy::Fixed);
+
+            QPushButton *imageExportButton = new QPushButton("Export", exportImageWidget);
+
+            QSpacerItem *exportImageSpacer = new QSpacerItem(0, 0, QSizePolicy::Maximum, QSizePolicy::Expanding);
+
+            exportStackWidget->addWidget(exportImageWidget);
+            exportImageWidget->setLayout(exportImageLayout);
+
+            exportImageLayout->addLayout(imageFormatLayout);
+            imageFormatLayout->addWidget(imageFormatLabel);
+            imageFormatLayout->addWidget(imageFormatCombo);
+            imageFormatLayout->addItem(imageFormatSpacer);
+
+            exportImageLayout->addItem(imageExportFixedSpacer);
+
+            exportImageLayout->addWidget(imageExportButton);
+
+            exportImageLayout->addItem(exportImageSpacer);
+
+            imageFormatLabel->setMinimumWidth(LabelWidth);
+            imageFormatCombo->insertItems(0, imgFormatList());
+        }
+    }
 }
 
 void Graph2DSeries::setGraphSeries()
@@ -628,6 +703,23 @@ void Graph2DSeries::changeLegendVisible(bool visible)
         legendNameEdit[i]->setVisible(visible);
 }
 
+void Graph2DSeries::exportGraphImage()
+{
+    bool ok = false;
+    QInputDialog::getItem(this, "export image", "select the image format", imgFormatList(), 0, false, &ok);
+
+    if(!ok) return;
+
+    const QString directoryPath = QFileDialog::getExistingDirectory(this);
+
+    QPixmap graphPixmap = graphView->grab();
+    QImage graphImage = graphPixmap.toImage();
+    qDebug() << graphImage.format();
+}
+
+
+
+
 const QList<QString> Graph2DSeries::colorNameList =
 {
     "color0",
@@ -664,3 +756,13 @@ const QList<QString> Graph2DSeries::themeNameList =
     "qt"
 };
 
+const QList<QString> Graph2DSeries::imgFormatList()
+{
+    QList<QString> imgFormatList;
+    for(const QByteArray& byte : QImageWriter::supportedImageFormats())
+    {
+        imgFormatList << byte.constData();
+    }
+
+    return imgFormatList;
+}
