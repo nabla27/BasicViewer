@@ -63,6 +63,8 @@ Graph2DSeries::Graph2DSeries(TableWidget *table, QWidget *parent)
         if(this->table->getSheetName() == sheetName) updateGraphData();
     });
 
+    raise();
+
     /* ウィンドウが閉じられたら自動でdelete */
     setAttribute(Qt::WA_DeleteOnClose);
 }
@@ -146,6 +148,7 @@ void Graph2DSeries::initializeGraphLayout()
 #define EditWidth1 35
     {
         selectPageCombo->addItem("Graph");
+        selectPageCombo->addItem("Series");
         selectPageCombo->addItem("Legend");
         selectPageCombo->addItem("Label");
         selectPageCombo->addItem("Axis");
@@ -192,6 +195,43 @@ void Graph2DSeries::initializeGraphLayout()
         connect(themeSetCombo, &QComboBox::currentIndexChanged, [this, themeSetCombo](){
             graph->setTheme(QChart::ChartTheme(themeSetCombo->currentIndex()));
         });
+    }
+    {
+        /* seriesの設定項目 */
+        QWidget *seriesSettingWidget = new QWidget(settingStackWidget);
+        QVBoxLayout *seriesSettingLayout = new QVBoxLayout(seriesSettingWidget);
+        QTabWidget *seriesSettingTab = new QTabWidget(seriesSettingWidget);
+        QSpacerItem *seriesSettingSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+
+        settingStackWidget->addWidget(seriesSettingWidget);
+        seriesSettingWidget->setLayout(seriesSettingLayout);
+        seriesSettingLayout->addWidget(seriesSettingTab);
+        seriesSettingLayout->addItem(seriesSettingSpacer);
+
+        for(qsizetype i = 0; i < plotTableRanges.size(); ++i)
+        {
+            QWidget *toolBoxWidget = new QWidget(seriesSettingTab);
+            QVBoxLayout *toolBoxLayout = new QVBoxLayout(toolBoxWidget);
+            QSpacerItem *toolBoxSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+
+            QHBoxLayout *seriesLineColorLayout = new QHBoxLayout();
+            QLabel *seriesLineColorLabel = new QLabel("Line color", toolBoxWidget);
+            QComboBox *seriesLineColorCombo = new QComboBox(toolBoxWidget);
+            QSpacerItem *seriesLineColorSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
+
+            seriesSettingTab->addTab(toolBoxWidget, "series " + QString::number(i));
+            toolBoxWidget->setLayout(toolBoxLayout);
+
+            toolBoxLayout->addLayout(seriesLineColorLayout);
+            seriesLineColorLayout->addWidget(seriesLineColorLabel);
+            seriesLineColorLayout->addWidget(seriesLineColorCombo);
+            seriesLineColorLayout->addItem(seriesLineColorSpacer);
+
+            toolBoxLayout->addItem(toolBoxSpacer);
+
+            seriesLineColorLabel->setMinimumWidth(LabelWidth);
+            seriesLineColorCombo->insertItems(0, colorNameList);
+        }
     }
     {
         /* グラフ凡例の設定項目 */
@@ -390,8 +430,8 @@ void Graph2DSeries::initializeGraphLayout()
             connect(maxXEdit, &QLineEdit::textEdited, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setMax);
             connect(qobject_cast<QValueAxis*>(graph->axes(Qt::Horizontal).constLast()), &QValueAxis::minChanged, setMinXEdit);
             connect(qobject_cast<QValueAxis*>(graph->axes(Qt::Horizontal).constLast()), &QValueAxis::maxChanged, setMaxXEdit);
-            connect(this, &Graph2DSeries::updateGraphSeries, setMinXEdit);
-            connect(this, &Graph2DSeries::updateGraphSeries, setMaxXEdit);
+            connect(this, &Graph2DSeries::graphSeriesUpdated, setMinXEdit);
+            connect(this, &Graph2DSeries::graphSeriesUpdated, setMaxXEdit);
             connect(checkXAxisNameVisible, &QCheckBox::toggled, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setTitleVisible);
             connect(checkXAxisNameVisible, &QCheckBox::toggled, xAxisNameLabel, &QLabel::setVisible);
             connect(checkXAxisNameVisible, &QCheckBox::toggled, xAxisNameEdit, &QLineEdit::setVisible);
@@ -555,8 +595,8 @@ void Graph2DSeries::initializeGraphLayout()
             connect(maxYEdit, &QLineEdit::textEdited, graph->axes(Qt::Vertical).constLast(), &QAbstractAxis::setMax);
             connect(qobject_cast<QValueAxis*>(graph->axes(Qt::Vertical).constLast()), &QValueAxis::minChanged, setMinYEdit);
             connect(qobject_cast<QValueAxis*>(graph->axes(Qt::Vertical).constLast()), &QValueAxis::maxChanged, setMaxYEdit);
-            connect(this, &Graph2DSeries::updateGraphSeries, setMinYEdit);
-            connect(this, &Graph2DSeries::updateGraphSeries, setMaxYEdit);
+            connect(this, &Graph2DSeries::graphSeriesUpdated, setMinYEdit);
+            connect(this, &Graph2DSeries::graphSeriesUpdated, setMaxYEdit);
             connect(checkYAxisNameVisible, &QCheckBox::toggled, graph->axes(Qt::Vertical).constLast(), &QAbstractAxis::setTitleVisible);
             connect(checkYAxisNameVisible, &QCheckBox::toggled, yAxisNameLabel, &QLabel::setVisible);
             connect(checkYAxisNameVisible, &QCheckBox::toggled, yAxisNameEdit, &QLineEdit::setVisible);
@@ -695,6 +735,8 @@ void Graph2DSeries::setGraphSeries()
 
         graph->addSeries(series);
     }
+
+    emit graphSeriesUpdated();
 }
 
 void Graph2DSeries::updateGraphData()
@@ -704,8 +746,6 @@ void Graph2DSeries::updateGraphData()
     setGraphSeries();
 
     graph->createDefaultAxes();
-
-    emit updateGraphSeries();
 }
 
 void Graph2DSeries::changeLegendVisible(bool visible)
