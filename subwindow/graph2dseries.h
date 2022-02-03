@@ -88,7 +88,7 @@ class RGBEditLayout : public QHBoxLayout
     Q_OBJECT
 
 public:
-    RGBEditLayout(QWidget *parent = nullptr);
+    RGBEditLayout(QWidget *parent);
 
 public:
     void setLabelMinimumWidth(const int width) { label->setMinimumWidth(width); }
@@ -115,5 +115,122 @@ private:
     QLineEdit *bEdit;
     QSpacerItem *spacer;
 };
+
+
+
+
+
+
+class ComboEditLayout : public QHBoxLayout
+{
+    Q_OBJECT
+
+public:
+    ComboEditLayout(QWidget *parent, const QString& text = "");
+
+public:
+    void setLabelMinimumWidth(const int width) { label->setMinimumWidth(width); }
+    void setComboMaximumWidth(const int width) { combo->setMaximumWidth(width); }
+    void insertComboItems(int index, const QStringList& texts) { combo->insertItems(index, texts); }
+    int currentComboIndex() const { return combo->currentIndex(); }
+
+public slots:
+    void setComboCurrentIndex(const int index) { combo->setCurrentIndex(index); }
+    void setVisible(bool visible);
+
+signals:
+    void currentIndexChanged(int index);
+
+private:
+    QLabel *label;
+    QComboBox *combo;
+    QSpacerItem *spacer;
+};
+
+
+
+
+class LineEditLayout : public QHBoxLayout
+{
+    Q_OBJECT
+
+public:
+    LineEditLayout(QWidget *parent, const QString& text = "");
+
+public:
+    void setLabelMinimumWidth(const int width) { label->setMinimumWidth(width); }
+    void setLineEditMaximumWidth(const int width) { lineEdit->setMaximumWidth(width); }
+    QString lineEditText() const { return lineEdit->text(); }
+
+public slots:
+    void setLineEditText(const QString& text) { lineEdit->setText(text); }
+    void setVisible(bool visible);
+
+signals:
+    void lineTextEdited(const QString& text);
+
+private:
+    QLabel *label;
+    QLineEdit *lineEdit;
+    QSpacerItem *spacer;
+};
+
+
+
+
+
+class SpinBoxEditLayout : public QHBoxLayout
+{
+    Q_OBJECT
+
+public:
+    SpinBoxEditLayout(QWidget *parent, const QString& text = "");
+
+public:
+    void setLabelMinimumWidth(const int width) { label->setMinimumWidth(width); }
+    void setSpinBoxMaximumWidth(const int width) { spinBox->setMaximumWidth(width); }
+    int spinBoxValue() const { return spinBox->value(); }
+
+public slots:
+    void setSpinBoxValue(const int value) { spinBox->setValue(value); }
+    void setVisible(bool visible);
+
+signals:
+    void spinBoxValueChanged(const int value);
+
+private:
+    QLabel *label;
+    QSpinBox *spinBox;
+    QSpacerItem *spacer;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #endif // GRAPH2DSERIES_H

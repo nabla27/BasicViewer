@@ -167,10 +167,7 @@ void Graph2DSeries::initializeGraphLayout()
         QLineEdit *titleEdit = new QLineEdit(graphSettingWidget);
         QSpacerItem *horizontalTitleEditSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
 
-        QHBoxLayout *themeSetLayout = new QHBoxLayout();
-        QLabel *themeSetLabel = new QLabel("Theme", graphSettingWidget);
-        QComboBox *themeSetCombo = new QComboBox(graphSettingWidget);
-        QSpacerItem *horizontalThemeSetSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
+        ComboEditLayout *themeSetLayout = new ComboEditLayout(graphSettingWidget, "Theme");
 
         QSpacerItem *verticalSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
@@ -183,19 +180,15 @@ void Graph2DSeries::initializeGraphLayout()
         titleEditLayout->addItem(horizontalTitleEditSpacer);
 
         graphSettingLayout->addLayout(themeSetLayout);
-        themeSetLayout->addWidget(themeSetLabel);
-        themeSetLayout->addWidget(themeSetCombo);
-        themeSetLayout->addItem(horizontalThemeSetSpacer);
 
         graphSettingLayout->addItem(verticalSpacer);
 
         titleEditLabel->setMinimumWidth(SETTING_LABEL_WIDTH);
-        themeSetLabel->setMinimumWidth(SETTING_LABEL_WIDTH);
-        themeSetCombo->insertItems(0, themeNameList);
+        themeSetLayout->insertComboItems(0, themeNameList);
 
         connect(titleEdit, &QLineEdit::textEdited, graph, &QChart::setTitle);
-        connect(themeSetCombo, &QComboBox::currentIndexChanged, [this, themeSetCombo](){
-            graph->setTheme(QChart::ChartTheme(themeSetCombo->currentIndex()));
+        connect(themeSetLayout, &ComboEditLayout::currentIndexChanged, [this, themeSetLayout](){
+            graph->setTheme(QChart::ChartTheme(themeSetLayout->currentComboIndex()));
         });
     }
     {
@@ -237,9 +230,6 @@ void Graph2DSeries::initializeGraphLayout()
 
             seriesLineColorLabel->setMinimumWidth(SETTING_LABEL_WIDTH);
             seriesLineColorCombo->insertItems(0, colorNameList);
-            seriesLineColorCustomLayout->setLabelMinimumWidth(SETTING_LABEL_WIDTH);
-            seriesLineColorCustomLayout->setEditMaximumWidth(SETTING_EDIT_WIDTH - 10);
-            seriesLineColorCustomLayout->setReadOnly(true);
             seriesLineColorCustomLayout->setColor(qobject_cast<QXYSeries*>(graph->series().at(i))->color());
 
             connect(seriesLineColorCombo, &QComboBox::currentIndexChanged, [=](){
@@ -919,6 +909,10 @@ RGBEditLayout::RGBEditLayout(QWidget *parent)
     addWidget(bEdit);
     addItem(spacer);
 
+    setReadOnly(true);
+    setEditMaximumWidth(SETTING_EDIT_WIDTH - 10);
+    setLabelMinimumWidth(SETTING_LABEL_WIDTH);
+
     connect(rEdit, &QLineEdit::textEdited, [this](){ emit colorEdited(getColor()); });
     connect(gEdit, &QLineEdit::textEdited, [this](){ emit colorEdited(getColor()); });
     connect(bEdit, &QLineEdit::textEdited, [this](){ emit colorEdited(getColor()); });
@@ -957,6 +951,78 @@ void RGBEditLayout::setReadOnly(bool readOnly)
 
 
 
+
+ComboEditLayout::ComboEditLayout(QWidget *parent, const QString& text)
+{
+    label = new QLabel(text, parent);
+    combo = new QComboBox(parent);
+    spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
+
+    addWidget(label);
+    addWidget(combo);
+    addItem(spacer);
+
+    setLabelMinimumWidth(SETTING_LABEL_WIDTH);
+
+    connect(combo, &QComboBox::currentIndexChanged, [this](){ emit currentIndexChanged(combo->currentIndex()); });
+}
+
+void ComboEditLayout::setVisible(bool visible)
+{
+    label->setVisible(visible);
+    combo->setVisible(visible);
+}
+
+
+
+
+
+LineEditLayout::LineEditLayout(QWidget *parent, const QString& text)
+{
+    label = new QLabel(text, parent);
+    lineEdit = new QLineEdit(parent);
+    spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
+
+    addWidget(label);
+    addWidget(lineEdit);
+    addItem(spacer);
+
+    setLabelMinimumWidth(SETTING_LABEL_WIDTH);
+
+    connect(lineEdit, &QLineEdit::textEdited, [this](){ emit lineTextEdited(lineEdit->text()); });
+}
+
+void LineEditLayout::setVisible(bool visible)
+{
+    label->setVisible(visible);
+    lineEdit->setVisible(visible);
+}
+
+
+
+
+
+
+SpinBoxEditLayout::SpinBoxEditLayout(QWidget *parent, const QString& text)
+{
+    label = new QLabel(text, parent);
+    spinBox = new QSpinBox(parent);
+    spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
+
+    addWidget(label);
+    addWidget(spinBox);
+    addItem(spacer);
+
+    setLabelMinimumWidth(SETTING_LABEL_WIDTH);
+
+    connect(spinBox, &QSpinBox::valueChanged, [this](){ emit spinBoxValueChanged(spinBox->value()); });
+}
+
+void SpinBoxEditLayout::setVisible(bool visible)
+{
+    label->setVisible(visible);
+    spinBox->setVisible(visible);
+}
 
 
 
