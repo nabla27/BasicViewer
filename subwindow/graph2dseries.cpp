@@ -161,33 +161,22 @@ void Graph2DSeries::initializeGraphLayout()
         /* グラフの設定項目 */
         QWidget *graphSettingWidget = new QWidget(settingStackWidget);
         QVBoxLayout *graphSettingLayout = new QVBoxLayout(graphSettingWidget);
-
-        QHBoxLayout *titleEditLayout = new QHBoxLayout();
-        QLabel *titleEditLabel = new QLabel("Title", graphSettingWidget);
-        QLineEdit *titleEdit = new QLineEdit(graphSettingWidget);
-        QSpacerItem *horizontalTitleEditSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
-
+        //追加するレイアウト
+        LineEditLayout *titleEditLayout = new LineEditLayout(graphSettingWidget, "Title");
         ComboEditLayout *themeSetLayout = new ComboEditLayout(graphSettingWidget, "Theme");
-
         QSpacerItem *verticalSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
         settingStackWidget->addWidget(graphSettingWidget);
         graphSettingWidget->setLayout(graphSettingLayout);
 
         graphSettingLayout->addLayout(titleEditLayout);
-        titleEditLayout->addWidget(titleEditLabel);
-        titleEditLayout->addWidget(titleEdit);
-        titleEditLayout->addItem(horizontalTitleEditSpacer);
-
         graphSettingLayout->addLayout(themeSetLayout);
-
         graphSettingLayout->addItem(verticalSpacer);
 
-        titleEditLabel->setMinimumWidth(SETTING_LABEL_WIDTH);
         themeSetLayout->insertComboItems(0, themeNameList);
 
-        connect(titleEdit, &QLineEdit::textEdited, graph, &QChart::setTitle);
-        connect(themeSetLayout, &ComboEditLayout::currentIndexChanged, [this, themeSetLayout](){
+        connect(titleEditLayout, &LineEditLayout::lineTextEdited, graph, &QChart::setTitle);
+        connect(themeSetLayout, &ComboEditLayout::currentComboIndexChanged, [this, themeSetLayout](){
             graph->setTheme(QChart::ChartTheme(themeSetLayout->currentComboIndex()));
         });
     }
@@ -209,31 +198,21 @@ void Graph2DSeries::initializeGraphLayout()
             QVBoxLayout *tabWidgetLayout = new QVBoxLayout(tabWidget);
             QSpacerItem *tabSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
-            QHBoxLayout *seriesLineColorLayout = new QHBoxLayout();
-            QLabel *seriesLineColorLabel = new QLabel("Line color", tabWidget);
-            QComboBox *seriesLineColorCombo = new QComboBox(tabWidget);
-            QSpacerItem *seriesLineColorSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
-
+            ComboEditLayout *seriesLineColorLayout = new ComboEditLayout(tabWidget, "Line color");
             RGBEditLayout *seriesLineColorCustomLayout = new RGBEditLayout(tabWidget);
 
             seriesSettingTab->addTab(tabWidget, "series " + QString::number(i));
             tabWidget->setLayout(tabWidgetLayout);
 
             tabWidgetLayout->addLayout(seriesLineColorLayout);
-            seriesLineColorLayout->addWidget(seriesLineColorLabel);
-            seriesLineColorLayout->addWidget(seriesLineColorCombo);
-            seriesLineColorLayout->addItem(seriesLineColorSpacer);
-
             tabWidgetLayout->addLayout(seriesLineColorCustomLayout);
-
             tabWidgetLayout->addItem(tabSpacer);
 
-            seriesLineColorLabel->setMinimumWidth(SETTING_LABEL_WIDTH);
-            seriesLineColorCombo->insertItems(0, colorNameList);
+            seriesLineColorLayout->insertComboItems(0, colorNameList);
             seriesLineColorCustomLayout->setColor(qobject_cast<QXYSeries*>(graph->series().at(i))->color());
 
-            connect(seriesLineColorCombo, &QComboBox::currentIndexChanged, [=](){
-                const int index = seriesLineColorCombo->currentIndex();
+            connect(seriesLineColorLayout, &ComboEditLayout::currentComboIndexChanged, [=](){
+                const int index = seriesLineColorLayout->currentComboIndex();
                 if(index > QT_GLOBAL_COLOR_COUNT) { seriesLineColorCustomLayout->setReadOnly(false); return; }
                 qobject_cast<QXYSeries*>(graph->series().at(i))->setColor(Qt::GlobalColor(index));
                 seriesLineColorCustomLayout->setColor(index);
@@ -311,190 +290,100 @@ void Graph2DSeries::initializeGraphLayout()
         axisSettingLayout->addWidget(xAxisGroupBox);
         axisSettingLayout->addWidget(yAxisGroupBox);
         axisSettingLayout->addItem(verticalSpacer);
+
         /* x軸 */
         QVBoxLayout *xAxisLayout = new QVBoxLayout(xAxisGroupBox);
-
-        QHBoxLayout *rangeMinXLayout = new QHBoxLayout();
-        QLabel *minXLabel = new QLabel("Min", xAxisGroupBox);
-        QLineEdit *minXEdit = new QLineEdit(xAxisGroupBox);
-        QSpacerItem *horizontalMinXSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
-
-        QHBoxLayout *rangeMaxXLayout = new QHBoxLayout();
-        QLabel *maxXLabel = new QLabel("Max", xAxisGroupBox); maxXLabel->setFrameShadow(QFrame::Plain);
-        QLineEdit *maxXEdit = new QLineEdit(xAxisGroupBox);
-        QSpacerItem *horizontalMaxXSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
-
+        LineEditLayout *rangeMinXLayout = new LineEditLayout(xAxisGroupBox, "Min");
+        LineEditLayout *rangeMaxXLayout = new LineEditLayout(xAxisGroupBox, "Max");
         QCheckBox *checkXAxisNameVisible = new QCheckBox("Show axis name", xAxisGroupBox);
-
-        QHBoxLayout *xAxisNameLayout = new QHBoxLayout();
-        QLabel *xAxisNameLabel = new QLabel("Axis name", yAxisGroupBox);
-        QLineEdit *xAxisNameEdit = new QLineEdit(xAxisGroupBox);
-        QSpacerItem *xAxisNameSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
-
-        QHBoxLayout *xAxisNameSizeLayout = new QHBoxLayout();
-        QLabel *xAxisNameSizeLabel = new QLabel("Axis name size", yAxisGroupBox);
-        QSpinBox *xAxisNameSizeSpin = new QSpinBox(yAxisGroupBox);
-        QSpacerItem *xAxisNameSizeSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
-
+        LineEditLayout *xAxisNameLayout = new LineEditLayout(xAxisGroupBox, "Axis name");
+        SpinBoxEditLayout *xAxisNameSizeLayout = new SpinBoxEditLayout(xAxisGroupBox, "Axis name size");
         QCheckBox *checkHorizontalLabelVisible = new QCheckBox("Show label", yAxisGroupBox);
-
-        QHBoxLayout *horizontalLabelAngleLayout = new QHBoxLayout();
-        QLabel *horizontalLabelAngleLabel = new QLabel("Label angle", xAxisGroupBox);
-        QLineEdit *horizontalLabelAngleEdit = new QLineEdit(xAxisGroupBox);
-        QSpacerItem *horizontalLabelAngleSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
-
-        QHBoxLayout *horizontalLabelColorLayout = new QHBoxLayout();
-        QLabel *horizontalLabelColorLabel = new QLabel("Label color", xAxisGroupBox);
-        QComboBox *horizontalLabelColorCombo = new QComboBox(xAxisGroupBox);
-        QSpacerItem *horizontalLabelColorSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
-
+        LineEditLayout *horizontalLabelAngleLayout = new LineEditLayout(xAxisGroupBox, "Label Angle");
+        ComboEditLayout *horizontalLabelColorLayout = new ComboEditLayout(xAxisGroupBox, "Label color");
         RGBEditLayout *horizontalLabelColorCustom = new RGBEditLayout(xAxisGroupBox);
-
-        QHBoxLayout *horizontalLabelSizeLayout = new QHBoxLayout();
-        QLabel *horizontalLabelSizeLabel = new QLabel("Label size", xAxisGroupBox);
-        QSpinBox *horizontalLabelSizeSpin = new QSpinBox(xAxisGroupBox);
-        QSpacerItem *horizontalLabelSizeSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
-
+        SpinBoxEditLayout *horizontalLabelSizeLayout = new SpinBoxEditLayout(xAxisGroupBox, "Label size");
         QCheckBox *checkShowAxisHorizontalGrid = new QCheckBox("Show horizontal grid", xAxisGroupBox);
-
-        QHBoxLayout *horizontalGridColorLayout = new QHBoxLayout();
-        QLabel *horizontalGridColorLabel = new QLabel("Grid color", xAxisGroupBox);
-        QComboBox *horizontalGridColorCombo = new QComboBox(xAxisGroupBox);
-        QSpacerItem *horizontalGridColorSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
-
+        ComboEditLayout *horizontalGridColorLayout = new ComboEditLayout(xAxisGroupBox, "Grid color");
         RGBEditLayout *horizontalGridColorCustom = new RGBEditLayout(xAxisGroupBox);
 
         xAxisGroupBox->setLayout(xAxisLayout);
-
         xAxisLayout->addLayout(rangeMinXLayout);
-        rangeMinXLayout->addWidget(minXLabel);
-        rangeMinXLayout->addWidget(minXEdit);
-        rangeMinXLayout->addItem(horizontalMinXSpacer);
-
         xAxisLayout->addLayout(rangeMaxXLayout);
-        rangeMaxXLayout->addWidget(maxXLabel);
-        rangeMaxXLayout->addWidget(maxXEdit);
-        rangeMaxXLayout->addItem(horizontalMaxXSpacer);
-
         xAxisLayout->addWidget(checkXAxisNameVisible);
-
         xAxisLayout->addLayout(xAxisNameLayout);
-        xAxisNameLayout->addWidget(xAxisNameLabel);
-        xAxisNameLayout->addWidget(xAxisNameEdit);
-        xAxisNameLayout->addItem(xAxisNameSpacer);
-
         xAxisLayout->addLayout(xAxisNameSizeLayout);
-        xAxisNameSizeLayout->addWidget(xAxisNameSizeLabel);
-        xAxisNameSizeLayout->addWidget(xAxisNameSizeSpin);
-        xAxisNameSizeLayout->addItem(xAxisNameSizeSpacer);
-
         xAxisLayout->addWidget(checkHorizontalLabelVisible);
-
         xAxisLayout->addLayout(horizontalLabelAngleLayout);
-        horizontalLabelAngleLayout->addWidget(horizontalLabelAngleLabel);
-        horizontalLabelAngleLayout->addWidget(horizontalLabelAngleEdit);
-        horizontalLabelAngleLayout->addItem(horizontalLabelAngleSpacer);
-
         xAxisLayout->addLayout(horizontalLabelColorLayout);
-        horizontalLabelColorLayout->addWidget(horizontalLabelColorLabel);
-        horizontalLabelColorLayout->addWidget(horizontalLabelColorCombo);
-        horizontalLabelColorLayout->addItem(horizontalLabelColorSpacer);
-
         xAxisLayout->addLayout(horizontalLabelColorCustom);
-
         xAxisLayout->addLayout(horizontalLabelSizeLayout);
-        horizontalLabelSizeLayout->addWidget(horizontalLabelSizeLabel);
-        horizontalLabelSizeLayout->addWidget(horizontalLabelSizeSpin);
-        horizontalLabelSizeLayout->addItem(horizontalLabelSizeSpacer);
-
         xAxisLayout->addWidget(checkShowAxisHorizontalGrid);
-
         xAxisLayout->addLayout(horizontalGridColorLayout);
-        horizontalGridColorLayout->addWidget(horizontalGridColorLabel);
-        horizontalGridColorLayout->addWidget(horizontalGridColorCombo);
-        horizontalGridColorLayout->addItem(horizontalGridColorSpacer);
-
         xAxisLayout->addLayout(horizontalGridColorCustom);
 
-        minXLabel->setMinimumWidth(SETTING_LABEL_WIDTH);
-        minXEdit->setMaximumWidth(SETTING_EDIT_WIDTH);
-        maxXLabel->setMinimumWidth(SETTING_LABEL_WIDTH);
-        maxXEdit->setMaximumWidth(SETTING_EDIT_WIDTH);
+        rangeMinXLayout->setLineEditMaximumWidth(SETTING_EDIT_WIDTH);
+        rangeMaxXLayout->setLineEditMaximumWidth(SETTING_EDIT_WIDTH);
         checkXAxisNameVisible->setChecked(true);
-        xAxisNameLabel->setMinimumWidth(SETTING_LABEL_WIDTH);
-        xAxisNameSizeLabel->setMinimumWidth(SETTING_LABEL_WIDTH);
         checkHorizontalLabelVisible->setChecked(true);
-        horizontalLabelAngleEdit->setText("0");
-        horizontalLabelAngleEdit->setMaximumWidth(SETTING_EDIT_WIDTH);
-        horizontalLabelAngleLabel->setMinimumWidth(SETTING_LABEL_WIDTH);
-        horizontalLabelColorLabel->setMinimumWidth(SETTING_LABEL_WIDTH);
-        horizontalLabelColorCombo->insertItems(0, colorNameList);
-        horizontalLabelColorCombo->setCurrentIndex(Qt::black);
-        horizontalLabelColorCustom->setLabelMinimumWidth(SETTING_LABEL_WIDTH);
-        horizontalLabelColorCustom->setEditMaximumWidth(SETTING_EDIT_WIDTH - 10);
-        horizontalLabelColorCustom->setReadOnly(true);
-        horizontalLabelSizeLabel->setMinimumWidth(SETTING_LABEL_WIDTH);
+        horizontalLabelColorLayout->insertComboItems(0, colorNameList);
+        horizontalLabelColorLayout->setComboCurrentIndex(Qt::black);
         checkShowAxisHorizontalGrid->setChecked(true);
-        horizontalGridColorLabel->setMinimumWidth(SETTING_LABEL_WIDTH);
-        horizontalGridColorCombo->insertItems(0, colorNameList);
-        horizontalGridColorCombo->setCurrentIndex(Qt::lightGray);
-        horizontalGridColorCustom->setLabelMinimumWidth(SETTING_LABEL_WIDTH);
-        horizontalGridColorCustom->setEditMaximumWidth(SETTING_EDIT_WIDTH - 10);
-        horizontalGridColorCustom->setReadOnly(true);
+        horizontalGridColorLayout->insertComboItems(0, colorNameList);
+        horizontalGridColorLayout->setComboCurrentIndex(Qt::lightGray);
 
-        if(plotTableRanges.size() > 0){
-            auto setMinXEdit = [minXEdit, this](){ minXEdit->setText(QString::number(qobject_cast<QValueAxis*>(graph->axes(Qt::Horizontal).constLast())->min())); };
-            auto setMaxXEdit = [maxXEdit, this](){ maxXEdit->setText(QString::number(qobject_cast<QValueAxis*>(graph->axes(Qt::Horizontal).constLast())->max())); };
+        if(plotTableRanges.size() > 0)
+        {
+            auto setMinXEdit = [rangeMinXLayout, this](){ rangeMinXLayout->setLineEditText(QString::number(qobject_cast<QValueAxis*>(graph->axes(Qt::Horizontal).constLast())->min())); };
+            auto setMaxXEdit = [rangeMaxXLayout, this](){ rangeMaxXLayout->setLineEditText(QString::number(qobject_cast<QValueAxis*>(graph->axes(Qt::Horizontal).constLast())->max())); };
             setMinXEdit();
             setMaxXEdit();
-            xAxisNameSizeSpin->setValue(graph->axes(Qt::Horizontal).constLast()->titleFont().pointSize());
-            horizontalLabelSizeSpin->setValue(graph->axes(Qt::Horizontal).constLast()->labelsFont().pointSize());
+            xAxisNameSizeLayout->setSpinBoxValue(graph->axes(Qt::Horizontal).constLast()->titleFont().pointSize());
+            horizontalLabelAngleLayout->setLineEditText(QString::number(graph->axes(Qt::Horizontal).constLast()->labelsAngle()));
+            horizontalLabelSizeLayout->setSpinBoxValue(graph->axes(Qt::Horizontal).constLast()->labelsFont().pointSize());
             horizontalLabelColorCustom->setColor(graph->axes(Qt::Horizontal).constLast()->labelsColor());
             horizontalGridColorCustom->setColor(graph->axes(Qt::Horizontal).constLast()->gridLineColor());
 
-            connect(minXEdit, &QLineEdit::textEdited, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setMin);
-            connect(maxXEdit, &QLineEdit::textEdited, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setMax);
+            connect(rangeMinXLayout, &LineEditLayout::lineTextEdited, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setMin);
+            connect(rangeMaxXLayout, &LineEditLayout::lineTextEdited, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setMax);
             connect(qobject_cast<QValueAxis*>(graph->axes(Qt::Horizontal).constLast()), &QValueAxis::minChanged, setMinXEdit);
             connect(qobject_cast<QValueAxis*>(graph->axes(Qt::Horizontal).constLast()), &QValueAxis::maxChanged, setMaxXEdit);
             connect(this, &Graph2DSeries::graphSeriesUpdated, setMinXEdit);
             connect(this, &Graph2DSeries::graphSeriesUpdated, setMaxXEdit);
             connect(checkXAxisNameVisible, &QCheckBox::toggled, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setTitleVisible);
-            connect(checkXAxisNameVisible, &QCheckBox::toggled, xAxisNameLabel, &QLabel::setVisible);
-            connect(checkXAxisNameVisible, &QCheckBox::toggled, xAxisNameEdit, &QLineEdit::setVisible);
-            connect(checkXAxisNameVisible, &QCheckBox::toggled, xAxisNameSizeLabel, &QLabel::setVisible);
-            connect(checkXAxisNameVisible, &QCheckBox::toggled, xAxisNameSizeSpin, &QSpinBox::setVisible);
-            connect(xAxisNameEdit, &QLineEdit::textEdited, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setTitleText);
-            connect(xAxisNameSizeSpin, &QSpinBox::valueChanged, [this, xAxisNameSizeSpin](){
-                QFont xAxisNameFont; xAxisNameFont.setPointSize(xAxisNameSizeSpin->value());
+            connect(checkXAxisNameVisible, &QCheckBox::toggled, xAxisNameLayout, &LineEditLayout::setVisible);
+            connect(checkXAxisNameVisible, &QCheckBox::toggled, xAxisNameSizeLayout, &SpinBoxEditLayout::setVisible);
+            connect(xAxisNameLayout, &LineEditLayout::lineTextEdited, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setTitleText);
+            connect(xAxisNameSizeLayout, &SpinBoxEditLayout::spinBoxValueChanged, [this, xAxisNameSizeLayout](){
+                QFont xAxisNameFont = graph->axes(Qt::Horizontal).constLast()->titleFont();
+                xAxisNameFont.setPointSize(xAxisNameSizeLayout->spinBoxValue());
                 graph->axes(Qt::Horizontal).constLast()->setTitleFont(xAxisNameFont);
             });
             connect(checkHorizontalLabelVisible, &QCheckBox::toggled, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setLabelsVisible);
-            connect(checkHorizontalLabelVisible, &QCheckBox::toggled, horizontalLabelAngleLabel, &QLabel::setVisible);
-            connect(checkHorizontalLabelVisible, &QCheckBox::toggled, horizontalLabelAngleEdit, &QLineEdit::setVisible);
-            connect(checkHorizontalLabelVisible, &QCheckBox::toggled, horizontalLabelColorLabel, &QLabel::setVisible);
-            connect(checkHorizontalLabelVisible, &QCheckBox::toggled, horizontalLabelColorCombo, &QComboBox::setVisible);
-            connect(checkHorizontalLabelVisible, &QCheckBox::toggled, horizontalLabelSizeLabel, &QLabel::setVisible);
-            connect(checkHorizontalLabelVisible, &QCheckBox::toggled, horizontalLabelSizeSpin, &QSpinBox::setVisible);
-            connect(horizontalLabelAngleEdit, &QLineEdit::textEdited, [this, horizontalLabelAngleEdit](){
-                graph->axes(Qt::Horizontal).constLast()->setLabelsAngle(horizontalLabelAngleEdit->text().toInt());
+            connect(checkHorizontalLabelVisible, &QCheckBox::toggled, horizontalLabelAngleLayout, &LineEditLayout::setVisible);
+            connect(checkHorizontalLabelVisible, &QCheckBox::toggled, horizontalLabelColorLayout, &ComboEditLayout::setVisible);
+            connect(checkHorizontalLabelVisible, &QCheckBox::toggled, horizontalLabelColorCustom, &RGBEditLayout::setVisible);
+            connect(checkHorizontalLabelVisible, &QCheckBox::toggled, horizontalLabelSizeLayout, &SpinBoxEditLayout::setVisible);
+            connect(horizontalLabelAngleLayout, &LineEditLayout::lineTextEdited, [this, horizontalLabelAngleLayout](){
+                graph->axes(Qt::Horizontal).constLast()->setLabelsAngle(horizontalLabelAngleLayout->lineEditText().toInt());
             });
-            connect(horizontalLabelColorCombo, &QComboBox::currentIndexChanged, [this, horizontalLabelColorCombo, horizontalLabelColorCustom](){
-                const int index = horizontalLabelColorCombo->currentIndex();
+            connect(horizontalLabelColorLayout, &ComboEditLayout::currentComboIndexChanged, [this, horizontalLabelColorLayout, horizontalLabelColorCustom](){
+                const int index = horizontalLabelColorLayout->currentComboIndex();
                 if(index > QT_GLOBAL_COLOR_COUNT) { horizontalLabelColorCustom->setReadOnly(false); return; }
                 graph->axes(Qt::Horizontal).constLast()->setLabelsColor(Qt::GlobalColor(index));
                 horizontalLabelColorCustom->setColor(index);
                 horizontalLabelColorCustom->setReadOnly(true);
             });
             connect(horizontalLabelColorCustom, &RGBEditLayout::colorEdited, graph->axes(Qt::Horizontal).constLast(), &QValueAxis::setLabelsColor);
-            connect(horizontalLabelSizeSpin, &QSpinBox::valueChanged, [this, horizontalLabelSizeSpin](){
-                QFont labelsFont; labelsFont.setPointSize(horizontalLabelSizeSpin->value());
+            connect(horizontalLabelSizeLayout, &SpinBoxEditLayout::spinBoxValueChanged, [this, horizontalLabelSizeLayout](){
+                QFont labelsFont = graph->axes(Qt::Horizontal).constLast()->labelsFont();
+                labelsFont.setPointSize(horizontalLabelSizeLayout->spinBoxValue());
                 graph->axes(Qt::Horizontal).constLast()->setLabelsFont(labelsFont);
             });
             connect(checkShowAxisHorizontalGrid, &QCheckBox::toggled, graph->axes(Qt::Horizontal).constLast(), &QAbstractAxis::setGridLineVisible);
-            connect(checkShowAxisHorizontalGrid, &QCheckBox::toggled, horizontalGridColorLabel, &QLabel::setVisible);
-            connect(checkShowAxisHorizontalGrid, &QCheckBox::toggled, horizontalGridColorCombo, &QComboBox::setVisible);
-            connect(horizontalGridColorCombo, &QComboBox::currentIndexChanged, [this, horizontalGridColorCombo, horizontalGridColorCustom](){
-                const int index = horizontalGridColorCombo->currentIndex();
+            connect(checkShowAxisHorizontalGrid, &QCheckBox::toggled, horizontalGridColorLayout, &ComboEditLayout::setVisible);
+            connect(horizontalGridColorLayout, &ComboEditLayout::currentComboIndexChanged, [this, horizontalGridColorLayout, horizontalGridColorCustom](){
+                const int index = horizontalGridColorLayout->currentComboIndex();
                 if(index > QT_GLOBAL_COLOR_COUNT) { horizontalGridColorCustom->setReadOnly(false); return; }
                 graph->axes(Qt::Horizontal).constLast()->setGridLineColor(Qt::GlobalColor(index));
                 horizontalGridColorCustom->setColor(index);
@@ -783,7 +672,8 @@ void Graph2DSeries::setGraphSeries()
 {
     for(const plotTableRange& selectedRange : plotTableRanges)
     {
-        QLineSeries *series = new QLineSeries;
+        //QLineSeries *series = new QLineSeries;
+        QSplineSeries *series = new QSplineSeries;
 
         for(int row = selectedRange.startRow; row <= selectedRange.endRow; ++row)
         {
@@ -794,8 +684,6 @@ void Graph2DSeries::setGraphSeries()
 
         graph->addSeries(series);
     }
-
-    emit graphSeriesUpdated();
 }
 
 void Graph2DSeries::updateGraphData()
@@ -805,6 +693,8 @@ void Graph2DSeries::updateGraphData()
     setGraphSeries();
 
     graph->createDefaultAxes();
+
+    emit graphSeriesUpdated();          //グラフのデータ更新(それに伴う軸の更新も)のシグナルを送る。createDefaultAxesの後にシグナルを送る
 }
 
 void Graph2DSeries::changeLegendVisible(bool visible)
@@ -964,7 +854,7 @@ ComboEditLayout::ComboEditLayout(QWidget *parent, const QString& text)
 
     setLabelMinimumWidth(SETTING_LABEL_WIDTH);
 
-    connect(combo, &QComboBox::currentIndexChanged, [this](){ emit currentIndexChanged(combo->currentIndex()); });
+    connect(combo, &QComboBox::currentIndexChanged, [this](){ emit currentComboIndexChanged(combo->currentIndex()); });
 }
 
 void ComboEditLayout::setVisible(bool visible)

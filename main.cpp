@@ -1,7 +1,6 @@
 #include "mainwindow.h"
 
 #include <QApplication>
-#include "subwindow/graphnormal.h"
 
 int main(int argc, char *argv[])
 {

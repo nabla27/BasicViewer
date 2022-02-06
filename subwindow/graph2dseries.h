@@ -26,6 +26,8 @@
 #include <QColor>
 #include "tablewidget.h"
 
+#include <QSplineSeries>
+
 class Graph2DSeries : public QWidget
 {
     Q_OBJECT
@@ -139,7 +141,7 @@ public slots:
     void setVisible(bool visible);
 
 signals:
-    void currentIndexChanged(int index);
+    void currentComboIndexChanged(int index);
 
 private:
     QLabel *label;
