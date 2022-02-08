@@ -493,82 +493,43 @@ void Graph2DSeries::initializeGraphLayout()
     {   /* グラフの出力設定項目 */
         QWidget *exportSettingWidget = new QWidget(settingStackWidget);
         QVBoxLayout *exportSettingLayout = new QVBoxLayout(exportSettingWidget);
-
-        QHBoxLayout *exportFileNameLayout = new QHBoxLayout();
-        QLabel *exportFileNameLabel = new QLabel("File name", exportSettingWidget);
-        QLineEdit *exportFileNameEdit = new QLineEdit("file", exportSettingWidget);
-        QSpacerItem *exportFileNameSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
-
-        QHBoxLayout *exportTypeLayout = new QHBoxLayout();
-        QLabel *exportTypeLabel = new QLabel("Export to", exportSettingWidget);
-        QComboBox *exportTypeCombo = new QComboBox(exportSettingWidget);
-        QSpacerItem *exportTypeSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
-
+        LineEditLayout *exportFileNameLayout = new LineEditLayout(exportSettingWidget, "File name");
+        ComboEditLayout *exportTypeLayout = new ComboEditLayout(exportSettingWidget, "Export to");
         QStackedWidget *exportStackWidget = new QStackedWidget(exportSettingWidget);
-
         QSpacerItem *exportSettingSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
         settingStackWidget->addWidget(exportSettingWidget);
         exportSettingWidget->setLayout(exportSettingLayout);
-
         exportSettingLayout->addLayout(exportFileNameLayout);
-        exportFileNameLayout->addWidget(exportFileNameLabel);
-        exportFileNameLayout->addWidget(exportFileNameEdit);
-        exportFileNameLayout->addItem(exportFileNameSpacer);
-
         exportSettingLayout->addLayout(exportTypeLayout);
-        exportTypeLayout->addWidget(exportTypeLabel);
-        exportTypeLayout->addWidget(exportTypeCombo);
-        exportTypeLayout->addItem(exportTypeSpacer);
-
         exportSettingLayout->addWidget(exportStackWidget);
-
         exportSettingLayout->addItem(exportSettingSpacer);
+        exportTypeLayout->insertComboItems(0, QStringList() << "Image");
 
-        exportFileNameLabel->setMinimumWidth(SETTING_LABEL_WIDTH);
-        exportTypeLabel->setMinimumWidth(SETTING_LABEL_WIDTH);
-        exportTypeCombo->insertItems(0, QStringList() << "Image");
-
-        connect(exportTypeCombo, &QComboBox::currentIndexChanged, exportStackWidget, &QStackedWidget::setCurrentIndex);
+        connect(exportTypeLayout, &ComboEditLayout::currentComboIndexChanged, exportStackWidget, &QStackedWidget::setCurrentIndex);
 
         { /* Image */
             QGroupBox *exportImageWidget = new QGroupBox("Image", exportStackWidget);
             QVBoxLayout *exportImageLayout = new QVBoxLayout(exportImageWidget);
-
-            QHBoxLayout *imageFormatLayout = new QHBoxLayout();
-            QLabel *imageFormatLabel = new QLabel("Format", exportImageWidget);
-            QComboBox *imageFormatCombo = new QComboBox(exportImageWidget);
-            QSpacerItem *imageFormatSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
-
+            ComboEditLayout *imageFormatLayout = new ComboEditLayout(exportImageWidget, "Format");
             QSpacerItem *imageExportFixedSpacer = new QSpacerItem(0, 40, QSizePolicy::Minimum, QSizePolicy::Fixed);
-
             QPushButton *imageExportButton = new QPushButton("Export", exportImageWidget);
-
             QSpacerItem *exportImageSpacer = new QSpacerItem(0, 0, QSizePolicy::Maximum, QSizePolicy::Expanding);
 
             exportStackWidget->addWidget(exportImageWidget);
             exportImageWidget->setLayout(exportImageLayout);
-
             exportImageLayout->addLayout(imageFormatLayout);
-            imageFormatLayout->addWidget(imageFormatLabel);
-            imageFormatLayout->addWidget(imageFormatCombo);
-            imageFormatLayout->addItem(imageFormatSpacer);
-
             exportImageLayout->addItem(imageExportFixedSpacer);
-
             exportImageLayout->addWidget(imageExportButton);
-
             exportImageLayout->addItem(exportImageSpacer);
-
-            imageFormatLabel->setMinimumWidth(SETTING_LABEL_WIDTH);
-            imageFormatCombo->insertItems(0, imgFormatList());
+            imageFormatLayout->insertComboItems(0, imgFormatList());
 
             connect(imageExportButton, &QPushButton::released, [=](){
                 const QString direcotryPath = QFileDialog::getExistingDirectory(this);
-                const QString imageFormat = imageFormatCombo->currentText();
+                const QString imageFormat = imageFormatLayout->currentComboText();
 
                 QImage img = graphView->grab().toImage();
-                const bool success = img.save(direcotryPath + "/" + exportFileNameEdit->text() + "." + imageFormat, imageFormat.toLocal8Bit().constData());
+                const bool success = img.save(direcotryPath + "/" + exportFileNameLayout->lineEditText() + "." + imageFormat, imageFormat.toLocal8Bit().constData());
                 if(!success){
                     QMessageBox::critical(this, "Error", "Failed to save.                                            ");
                 }

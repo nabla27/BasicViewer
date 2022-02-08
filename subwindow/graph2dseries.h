@@ -135,6 +135,7 @@ public:
     void setComboMaximumWidth(const int width) { combo->setMaximumWidth(width); }
     void insertComboItems(int index, const QStringList& texts) { combo->insertItems(index, texts); }
     int currentComboIndex() const { return combo->currentIndex(); }
+    QString currentComboText() const { return combo->currentText(); }
 
 public slots:
     void setComboCurrentIndex(const int index) { combo->setCurrentIndex(index); }
