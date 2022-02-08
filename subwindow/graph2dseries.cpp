@@ -228,14 +228,25 @@ void Graph2DSeries::initializeGraphLayout()
         QWidget *legendSettingWidget = new QWidget(settingStackWidget);
         QVBoxLayout *legendSettingLayout = new QVBoxLayout(legendSettingWidget);
         QCheckBox *checkBoxShowLegend = new QCheckBox("show legend", legendSettingWidget);
+        SpinBoxEditLayout *legendSizeLayout = new SpinBoxEditLayout(legendSettingWidget, "Size");
         QLabel *legendTextEditLabel = new QLabel("・text", legendSettingWidget);
 
         settingStackWidget->addWidget(legendSettingWidget);
         legendSettingWidget->setLayout(legendSettingLayout);
         legendSettingLayout->addWidget(checkBoxShowLegend);
+        legendSettingLayout->addLayout(legendSizeLayout);
         legendSettingLayout->addWidget(legendTextEditLabel);
 
+        legendSizeLayout->setVisible(false);
+        legendSizeLayout->setSpinBoxValue(graph->legend()->font().pointSize());
+
         connect(checkBoxShowLegend, &QCheckBox::toggled, this, &Graph2DSeries::changeLegendVisible);
+        connect(checkBoxShowLegend, &QCheckBox::toggled, legendSizeLayout, &SpinBoxEditLayout::setVisible);
+        connect(legendSizeLayout, &SpinBoxEditLayout::spinBoxValueChanged, [this, legendSizeLayout](){
+            QFont legendFont = graph->legend()->font();
+            legendFont.setPointSize(legendSizeLayout->spinBoxValue());
+            graph->legend()->setFont(legendFont);
+        });
         connect(checkBoxShowLegend, &QCheckBox::toggled, legendTextEditLabel, &QLabel::setVisible);
 
         for(qsizetype i = 0; i < plotTableRanges.size(); ++i){
