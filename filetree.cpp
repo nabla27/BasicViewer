@@ -393,6 +393,9 @@ void FileTree::saveFile()
     /* ディレクトリダイアログの表示と保存するフォルダーのフルパス取得 */
     const QString pathForSave = QFileDialog::getExistingDirectory(this);
 
+    /* ディレクトリが選択されなければ無効 */
+    if(pathForSave.isEmpty()) return;
+
     /* 選択されたファイルの名前 */
     const QString fileName = this->selectedItems().takeAt(0)->text(0);
 
