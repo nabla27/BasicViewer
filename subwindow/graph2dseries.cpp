@@ -323,8 +323,8 @@ void Graph2DSeries::initializeGraphLayout()
         xAxisLayout->addLayout(horizontalGridColorLayout);
         xAxisLayout->addLayout(horizontalGridColorCustom);
 
-        //rangeMinXLayout->setLineEditMaximumWidth(SETTING_EDIT_WIDTH);
-        //rangeMaxXLayout->setLineEditMaximumWidth(SETTING_EDIT_WIDTH);
+        rangeMinXLayout->setLineEditMaximumWidth(SETTING_EDIT_SWIDTH);
+        rangeMaxXLayout->setLineEditMaximumWidth(SETTING_EDIT_SWIDTH);
         checkXAxisNameVisible->setChecked(true);
         checkHorizontalLabelVisible->setChecked(true);
         horizontalLabelColorLayout->insertComboItems(0, colorNameList);
@@ -422,11 +422,11 @@ void Graph2DSeries::initializeGraphLayout()
         yAxisLayout->addLayout(verticalGridColorLayout);
         yAxisLayout->addLayout(verticalGridColorCustom);
 
-        //rangeMinYLayout->setLineEditMaximumWidth(SETTING_EDIT_WIDTH);
-        //rangeMaxYLayout->setLineEditMaximumWidth(SETTING_EDIT_WIDTH);
+        rangeMinYLayout->setLineEditMaximumWidth(SETTING_EDIT_SWIDTH);
+        rangeMaxYLayout->setLineEditMaximumWidth(SETTING_EDIT_SWIDTH);
         checkYAxisNameVisible->setChecked(true);
         checkVerticalLabelVisible->setChecked(true);
-        //verticalLabelAngleLayout->setLineEditMaximumWidth(SETTING_EDIT_WIDTH);
+        verticalLabelAngleLayout->setLineEditMaximumWidth(SETTING_EDIT_SWIDTH);
         verticalLabelColorLayout->insertComboItems(0, colorNameList);
         verticalLabelColorLayout->setComboCurrentIndex(Qt::black);
         checkShowAxisVerticalGrid->setChecked(true);
@@ -709,7 +709,7 @@ RGBEditLayout::RGBEditLayout(QWidget *parent)
     addItem(spacer);
 
     setReadOnly(true);
-    setEditMaximumWidth(SETTING_EDIT_SWIDTH - 10);
+    setEditMaximumWidth(25);
     setLabelMinimumWidth(SETTING_LABEL_WIDTH);
 
     connect(rEdit, &QLineEdit::textEdited, [this](){ emit colorEdited(getColor()); });
