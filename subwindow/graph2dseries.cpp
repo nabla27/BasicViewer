@@ -182,44 +182,12 @@ void Graph2DSeries::initializeGraphLayout()
         });
     }
     {
-        seriesSettingLayout *seriesSettingWidget = new seriesSettingLayout(settingStackWidget, graph);
-        settingStackWidget->addWidget(seriesSettingWidget);
+        seriesSettingLayout *seriesSetting = new seriesSettingLayout(settingStackWidget, graph);
+        settingStackWidget->addWidget(seriesSetting);
     }
     {
-        /* グラフ凡例の設定項目 */
-        QWidget *legendSettingWidget = new QWidget(settingStackWidget);
-        QVBoxLayout *legendSettingLayout = new QVBoxLayout(legendSettingWidget);
-        QCheckBox *checkBoxShowLegend = new QCheckBox("show legend", legendSettingWidget);
-        SpinBoxEditLayout *legendSizeLayout = new SpinBoxEditLayout(legendSettingWidget, "Size");
-        QLabel *legendTextEditLabel = new QLabel("・text", legendSettingWidget);
-
-        settingStackWidget->addWidget(legendSettingWidget);
-        legendSettingWidget->setLayout(legendSettingLayout);
-        legendSettingLayout->addWidget(checkBoxShowLegend);
-        legendSettingLayout->addLayout(legendSizeLayout);
-        legendSettingLayout->addWidget(legendTextEditLabel);
-
-        legendSizeLayout->setVisible(false);
-        legendSizeLayout->setSpinBoxValue(graph->legend()->font().pointSize());
-
-        connect(checkBoxShowLegend, &QCheckBox::toggled, this, &Graph2DSeries::changeLegendVisible);
-        connect(checkBoxShowLegend, &QCheckBox::toggled, legendSizeLayout, &SpinBoxEditLayout::setVisible);
-        connect(legendSizeLayout, &SpinBoxEditLayout::spinBoxValueChanged, [this, legendSizeLayout](){
-            QFont legendFont = graph->legend()->font();
-            legendFont.setPointSize(legendSizeLayout->spinBoxValue());
-            graph->legend()->setFont(legendFont);
-        });
-        connect(checkBoxShowLegend, &QCheckBox::toggled, legendTextEditLabel, &QLabel::setVisible);
-
-        for(qsizetype i = 0; i < plotTableRanges.size(); ++i){
-            legendNameEdit[i] = new QLineEdit(legendSettingWidget);
-            legendSettingLayout->addWidget(legendNameEdit.at(i));
-            connect(legendNameEdit.at(i), &QLineEdit::textEdited, graph->series().at(i), &QAbstractSeries::setName);
-            legendNameEdit.at(i)->setVisible(false);
-        }
-
-        QSpacerItem *verticalSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
-        legendSettingLayout->addItem(verticalSpacer);
+        legendSettingLayout *legendSetting = new legendSettingLayout(settingStackWidget, graph);
+        settingStackWidget->addWidget(legendSetting);
     }
     {
         /* グラフラベルの設定項目 */
@@ -770,45 +738,51 @@ seriesSettingLayout::seriesSettingLayout(QWidget *parent, QChart *graph)
     : QWidget(parent), graph(graph)
 {
     QVBoxLayout *layout = new QVBoxLayout(this);
-    QTabWidget *tab = new QTabWidget(this);
+    tab = new QTabWidget(this);
     QSpacerItem *spacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
     setLayout(layout);
     layout->addWidget(tab);
     layout->addItem(spacer);
 
-    for(qsizetype i = 0; i < graph->series().size(); ++i)
+    const qsizetype num = graph->series().size();
+    lineColorCombo.resize(num);
+    lineColorCustom.resize(num);
+
+    for(qsizetype i = 0; i < num; ++i)
     {
         QWidget *tabWidget = new QWidget(tab);
         QVBoxLayout *tabWidgetLayout = new QVBoxLayout(tabWidget);
         QSpacerItem *tabSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
-       lineColorLayout = new ComboEditLayout(tabWidget, "Line color");
-       lineColorCustomLayout = new RGBEditLayout(tabWidget);
+       lineColorCombo[i] = new ComboEditLayout(tabWidget, "Line color");
+       lineColorCustom[i] = new RGBEditLayout(tabWidget);
 
        tab->addTab(tabWidget, "series " + QString::number(i));
        tabWidget->setLayout(tabWidgetLayout);
 
-       tabWidgetLayout->addLayout(lineColorLayout);
-       tabWidgetLayout->addLayout(lineColorCustomLayout);
+       tabWidgetLayout->addLayout(lineColorCombo.at(i));
+       tabWidgetLayout->addLayout(lineColorCustom.at(i));
        tabWidgetLayout->addItem(tabSpacer);
 
-       lineColorLayout->insertComboItems(0, QStringList() << "test");
+       lineColorCombo.at(i)->insertComboItems(0, QStringList() << "test");
 
-       connect(lineColorLayout, &ComboEditLayout::currentComboIndexChanged, this, &seriesSettingLayout::setColorWithCombo);
-       connect(lineColorCustomLayout, &RGBEditLayout::colorEdited, this, &seriesSettingLayout::setColorWithRGB);
+       connect(lineColorCombo.at(i), &ComboEditLayout::currentComboIndexChanged, this, &seriesSettingLayout::setColorWithCombo);
+       connect(lineColorCustom.at(i), &RGBEditLayout::colorEdited, this, &seriesSettingLayout::setColorWithRGB);
     }
 }
 
 void seriesSettingLayout::setColorWithCombo(const int index)
 {
+    const int seriesNum = tab->currentIndex();
+
     if(index > QT_GLOBAL_COLOR_COUNT){
-        lineColorCustomLayout->setReadOnly(false); return;
+        lineColorCustom.at(seriesNum)->setReadOnly(false); return;
     }
 
-    lineColorCustomLayout->setReadOnly(true);
+    lineColorCustom.at(seriesNum)->setReadOnly(true);
     setLineColor(Qt::GlobalColor(index));
-    lineColorCustomLayout->setColor(index);
+    lineColorCustom.at(seriesNum)->setColor(index);
 }
 
 void seriesSettingLayout::setColorWithRGB(const QColor &color)
@@ -818,7 +792,7 @@ void seriesSettingLayout::setColorWithRGB(const QColor &color)
 
 void seriesSettingLayout::setLineColor(const QColor &color)
 {
-    const int seriesNum = lineColorLayout->currentComboIndex();
+    const int seriesNum = tab->currentIndex();
     const QAbstractSeries::SeriesType seriesType = graph->series().at(seriesNum)->type();
 
     switch (seriesType)
@@ -829,6 +803,49 @@ void seriesSettingLayout::setLineColor(const QColor &color)
         break;
     }
 }
+
+legendSettingLayout::legendSettingLayout(QWidget *parent, QChart *graph)
+    : QWidget(parent), graph(graph)
+{
+    QVBoxLayout *layout = new QVBoxLayout(this);
+    QCheckBox *legendVisible = new QCheckBox("show legend", this);
+    SpinBoxEditLayout *legendSize = new SpinBoxEditLayout(this, "Size");
+
+    setLayout(layout);
+    layout->addWidget(legendVisible);
+    layout->addLayout(legendSize);
+
+    legendSize->setVisible(false);
+    legendSize->setSpinBoxValue(graph->legend()->font().pointSize());
+
+    connect(legendVisible, &QCheckBox::toggled, this, &legendSettingLayout::setLegendVisible);
+    connect(legendVisible, &QCheckBox::toggled, legendSize, &SpinBoxEditLayout::setVisible);
+    connect(legendSize, &SpinBoxEditLayout::spinBoxValueChanged, this, &legendSettingLayout::setLegendPointSize);
+
+    for(qsizetype i = 0; i < graph->series().size(); ++i)
+    {
+        LineEditLayout *legendName = new LineEditLayout(this, "series " + QString::number(i));
+        legendName->setVisible(false);
+        layout->addLayout(legendName);
+        connect(legendName, &LineEditLayout::lineTextEdited, graph->series().at(i), &QAbstractSeries::setName);
+        connect(legendVisible, &QCheckBox::toggled, legendName, &LineEditLayout::setVisible);
+    }
+
+    QSpacerItem *spacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+    layout->addItem(spacer);
+}
+
+void legendSettingLayout::setLegendPointSize(const int ps)
+{
+    QFont legendFont = graph->legend()->font();
+    legendFont.setPointSize(ps);
+    graph->legend()->setFont(legendFont);
+}
+
+
+
+
+
 
 
 

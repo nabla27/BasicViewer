@@ -219,15 +219,34 @@ public:
 
 private:
     QChart *graph;
-    ComboEditLayout *lineColorLayout;
-    RGBEditLayout *lineColorCustomLayout;
-private:
+    QTabWidget *tab;
+    QList<ComboEditLayout*> lineColorCombo;
+    QList<RGBEditLayout*> lineColorCustom;
+
+private slots:
     void setColorWithCombo(const int index);
     void setColorWithRGB(const QColor& color);
+private:
     void setLineColor(const QColor& color);
 };
 
 
+
+
+class legendSettingLayout : public QWidget
+{
+    Q_OBJECT
+
+public:
+    legendSettingLayout(QWidget *parent, QChart *graph);
+
+private:
+    QChart *graph;
+
+private slots:
+    void setLegendPointSize(const int ps);
+    void setLegendVisible(const bool visible) { graph->legend()->setVisible(visible); }
+};
 
 
 
