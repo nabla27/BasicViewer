@@ -190,34 +190,8 @@ void Graph2DSeries::initializeGraphLayout()
         settingStackWidget->addWidget(legendSetting);
     }
     {
-        /* グラフラベルの設定項目 */
-        QWidget *labelSettingWidget = new QWidget(settingStackWidget);
-        QVBoxLayout *labelSettingLayout = new QVBoxLayout(labelSettingWidget);
-        QTabWidget *labelTab = new QTabWidget(labelSettingWidget);
-
-        settingStackWidget->addWidget(labelSettingWidget);
-        labelSettingWidget->setLayout(labelSettingLayout);
-        labelSettingLayout->addWidget(labelTab);
-
-        for(qsizetype i = 0; i < plotTableRanges.size(); ++i)
-        {
-            QWidget *toolBoxWidget = new QWidget(labelTab);
-            QVBoxLayout *toolBoxLayout = new QVBoxLayout(toolBoxWidget);
-            QCheckBox *checkLabelVisible = new QCheckBox("Show label", toolBoxWidget);
-            QCheckBox *checkLabelPointsVisible = new QCheckBox("Show label points", toolBoxWidget);
-            QSpacerItem *verticalSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
-
-            labelTab->addTab(toolBoxWidget, "series " + QString::number(i));
-            toolBoxWidget->setLayout(toolBoxLayout);
-            toolBoxLayout->addWidget(checkLabelVisible);
-            toolBoxLayout->addWidget(checkLabelPointsVisible);
-            toolBoxLayout->addItem(verticalSpacer);
-
-            connect(checkLabelVisible, &QCheckBox::toggled, qobject_cast<QXYSeries*>(graph->series().at(i)), &QXYSeries::setPointsVisible);
-            connect(checkLabelPointsVisible, &QCheckBox::toggled, qobject_cast<QXYSeries*>(graph->series().at(i)), &QXYSeries::setPointLabelsVisible);
-
-            qobject_cast<QXYSeries*>(graph->series().at(i))->setPointLabelsClipping(false);
-        }
+        LabelSettingLayout *labelSetting = new LabelSettingLayout(settingStackWidget, graph);
+        settingStackWidget->addWidget(labelSetting);
     }
     {
         /* グラフ軸の設定項目 */
@@ -482,8 +456,8 @@ void Graph2DSeries::setGraphSeries()
 {
     for(const plotTableRange& selectedRange : plotTableRanges)
     {
-        //QLineSeries *series = new QLineSeries;
-        QSplineSeries *series = new QSplineSeries;
+        QLineSeries *series = new QLineSeries;
+        //QSplineSeries *series = new QSplineSeries;
 
         for(int row = selectedRange.startRow; row <= selectedRange.endRow; ++row)
         {
@@ -649,9 +623,6 @@ void RGBEditLayout::setReadOnly(bool readOnly)
 }
 
 
-
-
-
 ComboEditLayout::ComboEditLayout(QWidget *parent, const QString& text)
 {
     label = new QLabel(text, parent);
@@ -675,9 +646,6 @@ void ComboEditLayout::setVisible(bool visible)
 }
 
 
-
-
-
 LineEditLayout::LineEditLayout(QWidget *parent, const QString& text)
 {
     label = new QLabel(text, parent);
@@ -699,10 +667,6 @@ void LineEditLayout::setVisible(bool visible)
     label->setVisible(visible);
     lineEdit->setVisible(visible);
 }
-
-
-
-
 
 
 SpinBoxEditLayout::SpinBoxEditLayout(QWidget *parent, const QString& text)
@@ -798,11 +762,12 @@ void seriesSettingLayout::setLineColor(const QColor &color)
     switch (seriesType)
     {
     case 0:
-        qobject_cast<QXYSeries*>(graph->series().at(seriesNum))->setColor(color);
+        qobject_cast<QXYSeries*>(graph->series().at(seriesNum))->setColor(color); break;
     default:
         break;
     }
 }
+
 
 legendSettingLayout::legendSettingLayout(QWidget *parent, QChart *graph)
     : QWidget(parent), graph(graph)
@@ -843,11 +808,84 @@ void legendSettingLayout::setLegendPointSize(const int ps)
 }
 
 
+LabelSettingLayout::LabelSettingLayout(QWidget *parent, QChart *graph)
+    : QWidget(parent), graph(graph)
+{
+    QVBoxLayout *layout = new QVBoxLayout(this);
+    tab = new QTabWidget(this);
 
+    setLayout(layout);
+    layout->addWidget(tab);
 
+    for(qsizetype i = 0; i < graph->series().size(); ++i)
+    {
+        QWidget *tabWidget = new QWidget(tab);
+        QVBoxLayout *tabLayout = new QVBoxLayout(tabWidget);
+        QCheckBox *labelVisible = new QCheckBox("show label", tabWidget);
+        QCheckBox *labelPointsVisible = new QCheckBox("show points", tabWidget);
+        QCheckBox *labelPointsClipping = new QCheckBox("label clipping", tabWidget);
+        QSpacerItem *tabSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
+        tab->addTab(tabWidget, "series " + QString::number(i));
+        tabWidget->setLayout(tabLayout);
+        tabLayout->addWidget(labelVisible);
+        tabLayout->addWidget(labelPointsVisible);
+        tabLayout->addWidget(labelPointsClipping);
+        tabLayout->addItem(tabSpacer);
 
+        labelPointsClipping->setChecked(true);
 
+        connect(labelVisible, &QCheckBox::toggled, this, &LabelSettingLayout::setPointsVisible);
+        connect(labelPointsVisible, &QCheckBox::toggled, this, &LabelSettingLayout::setPointLabelsVisible);
+        connect(labelPointsClipping, &QCheckBox::toggled, this, &LabelSettingLayout::setPointLabelsClipping);
+    }
+}
+
+void LabelSettingLayout::setPointsVisible(const bool visible)
+{
+    const int index = tab->currentIndex();
+    const QAbstractSeries::SeriesType seriesType = graph->series().at(index)->type();
+
+    switch(seriesType)
+    {
+    case QAbstractSeries::SeriesTypeLine:
+    case QAbstractSeries::SeriesTypeSpline:
+        qobject_cast<QXYSeries*>(graph->series().at(index))->setPointsVisible(visible);
+        break;
+    default:
+        break;
+    }
+}
+
+void LabelSettingLayout::setPointLabelsVisible(const bool visible)
+{
+    const int index = tab->currentIndex();
+    const QAbstractSeries::SeriesType seriesType = graph->series().at(index)->type();
+
+    switch(seriesType)
+    {
+    case QAbstractSeries::SeriesTypeLine:
+    case QAbstractSeries::SeriesTypeSpline:
+        qobject_cast<QXYSeries*>(graph->series().at(index))->setPointLabelsVisible(visible); break;
+    default:
+        break;
+    }
+}
+
+void LabelSettingLayout::setPointLabelsClipping(const bool clipping)
+{
+    const int index = tab->currentIndex();
+    const QAbstractSeries::SeriesType seriesType = graph->series().at(index)->type();
+
+    switch(seriesType)
+    {
+    case QAbstractSeries::SeriesTypeLine:
+    case QAbstractSeries::SeriesTypeSpline:
+        qobject_cast<QXYSeries*>(graph->series().at(index))->setPointLabelsClipping(clipping); break;
+    default:
+        break;
+    }
+}
 
 
 

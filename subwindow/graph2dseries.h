@@ -118,11 +118,6 @@ private:
     QSpacerItem *spacer;
 };
 
-
-
-
-
-
 class ComboEditLayout : public QHBoxLayout
 {
     Q_OBJECT
@@ -150,9 +145,6 @@ private:
     QSpacerItem *spacer;
 };
 
-
-
-
 class LineEditLayout : public QHBoxLayout
 {
     Q_OBJECT
@@ -177,10 +169,6 @@ private:
     QLineEdit *lineEdit;
     QSpacerItem *spacer;
 };
-
-
-
-
 
 class SpinBoxEditLayout : public QHBoxLayout
 {
@@ -210,6 +198,9 @@ private:
 
 
 
+
+
+
 class seriesSettingLayout : public QWidget
 {
     Q_OBJECT
@@ -230,9 +221,6 @@ private:
     void setLineColor(const QColor& color);
 };
 
-
-
-
 class legendSettingLayout : public QWidget
 {
     Q_OBJECT
@@ -248,7 +236,22 @@ private slots:
     void setLegendVisible(const bool visible) { graph->legend()->setVisible(visible); }
 };
 
+class LabelSettingLayout : public QWidget
+{
+    Q_OBJECT
 
+public:
+    LabelSettingLayout(QWidget *parent, QChart *graph);
+
+private:
+    QChart *graph;
+    QTabWidget *tab;
+
+private slots:
+    void setPointsVisible(const bool visible);
+    void setPointLabelsVisible(const bool visible);
+    void setPointLabelsClipping(const bool visible);
+};
 
 
 
