@@ -182,46 +182,8 @@ void Graph2DSeries::initializeGraphLayout()
         });
     }
     {
-        /* seriesの設定項目 */
-        QWidget *seriesSettingWidget = new QWidget(settingStackWidget);
-        QVBoxLayout *seriesSettingLayout = new QVBoxLayout(seriesSettingWidget);
-        QTabWidget *seriesSettingTab = new QTabWidget(seriesSettingWidget);
-        QSpacerItem *seriesSettingSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
-
+        seriesSettingLayout *seriesSettingWidget = new seriesSettingLayout(settingStackWidget, graph);
         settingStackWidget->addWidget(seriesSettingWidget);
-        seriesSettingWidget->setLayout(seriesSettingLayout);
-        seriesSettingLayout->addWidget(seriesSettingTab);
-        seriesSettingLayout->addItem(seriesSettingSpacer);
-
-        for(qsizetype i = 0; i < plotTableRanges.size(); ++i)
-        {
-            QWidget *tabWidget = new QWidget(seriesSettingTab);
-            QVBoxLayout *tabWidgetLayout = new QVBoxLayout(tabWidget);
-            QSpacerItem *tabSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
-
-            ComboEditLayout *seriesLineColorLayout = new ComboEditLayout(tabWidget, "Line color");
-            RGBEditLayout *seriesLineColorCustomLayout = new RGBEditLayout(tabWidget);
-
-            seriesSettingTab->addTab(tabWidget, "series " + QString::number(i));
-            tabWidget->setLayout(tabWidgetLayout);
-
-            tabWidgetLayout->addLayout(seriesLineColorLayout);
-            tabWidgetLayout->addLayout(seriesLineColorCustomLayout);
-            tabWidgetLayout->addItem(tabSpacer);
-
-            seriesLineColorLayout->insertComboItems(0, colorNameList);
-            seriesLineColorCustomLayout->setColor(qobject_cast<QXYSeries*>(graph->series().at(i))->color());
-
-            connect(seriesLineColorLayout, &ComboEditLayout::currentComboIndexChanged, [=](){
-                const int index = seriesLineColorLayout->currentComboIndex();
-                if(index > QT_GLOBAL_COLOR_COUNT) { seriesLineColorCustomLayout->setReadOnly(false); return; }
-                qobject_cast<QXYSeries*>(graph->series().at(i))->setColor(Qt::GlobalColor(index));
-                seriesLineColorCustomLayout->setColor(index);
-                seriesLineColorCustomLayout->setReadOnly(true);
-            });
-            connect(seriesLineColorCustomLayout, &RGBEditLayout::colorEdited,
-                    qobject_cast<QXYSeries*>(graph->series().at(i)), &QXYSeries::setColor);
-        }
     }
     {
         /* グラフ凡例の設定項目 */
@@ -499,7 +461,6 @@ void Graph2DSeries::initializeGraphLayout()
                 verticalGridColorCustom->setReadOnly(true);
             });
         }
-        //graph->axes(Qt::Vertical).constLast()->setShadesVisible(true);
     }
     {   /* グラフの出力設定項目 */
         QWidget *exportSettingWidget = new QWidget(settingStackWidget);
@@ -797,6 +758,88 @@ void SpinBoxEditLayout::setVisible(bool visible)
     label->setVisible(visible);
     spinBox->setVisible(visible);
 }
+
+
+
+
+
+
+
+
+seriesSettingLayout::seriesSettingLayout(QWidget *parent, QChart *graph)
+    : QWidget(parent), graph(graph)
+{
+    QVBoxLayout *layout = new QVBoxLayout(this);
+    QTabWidget *tab = new QTabWidget(this);
+    QSpacerItem *spacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+
+    setLayout(layout);
+    layout->addWidget(tab);
+    layout->addItem(spacer);
+
+    for(qsizetype i = 0; i < graph->series().size(); ++i)
+    {
+        QWidget *tabWidget = new QWidget(tab);
+        QVBoxLayout *tabWidgetLayout = new QVBoxLayout(tabWidget);
+        QSpacerItem *tabSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+
+       lineColorLayout = new ComboEditLayout(tabWidget, "Line color");
+       lineColorCustomLayout = new RGBEditLayout(tabWidget);
+
+       tab->addTab(tabWidget, "series " + QString::number(i));
+       tabWidget->setLayout(tabWidgetLayout);
+
+       tabWidgetLayout->addLayout(lineColorLayout);
+       tabWidgetLayout->addLayout(lineColorCustomLayout);
+       tabWidgetLayout->addItem(tabSpacer);
+
+       lineColorLayout->insertComboItems(0, QStringList() << "test");
+
+       connect(lineColorLayout, &ComboEditLayout::currentComboIndexChanged, this, &seriesSettingLayout::setColorWithCombo);
+       connect(lineColorCustomLayout, &RGBEditLayout::colorEdited, this, &seriesSettingLayout::setColorWithRGB);
+    }
+}
+
+void seriesSettingLayout::setColorWithCombo(const int index)
+{
+    if(index > QT_GLOBAL_COLOR_COUNT){
+        lineColorCustomLayout->setReadOnly(false); return;
+    }
+
+    lineColorCustomLayout->setReadOnly(true);
+    setLineColor(Qt::GlobalColor(index));
+    lineColorCustomLayout->setColor(index);
+}
+
+void seriesSettingLayout::setColorWithRGB(const QColor &color)
+{
+    setLineColor(color);
+}
+
+void seriesSettingLayout::setLineColor(const QColor &color)
+{
+    const int seriesNum = lineColorLayout->currentComboIndex();
+    const QAbstractSeries::SeriesType seriesType = graph->series().at(seriesNum)->type();
+
+    switch (seriesType)
+    {
+    case 0:
+        qobject_cast<QXYSeries*>(graph->series().at(seriesNum))->setColor(color);
+    default:
+        break;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 

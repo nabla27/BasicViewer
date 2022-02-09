@@ -210,6 +210,23 @@ private:
 
 
 
+class seriesSettingLayout : public QWidget
+{
+    Q_OBJECT
+
+public:
+    seriesSettingLayout(QWidget *parent, QChart *graph);
+
+private:
+    QChart *graph;
+    ComboEditLayout *lineColorLayout;
+    RGBEditLayout *lineColorCustomLayout;
+private:
+    void setColorWithCombo(const int index);
+    void setColorWithRGB(const QColor& color);
+    void setLineColor(const QColor& color);
+};
+
 
 
 
