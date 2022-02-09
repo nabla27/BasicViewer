@@ -400,7 +400,7 @@ void FileTree::saveFile()
     const QString fileName = this->selectedItems().takeAt(0)->text(0);
 
     /* ファイルをコピーして保存 */
-    QFile::copy(BasicSet::tmpDirectory + "/" + fileName, pathForSave + fileName);
+    QFile::copy(BasicSet::tmpDirectory + fileName, pathForSave + "/" + fileName);
 
     /* 保存したファイルをTreeから削除してよいかのメッセージボックス */
     QMessageBox::StandardButton reply = QMessageBox::question(this,
