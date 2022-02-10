@@ -54,18 +54,18 @@ Graph2DSeries::Graph2DSeries(TableWidget *table, QWidget *parent)
     /* tableWidgetの選択範囲を設定 */
     setTableSelectedIndex();
 
-    /* グラフの初期化 */
-    initializeGraph();
+    /* グラフデータの初期化 */
+    initializeGraphSeries();
+
+    /* グラフレイアウトの初期化 */
+    initializeGraphLayout();
 
     /* windowのタイトルをファイル名に設定 */
     sheetName = table->getSheetName();
     setWindowTitle(sheetName);
 
     /* tableの変更に従い、グラフを再描画 */
-    //ダブルクリック -> ファイルの保存 -> fileTreeのインデックス変更 -> sheet名の切り替え -> sheetの変更
-    changedTableAction = connect(table, &TableWidget::itemChanged, [this](){
-        if(this->table->getSheetName() == sheetName) updateGraphData();
-    });
+    changedTableAction = connect(table, &TableWidget::itemChanged, this, &Graph2DSeries::updateGraphSeries);
 
     raise();
 
@@ -96,11 +96,11 @@ void Graph2DSeries::setTableSelectedIndex()
 
         if(endCol - startCol == 0){  //選択範囲の列幅が1のとき、プロットするxy座標の値は別々の選択範囲で指定されている
             if(rangeIndex + 1 >= rangeCount) { return; }
-            plotTableRanges.append(plotTableRange(startRow, endRow, startCol, selectedRanges.at(rangeIndex + 1).leftColumn()));
+            plotTableRanges.append(PlotTableRange(startRow, endRow, startCol, selectedRanges.at(rangeIndex + 1).leftColumn()));
             rangeIndex += 2;
         }
         else{  //選択範囲の列幅が2より大きいとき、プロットするxy座標の値は同じ選択範囲で連続した列で指定されている
-            plotTableRanges.append(plotTableRange(startRow, endRow, startCol, startCol + 1));
+            plotTableRanges.append(PlotTableRange(startRow, endRow, startCol, startCol + 1));
             rangeIndex += 1;
         }
 
@@ -108,23 +108,10 @@ void Graph2DSeries::setTableSelectedIndex()
     }
 }
 
-void Graph2DSeries::initializeGraph()
-{
-    /* データをセット */
-    graph->removeAllSeries();   //データを初期化
-    setGraphSeries();           //データのセット
-    graph->createDefaultAxes(); //軸と格子の表示
-
-    /* グラフの初期設定 */
-    graph->legend()->setVisible(false);
-
-    /* レイアウトの初期化 */
-    initializeGraphLayout();
-}
-
 void Graph2DSeries::initializeGraphLayout()
 {
     setGeometry(0, 0, 620, 240);
+    graph->legend()->setVisible(false);
 
     /* レイアウトのグラフ部分 */
     graphView = new QChartView(graph);   //graphViewのウィンドウサイズは4:3がいい感じ
@@ -170,17 +157,22 @@ void Graph2DSeries::initializeGraphLayout()
     settingStackWidget->addWidget(axisSettingWidget);
     settingStackWidget->addWidget(exportSettingWidget);
 
-    connect(this, &Graph2DSeries::graphSeriesUpdated, axisSettingWidget->xAxisGroupBox, &AxisSettingGroupBox::setRangeEdit);
-    connect(this, &Graph2DSeries::graphSeriesUpdated, axisSettingWidget->yAxisGroupBox, &AxisSettingGroupBox::setRangeEdit);
+    //connect(this, &Graph2DSeries::graphSeriesUpdated, axisSettingWidget->xAxisGroupBox, &AxisSettingGroupBox::setRangeEdit);
+    //connect(this, &Graph2DSeries::graphSeriesUpdated, axisSettingWidget->yAxisGroupBox, &AxisSettingGroupBox::setRangeEdit);
 }
 
-void Graph2DSeries::setGraphSeries()
+void Graph2DSeries::initializeGraphSeries()
 {
-    for(const plotTableRange& selectedRange : plotTableRanges)
+    const qsizetype rangeCount = plotTableRanges.size();
+    seriesData.resize(rangeCount);
+
+    for(qsizetype index = 0; index < rangeCount; ++index){
+        seriesData[index].rangeIndex = index;
+    }
+
+    for(const PlotTableRange& selectedRange : plotTableRanges)
     {
         QLineSeries *series = new QLineSeries;
-        //QSplineSeries *series = new QSplineSeries;
-
         for(int row = selectedRange.startRow; row <= selectedRange.endRow; ++row)
         {
             if(table->item(row, selectedRange.colX) == nullptr || table->item(row, selectedRange.colY) == nullptr) continue;
@@ -190,18 +182,69 @@ void Graph2DSeries::setGraphSeries()
 
         graph->addSeries(series);
     }
-}
-
-void Graph2DSeries::updateGraphData()
-{
-    graph->removeAllSeries();
-
-    setGraphSeries();
 
     graph->createDefaultAxes();
-
-    emit graphSeriesUpdated();          //グラフのデータ更新(それに伴う軸の更新も)のシグナルを送る。createDefaultAxesの後にシグナルを送る
 }
+
+void Graph2DSeries::updateGraphSeries(QTableWidgetItem *item)
+{
+    if(sheetName != table->getSheetName()) { return; }
+
+    const int changedRow = item->row();
+    const int changedCol = item->column();
+
+    qsizetype index = 0;
+    for(const SeriesData& data : seriesData)
+    {
+        const PlotTableRange range = plotTableRanges.at(data.rangeIndex);
+
+        if(range.isInRange(changedRow, changedCol))
+        {
+            const PlotType plotType = data.plotType;
+
+            switch(plotType)
+            {
+            case PlotType::LineSeries:
+            case PlotType::SplineSeries:
+            case PlotType::ScatterSeries:
+                qobject_cast<QXYSeries*>(graph->series().at(index))->replace(changedRow - range.startRow,
+                                                                             table->item(changedRow, range.colX)->text().toFloat(),
+                                                                             table->item(changedRow, range.colY)->text().toFloat());
+                break;
+            default:
+                break;
+            }
+
+        }
+        index++;
+    }
+}
+
+
+
+
+/*
+ * QAbstractBarSeries(QBarCategoryAxis) ---|--- QBarSeries
+ *                                         |--- QHorizontalBarSeries
+ *                                         |--- QHorizontalPercentBarSeries
+ *                                         |--- QHorizontalStackedBarSeries
+ *                                         |--- QPercentBarSeries
+ *                                         |--- QStackedBarSeries
+ * QAreaSeries(QValueAxis)
+ * QBoxPlotSeries(QBarCategoryAxis)
+ * QCandlestickSeries(QBarCategoryAxis)
+ * QPieSeries
+ * QXYSeries(QValueAxis) ------------------|--- QLineSeries
+ *                                         |--- QSplineSeries
+ *                                         |--- QScatterSeries
+ *
+ * QBarCategoryAxis
+ * QColorAxis
+ * QDateTimeAxis
+ * QLogValueAxis
+ * QValueAxis
+ */
+
 
 
 
@@ -731,15 +774,15 @@ AxisSettingGroupBox::AxisSettingGroupBox(QWidget *parent, QChart *graph, const Q
     axisLabelVisible->setChecked(true);
     labelColor->insertComboItems(0, colorNameList());
     labelColor->setComboCurrentIndex(QT_GLOBAL_COLOR_COUNT + 1);
-    labelColorCustom->setColor(graph->axes(orient).constLast()->labelsColor());
     gridVisible->setChecked(true);
     gridColor->insertComboItems(0, colorNameList());
     gridColor->setComboCurrentIndex(QT_GLOBAL_COLOR_COUNT + 1);
-    gridColorCustom->setColor(graph->axes(orient).constLast()->gridLineColor());
+
+    if(graph->axes(orient).size() < 1) { return; }
+
     setRangeEdit();
-
-    if(graph->series().size() < 1) { return; }
-
+    labelColorCustom->setColor(graph->axes(orient).constLast()->labelsColor());
+    gridColorCustom->setColor(graph->axes(orient).constLast()->gridLineColor());
     axisNameSize->setSpinBoxValue(graph->axes(orient).constLast()->titleFont().pointSize());
     labelAngle->setLineEditText(QString::number(graph->axes(orient).constLast()->labelsAngle()));
     labelSize->setSpinBoxValue(graph->axes(orient).constLast()->labelsFont().pointSize());

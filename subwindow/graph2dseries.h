@@ -27,6 +27,17 @@
 #include "tablewidget.h"
 
 #include <QSplineSeries>
+#include <QBoxPlotSeries>
+#include <QAreaSeries>
+#include <QBarSeries>
+#include <QBarSet>
+#include <QCandlestickSeries>
+#include <QCandlestickSet>
+#include <QPieSeries>
+#include <QPieSlice>
+#include <QLogValueAxis>
+#include <QScatterSeries>
+#include <QPointF>
 
 class Graph2DSeries : public QWidget
 {
@@ -36,96 +47,46 @@ public:
     ~Graph2DSeries();
 
 private:
-    void setTableSelectedIndex();
-    void initializeGraph();
-    void initializeGraphLayout();
-    void setGraphSeries();
-    void updateGraphData();
-
-private:
     QChart *graph;
     QChartView *graphView;
     TableWidget *table;
     QString sheetName;
     QMetaObject::Connection changedTableAction;
 
-    struct plotTableRange
+    enum class PlotType { LineSeries, SplineSeries, ScatterSeries };
+
+    struct SeriesData
     {
-        plotTableRange(int startRow, int endRow, int colX, int colY)
+        PlotType plotType = PlotType::LineSeries;
+        qsizetype rangeIndex = 0;
+    };
+    QList<SeriesData> seriesData;
+
+
+    struct PlotTableRange
+    {
+        PlotTableRange(int startRow, int endRow, int colX, int colY)
             : startRow(startRow), endRow(endRow), colX(colX), colY(colY) {}
         int startRow = 0;
         int endRow = 0;
         int colX = 0 ;
         int colY = 0;
+        bool isInRange(const int row, const int col) const{
+            if(colX <= col && colY >= col && startRow <= row && endRow >= row) { return true; }
+            return false;
+        }
     };
-    QList<plotTableRange> plotTableRanges;
+    QList<PlotTableRange> plotTableRanges;
 
-signals:
-    void graphSeriesUpdated();
+private:
+    void setTableSelectedIndex();                    //tableの選択範囲を設定
+    void initializeGraphSeries();                    //グラフのseriesの初期化
+    void initializeGraphLayout();                    //グラフのレイアウトの初期化
+    void updateGraphSeries(QTableWidgetItem *item);  //table変更に伴うグラフの再描画
 };
 
 
 
-#if 0
-static const QStringList colorNameList()
-{
-    QStringList colorList;
-
-    colorList << "color0"
-              << "color1"
-              << "black"
-              << "white"
-              << "darkGray"
-              << "gray"
-              << "lightGray"
-              << "red"
-              << "green"
-              << "blue"
-              << "cyan"
-              << "magenta"
-              << "yellow"
-              << "darkRed"
-              << "darkGreen"
-              << "darkBlue"
-              << "darkCyan"
-              << "darkMagenta"
-              << "darkYellow"
-              << "transparent"
-              << "custom";
-
-    return colorList;
-}
-
-static const QStringList themeNameList()
-{
-    QStringList themeList;
-
-    themeList << "light"
-              << "blueCerulean"
-              << "dark"
-              << "brownSand"
-              << "blueNcs"
-              << "highContrast"
-              << "blueIcy"
-              << "qt";
-
-    return themeList;
-}
-
-static const QStringList imgFormatList()
-{
-    QStringList formatList;
-
-    for(const QByteArray& byte : QImageWriter::supportedImageFormats()){
-        formatList << byte.constData();
-    }
-
-    return formatList;
-}
-
-
-
-#endif
 
 
 
