@@ -200,12 +200,12 @@ private:
 
 
 
-class GraphSettingLayout : public QWidget
+class GraphSettingWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    GraphSettingLayout(QWidget *parent, QChart *graph);
+    GraphSettingWidget(QWidget *parent, QChart *graph);
 
 private:
     QChart *graph;
@@ -214,12 +214,12 @@ private slots:
     void setTheme(const int index) { graph->setTheme(QChart::ChartTheme(index)); }
 };
 
-class seriesSettingLayout : public QWidget
+class SeriesSettingWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    seriesSettingLayout(QWidget *parent, QChart *graph);
+    SeriesSettingWidget(QWidget *parent, QChart *graph);
 
 private:
     QChart *graph;
@@ -234,12 +234,12 @@ private:
     void setLineColor(const QColor& color);
 };
 
-class legendSettingLayout : public QWidget
+class LegendSettingWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    legendSettingLayout(QWidget *parent, QChart *graph);
+    LegendSettingWidget(QWidget *parent, QChart *graph);
 
 private:
     QChart *graph;
@@ -249,12 +249,12 @@ private slots:
     void setLegendVisible(const bool visible) { graph->legend()->setVisible(visible); }
 };
 
-class LabelSettingLayout : public QWidget
+class LabelSettingWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    LabelSettingLayout(QWidget *parent, QChart *graph);
+    LabelSettingWidget(QWidget *parent, QChart *graph);
 
 private:
     QChart *graph;
@@ -266,12 +266,12 @@ private slots:
     void setPointLabelsClipping(const bool visible);
 };
 
-class ExportSettingLayout : public QWidget
+class ExportSettingWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    ExportSettingLayout(QWidget *parent, QChart *graph, QChartView *graphView);
+    ExportSettingWidget(QWidget *parent, QChart *graph, QChartView *graphView);
 
 private:
     QChart *graph;

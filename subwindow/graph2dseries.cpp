@@ -149,42 +149,30 @@ void Graph2DSeries::initializeGraphLayout()
     setLayout(mainLayout);
 
     /* 右側の設定部分のレイアウト */
-    {
-        selectPageCombo->addItem("Graph");
-        selectPageCombo->addItem("Series");
-        selectPageCombo->addItem("Legend");
-        selectPageCombo->addItem("Label");
-        selectPageCombo->addItem("Axis");
-        selectPageCombo->addItem("Export");
-        connect(selectPageCombo, &QComboBox::activated, settingStackWidget, &QStackedWidget::setCurrentIndex);
-    }
-    {
-        GraphSettingLayout *graphSettingWidget = new GraphSettingLayout(settingStackWidget, graph);
-        settingStackWidget->addWidget(graphSettingWidget);
-    }
-    {
-        seriesSettingLayout *seriesSetting = new seriesSettingLayout(settingStackWidget, graph);
-        settingStackWidget->addWidget(seriesSetting);
-    }
-    {
-        legendSettingLayout *legendSetting = new legendSettingLayout(settingStackWidget, graph);
-        settingStackWidget->addWidget(legendSetting);
-    }
-    {
-        LabelSettingLayout *labelSetting = new LabelSettingLayout(settingStackWidget, graph);
-        settingStackWidget->addWidget(labelSetting);
-    }
-    {
-        AxisSettingWidget *axisSetting = new AxisSettingWidget(settingStackWidget, graph);
-        settingStackWidget->addWidget(axisSetting);
-        connect(this, &Graph2DSeries::graphSeriesUpdated, axisSetting->xAxisGroupBox, &AxisSettingGroupBox::setRangeEdit);
-        connect(this, &Graph2DSeries::graphSeriesUpdated, axisSetting->yAxisGroupBox, &AxisSettingGroupBox::setRangeEdit);
+    selectPageCombo->addItem("Graph");
+    selectPageCombo->addItem("Series");
+    selectPageCombo->addItem("Legend");
+    selectPageCombo->addItem("Label");
+    selectPageCombo->addItem("Axis");
+    selectPageCombo->addItem("Export");
+    connect(selectPageCombo, &QComboBox::activated, settingStackWidget, &QStackedWidget::setCurrentIndex);
 
-    }
-    {
-        ExportSettingLayout *exportSettingWidget = new ExportSettingLayout(settingStackWidget, graph, graphView);
-        settingStackWidget->addWidget(exportSettingWidget);
-    }
+    GraphSettingWidget *graphSettingWidget = new GraphSettingWidget(settingStackWidget, graph);
+    SeriesSettingWidget *seriesSettingWidget = new SeriesSettingWidget(settingStackWidget, graph);
+    LegendSettingWidget *legendSettingWidget = new LegendSettingWidget(settingStackWidget, graph);
+    LabelSettingWidget *labelSettingWidget = new LabelSettingWidget(settingStackWidget, graph);
+    AxisSettingWidget *axisSettingWidget = new AxisSettingWidget(settingStackWidget, graph);
+    ExportSettingWidget *exportSettingWidget = new ExportSettingWidget(settingStackWidget, graph, graphView);
+
+    settingStackWidget->addWidget(graphSettingWidget);
+    settingStackWidget->addWidget(seriesSettingWidget);
+    settingStackWidget->addWidget(legendSettingWidget);
+    settingStackWidget->addWidget(labelSettingWidget);
+    settingStackWidget->addWidget(axisSettingWidget);
+    settingStackWidget->addWidget(exportSettingWidget);
+
+    connect(this, &Graph2DSeries::graphSeriesUpdated, axisSettingWidget->xAxisGroupBox, &AxisSettingGroupBox::setRangeEdit);
+    connect(this, &Graph2DSeries::graphSeriesUpdated, axisSettingWidget->yAxisGroupBox, &AxisSettingGroupBox::setRangeEdit);
 }
 
 void Graph2DSeries::setGraphSeries()
@@ -433,7 +421,7 @@ void SpinBoxEditLayout::setVisible(bool visible)
 
 
 
-GraphSettingLayout::GraphSettingLayout(QWidget *parent, QChart *graph)
+GraphSettingWidget::GraphSettingWidget(QWidget *parent, QChart *graph)
     : QWidget(parent), graph(graph)
 {
     QVBoxLayout *layout = new QVBoxLayout(this);
@@ -449,11 +437,11 @@ GraphSettingLayout::GraphSettingLayout(QWidget *parent, QChart *graph)
     theme->insertComboItems(0, QStringList() << "Qt");
 
     connect(title, &LineEditLayout::lineTextEdited, graph, &QChart::setTitle);
-    connect(theme, &ComboEditLayout::currentComboIndexChanged, this, &GraphSettingLayout::setTheme);
+    connect(theme, &ComboEditLayout::currentComboIndexChanged, this, &GraphSettingWidget::setTheme);
 }
 
 
-seriesSettingLayout::seriesSettingLayout(QWidget *parent, QChart *graph)
+SeriesSettingWidget::SeriesSettingWidget(QWidget *parent, QChart *graph)
     : QWidget(parent), graph(graph)
 {
     QVBoxLayout *layout = new QVBoxLayout(this);
@@ -486,12 +474,12 @@ seriesSettingLayout::seriesSettingLayout(QWidget *parent, QChart *graph)
 
        lineColorCombo.at(i)->insertComboItems(0, QStringList() << "test");
 
-       connect(lineColorCombo.at(i), &ComboEditLayout::currentComboIndexChanged, this, &seriesSettingLayout::setColorWithCombo);
-       connect(lineColorCustom.at(i), &RGBEditLayout::colorEdited, this, &seriesSettingLayout::setColorWithRGB);
+       connect(lineColorCombo.at(i), &ComboEditLayout::currentComboIndexChanged, this, &SeriesSettingWidget::setColorWithCombo);
+       connect(lineColorCustom.at(i), &RGBEditLayout::colorEdited, this, &SeriesSettingWidget::setColorWithRGB);
     }
 }
 
-void seriesSettingLayout::setColorWithCombo(const int index)
+void SeriesSettingWidget::setColorWithCombo(const int index)
 {
     const int seriesNum = tab->currentIndex();
 
@@ -504,12 +492,12 @@ void seriesSettingLayout::setColorWithCombo(const int index)
     lineColorCustom.at(seriesNum)->setColor(index);
 }
 
-void seriesSettingLayout::setColorWithRGB(const QColor &color)
+void SeriesSettingWidget::setColorWithRGB(const QColor &color)
 {
     setLineColor(color);
 }
 
-void seriesSettingLayout::setLineColor(const QColor &color)
+void SeriesSettingWidget::setLineColor(const QColor &color)
 {
     const int seriesNum = tab->currentIndex();
     const QAbstractSeries::SeriesType seriesType = graph->series().at(seriesNum)->type();
@@ -524,7 +512,7 @@ void seriesSettingLayout::setLineColor(const QColor &color)
 }
 
 
-legendSettingLayout::legendSettingLayout(QWidget *parent, QChart *graph)
+LegendSettingWidget::LegendSettingWidget(QWidget *parent, QChart *graph)
     : QWidget(parent), graph(graph)
 {
     QVBoxLayout *layout = new QVBoxLayout(this);
@@ -538,9 +526,9 @@ legendSettingLayout::legendSettingLayout(QWidget *parent, QChart *graph)
     legendSize->setVisible(false);
     legendSize->setSpinBoxValue(graph->legend()->font().pointSize());
 
-    connect(legendVisible, &QCheckBox::toggled, this, &legendSettingLayout::setLegendVisible);
+    connect(legendVisible, &QCheckBox::toggled, this, &LegendSettingWidget::setLegendVisible);
     connect(legendVisible, &QCheckBox::toggled, legendSize, &SpinBoxEditLayout::setVisible);
-    connect(legendSize, &SpinBoxEditLayout::spinBoxValueChanged, this, &legendSettingLayout::setLegendPointSize);
+    connect(legendSize, &SpinBoxEditLayout::spinBoxValueChanged, this, &LegendSettingWidget::setLegendPointSize);
 
     for(qsizetype i = 0; i < graph->series().size(); ++i)
     {
@@ -555,7 +543,7 @@ legendSettingLayout::legendSettingLayout(QWidget *parent, QChart *graph)
     layout->addItem(spacer);
 }
 
-void legendSettingLayout::setLegendPointSize(const int ps)
+void LegendSettingWidget::setLegendPointSize(const int ps)
 {
     QFont legendFont = graph->legend()->font();
     legendFont.setPointSize(ps);
@@ -563,7 +551,7 @@ void legendSettingLayout::setLegendPointSize(const int ps)
 }
 
 
-LabelSettingLayout::LabelSettingLayout(QWidget *parent, QChart *graph)
+LabelSettingWidget::LabelSettingWidget(QWidget *parent, QChart *graph)
     : QWidget(parent), graph(graph)
 {
     QVBoxLayout *layout = new QVBoxLayout(this);
@@ -590,13 +578,13 @@ LabelSettingLayout::LabelSettingLayout(QWidget *parent, QChart *graph)
 
         labelPointsClipping->setChecked(true);
 
-        connect(labelVisible, &QCheckBox::toggled, this, &LabelSettingLayout::setPointsVisible);
-        connect(labelPointsVisible, &QCheckBox::toggled, this, &LabelSettingLayout::setPointLabelsVisible);
-        connect(labelPointsClipping, &QCheckBox::toggled, this, &LabelSettingLayout::setPointLabelsClipping);
+        connect(labelVisible, &QCheckBox::toggled, this, &LabelSettingWidget::setPointsVisible);
+        connect(labelPointsVisible, &QCheckBox::toggled, this, &LabelSettingWidget::setPointLabelsVisible);
+        connect(labelPointsClipping, &QCheckBox::toggled, this, &LabelSettingWidget::setPointLabelsClipping);
     }
 }
 
-void LabelSettingLayout::setPointsVisible(const bool visible)
+void LabelSettingWidget::setPointsVisible(const bool visible)
 {
     const int index = tab->currentIndex();
     const QAbstractSeries::SeriesType seriesType = graph->series().at(index)->type();
@@ -612,7 +600,7 @@ void LabelSettingLayout::setPointsVisible(const bool visible)
     }
 }
 
-void LabelSettingLayout::setPointLabelsVisible(const bool visible)
+void LabelSettingWidget::setPointLabelsVisible(const bool visible)
 {
     const int index = tab->currentIndex();
     const QAbstractSeries::SeriesType seriesType = graph->series().at(index)->type();
@@ -627,7 +615,7 @@ void LabelSettingLayout::setPointLabelsVisible(const bool visible)
     }
 }
 
-void LabelSettingLayout::setPointLabelsClipping(const bool clipping)
+void LabelSettingWidget::setPointLabelsClipping(const bool clipping)
 {
     const int index = tab->currentIndex();
     const QAbstractSeries::SeriesType seriesType = graph->series().at(index)->type();
@@ -643,7 +631,7 @@ void LabelSettingLayout::setPointLabelsClipping(const bool clipping)
 }
 
 
-ExportSettingLayout::ExportSettingLayout(QWidget *parent, QChart *graph, QChartView *graphView)
+ExportSettingWidget::ExportSettingWidget(QWidget *parent, QChart *graph, QChartView *graphView)
     : QWidget(parent), graph(graph), graphView(graphView)
 {
     QVBoxLayout *layout = new QVBoxLayout(this);
@@ -663,7 +651,7 @@ ExportSettingLayout::ExportSettingLayout(QWidget *parent, QChart *graph, QChartV
     type->insertComboItems(0, QStringList() << "Image");
 
     connect(type, &ComboEditLayout::currentComboIndexChanged, stackWidget, &QStackedWidget::setCurrentIndex);
-    connect(button, &QPushButton::released, this, &ExportSettingLayout::exportFile);
+    connect(button, &QPushButton::released, this, &ExportSettingWidget::exportFile);
 
     QGroupBox *exportImageBox = new QGroupBox("Image", stackWidget);
     QVBoxLayout *exportImageLayout = new QVBoxLayout(exportImageBox);
@@ -679,7 +667,7 @@ ExportSettingLayout::ExportSettingLayout(QWidget *parent, QChart *graph, QChartV
 
 }
 
-void ExportSettingLayout::exportFile()
+void ExportSettingWidget::exportFile()
 {
     switch(type->currentComboIndex())
     {
@@ -690,7 +678,7 @@ void ExportSettingLayout::exportFile()
     }
 }
 
-void ExportSettingLayout::exportToImage()
+void ExportSettingWidget::exportToImage()
 {
     const QString directoryPath = QFileDialog::getExistingDirectory(this);
     const QString exportFileName = fileName->lineEditText();
