@@ -60,27 +60,72 @@ private:
     };
     QList<plotTableRange> plotTableRanges;
 
-    /* レイアウト */
-    QVBoxLayout *legendBoxLayout;
-    QList<QLineEdit*> legendNameEdit;
-    static const QList<QString> colorNameList;
-    static const QList<QString> themeNameList;
-    static const QList<QString> imgFormatList();
-    static const QColor rgbStrToColor(QString str);
-
-private slots:
-    void changeLegendVisible(bool visible);
-
 signals:
     void graphSeriesUpdated();
 };
 
 
 
+#if 0
+static const QStringList colorNameList()
+{
+    QStringList colorList;
+
+    colorList << "color0"
+              << "color1"
+              << "black"
+              << "white"
+              << "darkGray"
+              << "gray"
+              << "lightGray"
+              << "red"
+              << "green"
+              << "blue"
+              << "cyan"
+              << "magenta"
+              << "yellow"
+              << "darkRed"
+              << "darkGreen"
+              << "darkBlue"
+              << "darkCyan"
+              << "darkMagenta"
+              << "darkYellow"
+              << "transparent"
+              << "custom";
+
+    return colorList;
+}
+
+static const QStringList themeNameList()
+{
+    QStringList themeList;
+
+    themeList << "light"
+              << "blueCerulean"
+              << "dark"
+              << "brownSand"
+              << "blueNcs"
+              << "highContrast"
+              << "blueIcy"
+              << "qt";
+
+    return themeList;
+}
+
+static const QStringList imgFormatList()
+{
+    QStringList formatList;
+
+    for(const QByteArray& byte : QImageWriter::supportedImageFormats()){
+        formatList << byte.constData();
+    }
+
+    return formatList;
+}
 
 
 
-
+#endif
 
 
 
@@ -232,6 +277,7 @@ private slots:
     void setColorWithRGB(const QColor& color);
 private:
     void setLineColor(const QColor& color);
+    const QColor getLineColor(const int index);
 };
 
 class LegendSettingWidget : public QWidget

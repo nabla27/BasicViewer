@@ -53,7 +53,6 @@ Graph2DSeries::Graph2DSeries(TableWidget *table, QWidget *parent)
 
     /* tableWidgetの選択範囲を設定 */
     setTableSelectedIndex();
-    legendNameEdit.resize(plotTableRanges.size());
 
     /* グラフの初期化 */
     initializeGraph();
@@ -204,85 +203,68 @@ void Graph2DSeries::updateGraphData()
     emit graphSeriesUpdated();          //グラフのデータ更新(それに伴う軸の更新も)のシグナルを送る。createDefaultAxesの後にシグナルを送る
 }
 
-void Graph2DSeries::changeLegendVisible(bool visible)
+
+
+
+
+
+
+
+static const QStringList colorNameList()
 {
-    graph->legend()->setVisible(visible);
-    for(qsizetype i = 0; i < plotTableRanges.size(); ++i)
-        legendNameEdit[i]->setVisible(visible);
+    QStringList colorList;
+
+    colorList << "color0"
+              << "color1"
+              << "black"
+              << "white"
+              << "darkGray"
+              << "gray"
+              << "lightGray"
+              << "red"
+              << "green"
+              << "blue"
+              << "cyan"
+              << "magenta"
+              << "yellow"
+              << "darkRed"
+              << "darkGreen"
+              << "darkBlue"
+              << "darkCyan"
+              << "darkMagenta"
+              << "darkYellow"
+              << "transparent"
+              << "custom";
+
+    return colorList;
 }
 
-const QList<QString> Graph2DSeries::colorNameList =
+static const QStringList themeNameList()
 {
-    "color0",        //0
-    "color1",
-    "black",
-    "white",
-    "darkGray",
-    "gray",          //5
-    "lightGray",
-    "red",
-    "green",
-    "blue",
-    "cyan",          //10
-    "magenta",
-    "yellow",
-    "darkRed",
-    "darkGreen",
-    "darkBlue",      //15
-    "darkCyan",
-    "darkMagenta",
-    "darkYello",
-    "transparent",
-    "custom",        //20
-};
+    QStringList themeList;
 
-const QList<QString> Graph2DSeries::themeNameList =
-{
-    "light",
-    "blueCerulean",
-    "dark",
-    "brownSand",
-    "blueNcs",
-    "highContrast",
-    "blueIcy",
-    "qt"
-};
+    themeList << "light"
+              << "blueCerulean"
+              << "dark"
+              << "brownSand"
+              << "blueNcs"
+              << "highContrast"
+              << "blueIcy"
+              << "qt";
 
-const QList<QString> Graph2DSeries::imgFormatList()
+    return themeList;
+}
+
+static const QStringList imgFormatList()
 {
-    QList<QString> imgFormatList;
-    for(const QByteArray& byte : QImageWriter::supportedImageFormats())
-    {
-        imgFormatList << byte.constData();
+    QStringList formatList;
+
+    for(const QByteArray& byte : QImageWriter::supportedImageFormats()){
+        formatList << byte.constData();
     }
 
-    return imgFormatList;
+    return formatList;
 }
-
-const QColor Graph2DSeries::rgbStrToColor(QString str)
-{
-    const QStringList rgbList = str.remove(' ').split(";");
-    const qsizetype count = rgbList.size();
-
-    const int red = (count > 0) ? rgbList.at(0).toInt() : 0;
-    const int green = (count > 1) ? rgbList.at(1).toInt() : 0;
-    const int blue = (count > 2) ? rgbList.at(1).toInt() : 0;
-
-    return QColor(red, green, blue);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -306,7 +288,6 @@ RGBEditLayout::RGBEditLayout(QWidget *parent)
     addWidget(bEdit);
     addItem(spacer);
 
-    setReadOnly(true);
     setEditMaximumWidth(25);
     setLabelMinimumWidth(SETTING_LABEL_WIDTH);
 
@@ -434,7 +415,8 @@ GraphSettingWidget::GraphSettingWidget(QWidget *parent, QChart *graph)
     layout->addLayout(theme);
     layout->addItem(spacer);
 
-    theme->insertComboItems(0, QStringList() << "Qt");
+    theme->insertComboItems(0, themeNameList());
+    theme->setComboCurrentIndex(graph->theme());
 
     connect(title, &LineEditLayout::lineTextEdited, graph, &QChart::setTitle);
     connect(theme, &ComboEditLayout::currentComboIndexChanged, this, &GraphSettingWidget::setTheme);
@@ -472,7 +454,9 @@ SeriesSettingWidget::SeriesSettingWidget(QWidget *parent, QChart *graph)
        tabWidgetLayout->addLayout(lineColorCustom.at(i));
        tabWidgetLayout->addItem(tabSpacer);
 
-       lineColorCombo.at(i)->insertComboItems(0, QStringList() << "test");
+       lineColorCombo.at(i)->insertComboItems(0, colorNameList());
+       lineColorCombo.at(i)->setComboCurrentIndex(QT_GLOBAL_COLOR_COUNT + 1);
+       lineColorCustom.at(i)->setColor(getLineColor(i));
 
        connect(lineColorCombo.at(i), &ComboEditLayout::currentComboIndexChanged, this, &SeriesSettingWidget::setColorWithCombo);
        connect(lineColorCustom.at(i), &RGBEditLayout::colorEdited, this, &SeriesSettingWidget::setColorWithRGB);
@@ -504,10 +488,23 @@ void SeriesSettingWidget::setLineColor(const QColor &color)
 
     switch (seriesType)
     {
-    case 0:
+    case QAbstractSeries::SeriesTypeLine:
         qobject_cast<QXYSeries*>(graph->series().at(seriesNum))->setColor(color); break;
     default:
         break;
+    }
+}
+
+const QColor SeriesSettingWidget::getLineColor(const int index)
+{
+    const QAbstractSeries::SeriesType seriesType = graph->series().at(index)->type();
+
+    switch(seriesType)
+    {
+    case QAbstractSeries::SeriesTypeLine:
+        return qobject_cast<QXYSeries*>(graph->series().at(index))->color();
+    default:
+        return QColor();
     }
 }
 
@@ -663,7 +660,7 @@ ExportSettingWidget::ExportSettingWidget(QWidget *parent, QChart *graph, QChartV
     exportImageLayout->addLayout(imageFormat);
     exportImageLayout->addItem(exportImageSpacer);
 
-    imageFormat->insertComboItems(0, QStringList() << "jpeg");
+    imageFormat->insertComboItems(0, imgFormatList());
 
 }
 
@@ -732,11 +729,13 @@ AxisSettingGroupBox::AxisSettingGroupBox(QWidget *parent, QChart *graph, const Q
     rangeMax->setLineEditMaximumWidth(SETTING_EDIT_SWIDTH);
     axisNameVisible->setChecked(true);
     axisLabelVisible->setChecked(true);
-    labelColor->insertComboItems(0, QStringList() << "test");
-    labelColor->setComboCurrentIndex(0);
+    labelColor->insertComboItems(0, colorNameList());
+    labelColor->setComboCurrentIndex(QT_GLOBAL_COLOR_COUNT + 1);
+    labelColorCustom->setColor(graph->axes(orient).constLast()->labelsColor());
     gridVisible->setChecked(true);
-    gridColor->insertComboItems(0, QStringList() << "test");
-    gridColor->setComboCurrentIndex(0);
+    gridColor->insertComboItems(0, colorNameList());
+    gridColor->setComboCurrentIndex(QT_GLOBAL_COLOR_COUNT + 1);
+    gridColorCustom->setColor(graph->axes(orient).constLast()->gridLineColor());
     setRangeEdit();
 
     if(graph->series().size() < 1) { return; }
@@ -843,6 +842,7 @@ void AxisSettingGroupBox::setRangeEdit()
         break;
     }
 }
+
 
 AxisSettingWidget::AxisSettingWidget(QWidget *parent, QChart *graph)
     : QWidget(parent), graph(graph)
