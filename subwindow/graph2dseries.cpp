@@ -157,8 +157,7 @@ void Graph2DSeries::initializeGraphLayout()
     settingStackWidget->addWidget(axisSettingWidget);
     settingStackWidget->addWidget(exportSettingWidget);
 
-    //connect(this, &Graph2DSeries::graphSeriesUpdated, axisSettingWidget->xAxisGroupBox, &AxisSettingGroupBox::setRangeEdit);
-    //connect(this, &Graph2DSeries::graphSeriesUpdated, axisSettingWidget->yAxisGroupBox, &AxisSettingGroupBox::setRangeEdit);
+    connect(seriesSettingWidget, &SeriesSettingWidget::seriesTypeChanged, this, &Graph2DSeries::changeSeriesType);
 }
 
 void Graph2DSeries::initializeGraphSeries()
@@ -200,13 +199,13 @@ void Graph2DSeries::updateGraphSeries(QTableWidgetItem *item)
 
         if(range.isInRange(changedRow, changedCol))
         {
-            const PlotType plotType = data.plotType;
+            const CEnum::PlotType plotType = data.plotType;
 
             switch(plotType)
             {
-            case PlotType::LineSeries:
-            case PlotType::SplineSeries:
-            case PlotType::ScatterSeries:
+            case CEnum::PlotType::LineSeries:
+            case CEnum::PlotType::SplineSeries:
+            case CEnum::PlotType::ScatterSeries:
                 qobject_cast<QXYSeries*>(graph->series().at(index))->replace(changedRow - range.startRow,
                                                                              table->item(changedRow, range.colX)->text().toFloat(),
                                                                              table->item(changedRow, range.colY)->text().toFloat());
@@ -218,6 +217,50 @@ void Graph2DSeries::updateGraphSeries(QTableWidgetItem *item)
         }
         index++;
     }
+}
+
+void Graph2DSeries::changeSeriesType(const int index, const CEnum::PlotType type)
+{
+    seriesData[index].plotType = type;
+
+    graph->removeAllSeries();
+
+    for(qsizetype i = 0; i < seriesData.size(); ++i)
+    {
+        const PlotTableRange range = plotTableRanges.at(seriesData.at(i).rangeIndex);
+
+        switch(seriesData.at(i).plotType)
+        {
+        case CEnum::PlotType::LineSeries:
+            graph->addSeries(createXYSeries<QLineSeries>(range));
+            break;
+        case CEnum::PlotType::SplineSeries:
+            graph->addSeries(createXYSeries<QSplineSeries>(range));
+            break;
+        case CEnum::PlotType::ScatterSeries:
+            graph->addSeries(createXYSeries<QScatterSeries>(range));
+            break;
+        default:
+            break;
+        }
+
+        graph->series().at(i)->attachAxis(graph->axes(Qt::Horizontal).constLast());
+        graph->series().at(i)->attachAxis(graph->axes(Qt::Vertical).constLast());
+    }
+}
+
+template<class T> T* Graph2DSeries::createXYSeries(const PlotTableRange& range)
+{
+    T *series = new T;
+
+    for(int row = range.startRow; row <= range.endRow; ++row)
+    {
+        if(table->item(row, range.colX) == nullptr || table->item(row, range.colY) == nullptr) continue;
+        series->append(table->item(row, range.colX)->text().toFloat(),
+                       table->item(row, range.colY)->text().toFloat());
+    }
+
+    return series;
 }
 
 
@@ -478,6 +521,7 @@ SeriesSettingWidget::SeriesSettingWidget(QWidget *parent, QChart *graph)
     layout->addItem(spacer);
 
     const qsizetype num = graph->series().size();
+    seriesTypeCombo.resize(num);
     lineColorCombo.resize(num);
     lineColorCustom.resize(num);
 
@@ -487,22 +531,26 @@ SeriesSettingWidget::SeriesSettingWidget(QWidget *parent, QChart *graph)
         QVBoxLayout *tabWidgetLayout = new QVBoxLayout(tabWidget);
         QSpacerItem *tabSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
-       lineColorCombo[i] = new ComboEditLayout(tabWidget, "Line color");
-       lineColorCustom[i] = new RGBEditLayout(tabWidget);
+        seriesTypeCombo[i] = new ComboEditLayout(tabWidget, "Series type");
+        lineColorCombo[i] = new ComboEditLayout(tabWidget, "Line color");
+        lineColorCustom[i] = new RGBEditLayout(tabWidget);
 
-       tab->addTab(tabWidget, "series " + QString::number(i));
-       tabWidget->setLayout(tabWidgetLayout);
+        tab->addTab(tabWidget, "series " + QString::number(i));
+        tabWidget->setLayout(tabWidgetLayout);
 
-       tabWidgetLayout->addLayout(lineColorCombo.at(i));
-       tabWidgetLayout->addLayout(lineColorCustom.at(i));
-       tabWidgetLayout->addItem(tabSpacer);
+        tabWidgetLayout->addLayout(seriesTypeCombo.at(i));
+        tabWidgetLayout->addLayout(lineColorCombo.at(i));
+        tabWidgetLayout->addLayout(lineColorCustom.at(i));
+        tabWidgetLayout->addItem(tabSpacer);
 
-       lineColorCombo.at(i)->insertComboItems(0, colorNameList());
-       lineColorCombo.at(i)->setComboCurrentIndex(QT_GLOBAL_COLOR_COUNT + 1);
-       lineColorCustom.at(i)->setColor(getLineColor(i));
+        seriesTypeCombo.at(i)->insertComboItems(0, enumToStrings(CEnum::PlotType::LineSeries));
+        lineColorCombo.at(i)->insertComboItems(0, colorNameList());
+        lineColorCombo.at(i)->setComboCurrentIndex(QT_GLOBAL_COLOR_COUNT + 1);
+        lineColorCustom.at(i)->setColor(getLineColor(i));
 
-       connect(lineColorCombo.at(i), &ComboEditLayout::currentComboIndexChanged, this, &SeriesSettingWidget::setColorWithCombo);
-       connect(lineColorCustom.at(i), &RGBEditLayout::colorEdited, this, &SeriesSettingWidget::setColorWithRGB);
+        connect(seriesTypeCombo.at(i), &ComboEditLayout::currentComboIndexChanged, this, &SeriesSettingWidget::emitSeriesTypeChanged);
+        connect(lineColorCombo.at(i), &ComboEditLayout::currentComboIndexChanged, this, &SeriesSettingWidget::setColorWithCombo);
+        connect(lineColorCustom.at(i), &RGBEditLayout::colorEdited, this, &SeriesSettingWidget::setColorWithRGB);
     }
 }
 
@@ -549,6 +597,11 @@ const QColor SeriesSettingWidget::getLineColor(const int index)
     default:
         return QColor();
     }
+}
+
+void SeriesSettingWidget::emitSeriesTypeChanged(const int type)
+{
+    emit seriesTypeChanged(tab->currentIndex(), CEnum::PlotType(type));
 }
 
 
@@ -892,7 +945,7 @@ AxisSettingWidget::AxisSettingWidget(QWidget *parent, QChart *graph)
 {
     QVBoxLayout *layout = new QVBoxLayout(this);
     xAxisGroupBox = new AxisSettingGroupBox(this, graph, "X Axis", Qt::Horizontal);
-    yAxisGroupBox = new AxisSettingGroupBox(this, graph, "Y Axis", Qt::Horizontal);
+    yAxisGroupBox = new AxisSettingGroupBox(this, graph, "Y Axis", Qt::Vertical);
     QSpacerItem *spacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
     setLayout(layout);

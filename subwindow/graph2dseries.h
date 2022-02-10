@@ -38,6 +38,48 @@
 #include <QLogValueAxis>
 #include <QScatterSeries>
 #include <QPointF>
+#include <QMetaEnum>
+
+template <typename QEnum>
+QString enumToString(const QEnum value) { return QString(QMetaEnum::fromType<QEnum>().valueToKey((int)value)); }
+
+template <class QEnum>
+QStringList enumToStrings(const QEnum){
+    QStringList enumStrList;
+    for(int i = 0; i < QMetaEnum::fromType<QEnum>().keyCount(); ++i){
+        enumStrList << QStringList(QMetaEnum::fromType<QEnum>().valueToKey(i));
+    }
+
+    return enumStrList;
+}
+
+class CEnum : private QObject{
+    Q_OBJECT
+public:
+    enum class PlotType { LineSeries, SplineSeries, ScatterSeries };
+    Q_ENUM(PlotType)
+};
+
+struct SeriesData
+{
+    CEnum::PlotType plotType = CEnum::PlotType::LineSeries;
+    qsizetype rangeIndex = 0;
+};
+
+struct PlotTableRange
+{
+    PlotTableRange(int startRow, int endRow, int colX, int colY)
+        : startRow(startRow), endRow(endRow), colX(colX), colY(colY) {}
+    int startRow = 0;
+    int endRow = 0;
+    int colX = 0 ;
+    int colY = 0;
+    bool isInRange(const int row, const int col) const{
+        if(colX <= col && colY >= col && startRow <= row && endRow >= row) { return true; }
+        return false;
+    }
+};
+
 
 class Graph2DSeries : public QWidget
 {
@@ -52,30 +94,7 @@ private:
     TableWidget *table;
     QString sheetName;
     QMetaObject::Connection changedTableAction;
-
-    enum class PlotType { LineSeries, SplineSeries, ScatterSeries };
-
-    struct SeriesData
-    {
-        PlotType plotType = PlotType::LineSeries;
-        qsizetype rangeIndex = 0;
-    };
     QList<SeriesData> seriesData;
-
-
-    struct PlotTableRange
-    {
-        PlotTableRange(int startRow, int endRow, int colX, int colY)
-            : startRow(startRow), endRow(endRow), colX(colX), colY(colY) {}
-        int startRow = 0;
-        int endRow = 0;
-        int colX = 0 ;
-        int colY = 0;
-        bool isInRange(const int row, const int col) const{
-            if(colX <= col && colY >= col && startRow <= row && endRow >= row) { return true; }
-            return false;
-        }
-    };
     QList<PlotTableRange> plotTableRanges;
 
 private:
@@ -83,6 +102,12 @@ private:
     void initializeGraphSeries();                    //グラフのseriesの初期化
     void initializeGraphLayout();                    //グラフのレイアウトの初期化
     void updateGraphSeries(QTableWidgetItem *item);  //table変更に伴うグラフの再描画
+
+    //指定したQXYSeriesを継承したT(QLineSeries,QSplineSeries,QScatterSeries)型のSeriesを返す
+    template<class T> T* createXYSeries(const PlotTableRange& range);
+
+private slots:
+    void changeSeriesType(const int index, const CEnum::PlotType type);
 };
 
 
@@ -230,15 +255,19 @@ public:
 private:
     QChart *graph;
     QTabWidget *tab;
+    QList<ComboEditLayout*> seriesTypeCombo;
     QList<ComboEditLayout*> lineColorCombo;
     QList<RGBEditLayout*> lineColorCustom;
 
 private slots:
     void setColorWithCombo(const int index);
     void setColorWithRGB(const QColor& color);
+    void emitSeriesTypeChanged(const int type);
 private:
     void setLineColor(const QColor& color);
     const QColor getLineColor(const int index);
+signals:
+    void seriesTypeChanged(const int index, const CEnum::PlotType type);
 };
 
 class LegendSettingWidget : public QWidget
