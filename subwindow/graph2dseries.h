@@ -200,6 +200,19 @@ private:
 
 
 
+class GraphSettingLayout : public QWidget
+{
+    Q_OBJECT
+
+public:
+    GraphSettingLayout(QWidget *parent, QChart *graph);
+
+private:
+    QChart *graph;
+
+private slots:
+    void setTheme(const int index) { graph->setTheme(QChart::ChartTheme(index)); }
+};
 
 class seriesSettingLayout : public QWidget
 {
@@ -253,8 +266,76 @@ private slots:
     void setPointLabelsClipping(const bool visible);
 };
 
+class ExportSettingLayout : public QWidget
+{
+    Q_OBJECT
 
+public:
+    ExportSettingLayout(QWidget *parent, QChart *graph, QChartView *graphView);
 
+private:
+    QChart *graph;
+    QChartView *graphView;
+    ComboEditLayout *type;
+    LineEditLayout *fileName;
+    ComboEditLayout *imageFormat;
+
+private slots:
+    void exportFile();
+    void exportToImage();
+};
+
+class AxisSettingGroupBox : public QGroupBox
+{
+    Q_OBJECT
+
+public:
+    AxisSettingGroupBox(QWidget *parent, QChart *graph, const QString& text, const Qt::Orientation orient);
+
+private:
+    QChart *graph;
+    Qt::Orientation orient;
+    LineEditLayout *rangeMin;
+    LineEditLayout *rangeMax;
+    SpinBoxEditLayout *axisNameSize;
+    LineEditLayout *labelAngle;
+    ComboEditLayout *labelColor;
+    RGBEditLayout *labelColorCustom;
+    SpinBoxEditLayout *labelSize;
+    ComboEditLayout *gridColor;
+    RGBEditLayout *gridColorCustom;
+
+    QMetaObject::Connection rangeMaxEditConnection;
+    QMetaObject::Connection rangeMinEditConnection;
+
+public slots:
+    void connectRangeEdit();
+    void setRangeEdit();
+
+private slots:
+    void setMinEdit(const qreal min) { rangeMin->setLineEditText(QString::number(min)); }
+    void setMaxEdit(const qreal max) { rangeMax->setLineEditText(QString::number(max)); }
+    void setAxisNameSize(const int ps);
+    void setAxisLabelAngle(const QString& angle);
+    void setAxisLabelColor(const int index);
+    void setAxisLabelSize(const int ps);
+    void setGridColor(const int index);
+};
+
+class AxisSettingWidget : public QWidget
+{
+    Q_OBJECT
+
+public:
+    AxisSettingWidget(QWidget *parent, QChart *graph);
+
+public:
+    AxisSettingGroupBox *xAxisGroupBox;
+    AxisSettingGroupBox *yAxisGroupBox;
+
+private:
+    QChart *graph;
+};
 
 
 
