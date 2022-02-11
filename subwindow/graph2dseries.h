@@ -56,7 +56,7 @@ QStringList enumToStrings(const QEnum){
 class CEnum : private QObject{
     Q_OBJECT
 public:
-    enum class PlotType { LineSeries, SplineSeries, ScatterSeries };
+    enum class PlotType { LineSeries, SplineSeries, ScatterSeries, AreaSeries, LogressionLine };
     Q_ENUM(PlotType)
 };
 
@@ -105,9 +105,20 @@ private:
 
     //指定したQXYSeriesを継承したT(QLineSeries,QSplineSeries,QScatterSeries)型のSeriesを返す
     template<class T> T* createXYSeries(const PlotTableRange& range);
+    //直線以下を塗りつぶすQAreaSeries型のseriesを返す
+    QAreaSeries* createAreaSeries(const SeriesData& data);
+    //最小二乗法による近似曲線を求める
+    QPointF deriveRogressionLine(const PlotTableRange& range);
+    QLineSeries* createRogressionLine(const PlotTableRange& range);
+
+    qreal getRangeMin(Qt::Orientation orient);
+    qreal getRangeMax(Qt::Orientation orient);
+
+    void addRogressionLine(const int index);
+    void updateRogressionLine(const int index);
 
 private slots:
-    void changeSeriesType(const int index, const CEnum::PlotType type);
+    void changeSeriesType(const CEnum::PlotType type, const int index = -1);
 };
 
 
@@ -263,11 +274,13 @@ private slots:
     void setColorWithCombo(const int index);
     void setColorWithRGB(const QColor& color);
     void emitSeriesTypeChanged(const int type);
+    void emitRogressionAdded();
 private:
     void setLineColor(const QColor& color);
     const QColor getLineColor(const int index);
 signals:
-    void seriesTypeChanged(const int index, const CEnum::PlotType type);
+    void seriesTypeChanged(const CEnum::PlotType type, const int index);
+    void rogressionLineAdded(const int index);
 };
 
 class LegendSettingWidget : public QWidget

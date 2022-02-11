@@ -37,6 +37,26 @@
  *
  *
  *
+ * QAbstractBarSeries(QBarCategoryAxis) ---|--- QBarSeries
+ *                                         |--- QHorizontalBarSeries
+ *                                         |--- QHorizontalPercentBarSeries
+ *                                         |--- QHorizontalStackedBarSeries
+ *                                         |--- QPercentBarSeries
+ *                                         |--- QStackedBarSeries
+ * QAreaSeries(QValueAxis)
+ * QBoxPlotSeries(QBarCategoryAxis)
+ * QCandlestickSeries(QBarCategoryAxis)
+ * QPieSeries
+ * QXYSeries(QValueAxis) ------------------|--- QLineSeries
+ *                                         |--- QSplineSeries
+ *                                         |--- QScatterSeries
+ *
+ * QBarCategoryAxis
+ * QColorAxis
+ * QDateTimeAxis
+ * QLogValueAxis
+ * QValueAxis
+ *
  *
  */
 
@@ -158,6 +178,7 @@ void Graph2DSeries::initializeGraphLayout()
     settingStackWidget->addWidget(exportSettingWidget);
 
     connect(seriesSettingWidget, &SeriesSettingWidget::seriesTypeChanged, this, &Graph2DSeries::changeSeriesType);
+    connect(seriesSettingWidget, &SeriesSettingWidget::rogressionLineAdded, this, &Graph2DSeries::addRogressionLine);
 }
 
 void Graph2DSeries::initializeGraphSeries()
@@ -210,6 +231,15 @@ void Graph2DSeries::updateGraphSeries(QTableWidgetItem *item)
                                                                              table->item(changedRow, range.colX)->text().toFloat(),
                                                                              table->item(changedRow, range.colY)->text().toFloat());
                 break;
+            case CEnum::PlotType::AreaSeries:
+
+                qobject_cast<QAreaSeries*>(graph->series().at(index))->upperSeries()->replace(changedRow - range.startRow,
+                                                                                              table->item(changedRow, range.colX)->text().toFloat(),
+                                                                                              table->item(changedRow, range.colY)->text().toFloat());
+                break;
+            case CEnum::PlotType::LogressionLine:
+                updateRogressionLine(index);
+                break;
             default:
                 break;
             }
@@ -219,9 +249,9 @@ void Graph2DSeries::updateGraphSeries(QTableWidgetItem *item)
     }
 }
 
-void Graph2DSeries::changeSeriesType(const int index, const CEnum::PlotType type)
+void Graph2DSeries::changeSeriesType(const CEnum::PlotType type, const int index)
 {
-    seriesData[index].plotType = type;
+    if(index != -1) { seriesData[index].plotType = type; }
 
     graph->removeAllSeries();
 
@@ -239,6 +269,12 @@ void Graph2DSeries::changeSeriesType(const int index, const CEnum::PlotType type
             break;
         case CEnum::PlotType::ScatterSeries:
             graph->addSeries(createXYSeries<QScatterSeries>(range));
+            break;
+        case CEnum::PlotType::AreaSeries:
+            graph->addSeries(createAreaSeries(seriesData.at(i)));
+            break;
+        case CEnum::PlotType::LogressionLine:
+            graph->addSeries(createRogressionLine(plotTableRanges.at(seriesData.at(i).rangeIndex)));
             break;
         default:
             break;
@@ -263,30 +299,114 @@ template<class T> T* Graph2DSeries::createXYSeries(const PlotTableRange& range)
     return series;
 }
 
+QAreaSeries* Graph2DSeries::createAreaSeries(const SeriesData &data)
+{
+    QLineSeries *upperSeries = createXYSeries<QLineSeries>(plotTableRanges.at(data.rangeIndex));
+    QAreaSeries *series = new QAreaSeries(upperSeries);
+
+    return series;
+}
+
+QPointF Graph2DSeries::deriveRogressionLine(const PlotTableRange &range)
+{
+    /* x座標,y座標の合計 */
+    double sumX = 0, sumY = 0;
+    for(int row = range.startRow; row <= range.endRow; ++row)
+    {if(table->item(row, range.colX) == nullptr || table->item(row, range.colY) == nullptr) continue;
+
+        sumX += table->item(row, range.colX)->text().toDouble();
+        sumY += table->item(row, range.colY)->text().toDouble();
+    }
+
+    /* x,yの平均 */
+    const double averageX = sumX / (range.endRow - range.startRow + 1);
+    const double averageY = sumY / (range.endRow - range.startRow + 1);
+
+    /* 傾きの分子と分母 */
+    double numerator = 0;
+    double fraction = 0;
+    for(int row = range.startRow; row <= range.endRow; ++row)
+    {
+        if(table->item(row, range.colX) == nullptr || table->item(row, range.colY) == nullptr) continue;
+        const double x = table->item(row, range.colX)->text().toDouble();
+        const double y = table->item(row, range.colY)->text().toDouble();
+
+        numerator += (x - averageX) * (y - averageY);
+        fraction += (x - averageX) * (x - averageX);
+    }
+
+    /* 傾きと切片 */
+    const double slope = numerator / fraction;
+    const double intercept = averageY - (slope * averageX);
+
+    return QPointF(slope, intercept);
+}
+
+QLineSeries* Graph2DSeries::createRogressionLine(const PlotTableRange& range)
+{
+    QPointF cof = deriveRogressionLine(range);
+
+    /* 直線 */
+    QLineSeries *series = new QLineSeries;
+    series->append(getRangeMin(Qt::Horizontal), cof.x() * getRangeMin(Qt::Horizontal) + cof.y());
+    series->append(getRangeMax(Qt::Horizontal), cof.x() * getRangeMax(Qt::Horizontal) + cof.y());
+
+    return series;
+}
+
+qreal Graph2DSeries::getRangeMin(Qt::Orientation orient)
+{
+    if(graph->axes(orient).size() < 1) { return NULL; }
+
+    const QAbstractAxis::AxisType axisType = graph->axes(orient).constLast()->type();
+
+    switch(axisType)
+    {
+    case QAbstractAxis::AxisTypeValue:
+        return qobject_cast<QValueAxis*>(graph->axes(orient).constLast())->min();
+    default :
+        return NULL;
+    }
+}
+
+qreal Graph2DSeries::getRangeMax(Qt::Orientation orient)
+{
+    if(graph->axes(orient).size() < 1) { return NULL; }
+
+    const QAbstractAxis::AxisType axisType = graph->axes(orient).constLast()->type();
+
+    switch(axisType)
+    {
+    case QAbstractAxis::AxisTypeValue:
+        return qobject_cast<QValueAxis*>(graph->axes(orient).constLast())->max();
+    default:
+        return NULL;
+    }
+}
+
+void Graph2DSeries::addRogressionLine(const int index)
+{
+    SeriesData newSeriesData;
+    newSeriesData.plotType = CEnum::PlotType::LogressionLine;
+    newSeriesData.rangeIndex = index;
+    seriesData.append(newSeriesData);
+
+    changeSeriesType(CEnum::PlotType::LogressionLine);
+}
+
+void Graph2DSeries::updateRogressionLine(const int index)
+{
+    QPointF cof = deriveRogressionLine(plotTableRanges.at(seriesData.at(index).rangeIndex));
+
+    qobject_cast<QLineSeries*>(graph->series().at(index))->replace(0,
+                                                                   getRangeMin(Qt::Horizontal),
+                                                                   cof.x() * getRangeMin(Qt::Horizontal) + cof.y());
+    qobject_cast<QLineSeries*>(graph->series().at(index))->replace(1,
+                                                                   getRangeMax(Qt::Horizontal),
+                                                                   cof.x() * getRangeMax(Qt::Horizontal) + cof.y());
+}
 
 
-
-/*
- * QAbstractBarSeries(QBarCategoryAxis) ---|--- QBarSeries
- *                                         |--- QHorizontalBarSeries
- *                                         |--- QHorizontalPercentBarSeries
- *                                         |--- QHorizontalStackedBarSeries
- *                                         |--- QPercentBarSeries
- *                                         |--- QStackedBarSeries
- * QAreaSeries(QValueAxis)
- * QBoxPlotSeries(QBarCategoryAxis)
- * QCandlestickSeries(QBarCategoryAxis)
- * QPieSeries
- * QXYSeries(QValueAxis) ------------------|--- QLineSeries
- *                                         |--- QSplineSeries
- *                                         |--- QScatterSeries
- *
- * QBarCategoryAxis
- * QColorAxis
- * QDateTimeAxis
- * QLogValueAxis
- * QValueAxis
- */
 
 
 
@@ -534,6 +654,7 @@ SeriesSettingWidget::SeriesSettingWidget(QWidget *parent, QChart *graph)
         seriesTypeCombo[i] = new ComboEditLayout(tabWidget, "Series type");
         lineColorCombo[i] = new ComboEditLayout(tabWidget, "Line color");
         lineColorCustom[i] = new RGBEditLayout(tabWidget);
+        QPushButton *addRogressionLine = new QPushButton("Add Rogression", tabWidget);
 
         tab->addTab(tabWidget, "series " + QString::number(i));
         tabWidget->setLayout(tabWidgetLayout);
@@ -541,6 +662,7 @@ SeriesSettingWidget::SeriesSettingWidget(QWidget *parent, QChart *graph)
         tabWidgetLayout->addLayout(seriesTypeCombo.at(i));
         tabWidgetLayout->addLayout(lineColorCombo.at(i));
         tabWidgetLayout->addLayout(lineColorCustom.at(i));
+        tabWidgetLayout->addWidget(addRogressionLine);
         tabWidgetLayout->addItem(tabSpacer);
 
         seriesTypeCombo.at(i)->insertComboItems(0, enumToStrings(CEnum::PlotType::LineSeries));
@@ -551,6 +673,7 @@ SeriesSettingWidget::SeriesSettingWidget(QWidget *parent, QChart *graph)
         connect(seriesTypeCombo.at(i), &ComboEditLayout::currentComboIndexChanged, this, &SeriesSettingWidget::emitSeriesTypeChanged);
         connect(lineColorCombo.at(i), &ComboEditLayout::currentComboIndexChanged, this, &SeriesSettingWidget::setColorWithCombo);
         connect(lineColorCustom.at(i), &RGBEditLayout::colorEdited, this, &SeriesSettingWidget::setColorWithRGB);
+        connect(addRogressionLine, &QPushButton::released, this, &SeriesSettingWidget::emitRogressionAdded);
     }
 }
 
@@ -601,7 +724,12 @@ const QColor SeriesSettingWidget::getLineColor(const int index)
 
 void SeriesSettingWidget::emitSeriesTypeChanged(const int type)
 {
-    emit seriesTypeChanged(tab->currentIndex(), CEnum::PlotType(type));
+    emit seriesTypeChanged(CEnum::PlotType(type), tab->currentIndex());
+}
+
+void SeriesSettingWidget::emitRogressionAdded()
+{
+    emit rogressionLineAdded(tab->currentIndex());
 }
 
 
