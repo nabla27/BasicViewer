@@ -46,11 +46,27 @@ QString enumToString(const QEnum value) { return QString(QMetaEnum::fromType<QEn
 template <class QEnum>
 QStringList enumToStrings(const QEnum){
     QStringList enumStrList;
-    for(int i = 0; i < QMetaEnum::fromType<QEnum>().keyCount(); ++i){
+    const int enumCount = QMetaEnum::fromType<QEnum>().keyCount();
+    for(int i = 0; i < enumCount; ++i){
         enumStrList << QStringList(QMetaEnum::fromType<QEnum>().valueToKey(i));
     }
 
     return enumStrList;
+}
+
+template <class QEnum>
+int getEnumCount(const QEnum){
+    return QMetaEnum::fromType<QEnum>().keyCount();
+}
+
+template <class QEnum>
+int getEnumIndex(const QString enumStr){
+    const int enumCount = getEnumCount(QEnum(0));
+    for(int i = 0; i < enumCount; ++i){
+        if(QMetaEnum::fromType<QEnum>().valueToKey(i) == enumStr) { return i; }
+    }
+
+    return -1;
 }
 
 class CEnum : private QObject{
@@ -59,6 +75,8 @@ public:
     enum class PlotType { LineSeries, SplineSeries, ScatterSeries, AreaSeries, LogressionLine };
     Q_ENUM(PlotType)
 };
+
+
 
 struct SeriesData
 {
@@ -114,7 +132,7 @@ private:
     qreal getRangeMin(Qt::Orientation orient);
     qreal getRangeMax(Qt::Orientation orient);
 
-    void addRogressionLine(const int index);
+    void addLineSeries(const int index, const CEnum::PlotType type);
     void updateRogressionLine(const int index);
 
 private slots:
@@ -274,13 +292,13 @@ private slots:
     void setColorWithCombo(const int index);
     void setColorWithRGB(const QColor& color);
     void emitSeriesTypeChanged(const int type);
-    void emitRogressionAdded();
+    void addNewSeries();
 private:
     void setLineColor(const QColor& color);
     const QColor getLineColor(const int index);
 signals:
     void seriesTypeChanged(const CEnum::PlotType type, const int index);
-    void rogressionLineAdded(const int index);
+    void lineSeriesAdded(const int index, const CEnum::PlotType type);
 };
 
 class LegendSettingWidget : public QWidget

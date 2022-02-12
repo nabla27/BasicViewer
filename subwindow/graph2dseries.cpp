@@ -178,7 +178,7 @@ void Graph2DSeries::initializeGraphLayout()
     settingStackWidget->addWidget(exportSettingWidget);
 
     connect(seriesSettingWidget, &SeriesSettingWidget::seriesTypeChanged, this, &Graph2DSeries::changeSeriesType);
-    connect(seriesSettingWidget, &SeriesSettingWidget::rogressionLineAdded, this, &Graph2DSeries::addRogressionLine);
+    connect(seriesSettingWidget, &SeriesSettingWidget::lineSeriesAdded, this, &Graph2DSeries::addLineSeries);
 }
 
 void Graph2DSeries::initializeGraphSeries()
@@ -384,14 +384,14 @@ qreal Graph2DSeries::getRangeMax(Qt::Orientation orient)
     }
 }
 
-void Graph2DSeries::addRogressionLine(const int index)
+void Graph2DSeries::addLineSeries(const int index, const CEnum::PlotType type)
 {
     SeriesData newSeriesData;
-    newSeriesData.plotType = CEnum::PlotType::LogressionLine;
+    newSeriesData.plotType = type;
     newSeriesData.rangeIndex = index;
     seriesData.append(newSeriesData);
 
-    changeSeriesType(CEnum::PlotType::LogressionLine);
+    changeSeriesType(type);
 }
 
 void Graph2DSeries::updateRogressionLine(const int index)
@@ -654,7 +654,7 @@ SeriesSettingWidget::SeriesSettingWidget(QWidget *parent, QChart *graph)
         seriesTypeCombo[i] = new ComboEditLayout(tabWidget, "Series type");
         lineColorCombo[i] = new ComboEditLayout(tabWidget, "Line color");
         lineColorCustom[i] = new RGBEditLayout(tabWidget);
-        QPushButton *addRogressionLine = new QPushButton("Add Rogression", tabWidget);
+        QPushButton *addNewSeries = new QPushButton("Add series", tabWidget);
 
         tab->addTab(tabWidget, "series " + QString::number(i));
         tabWidget->setLayout(tabWidgetLayout);
@@ -662,7 +662,7 @@ SeriesSettingWidget::SeriesSettingWidget(QWidget *parent, QChart *graph)
         tabWidgetLayout->addLayout(seriesTypeCombo.at(i));
         tabWidgetLayout->addLayout(lineColorCombo.at(i));
         tabWidgetLayout->addLayout(lineColorCustom.at(i));
-        tabWidgetLayout->addWidget(addRogressionLine);
+        tabWidgetLayout->addWidget(addNewSeries);
         tabWidgetLayout->addItem(tabSpacer);
 
         seriesTypeCombo.at(i)->insertComboItems(0, enumToStrings(CEnum::PlotType::LineSeries));
@@ -673,7 +673,7 @@ SeriesSettingWidget::SeriesSettingWidget(QWidget *parent, QChart *graph)
         connect(seriesTypeCombo.at(i), &ComboEditLayout::currentComboIndexChanged, this, &SeriesSettingWidget::emitSeriesTypeChanged);
         connect(lineColorCombo.at(i), &ComboEditLayout::currentComboIndexChanged, this, &SeriesSettingWidget::setColorWithCombo);
         connect(lineColorCustom.at(i), &RGBEditLayout::colorEdited, this, &SeriesSettingWidget::setColorWithRGB);
-        connect(addRogressionLine, &QPushButton::released, this, &SeriesSettingWidget::emitRogressionAdded);
+        connect(addNewSeries, &QPushButton::released, this, &SeriesSettingWidget::addNewSeries);
     }
 }
 
@@ -727,9 +727,14 @@ void SeriesSettingWidget::emitSeriesTypeChanged(const int type)
     emit seriesTypeChanged(CEnum::PlotType(type), tab->currentIndex());
 }
 
-void SeriesSettingWidget::emitRogressionAdded()
+void SeriesSettingWidget::addNewSeries()
 {
-    emit rogressionLineAdded(tab->currentIndex());
+    bool flagOk = false;
+    const QString type = QInputDialog::getItem(this, "graph2DSeries", "select the line type", enumToStrings(CEnum::PlotType::AreaSeries), 0, false, &flagOk);
+
+    if(!flagOk) { return; }
+
+    emit lineSeriesAdded(tab->currentIndex(), CEnum::PlotType(getEnumIndex<CEnum::PlotType>(type)));
 }
 
 
