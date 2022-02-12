@@ -292,7 +292,7 @@ private slots:
     void setColorWithCombo(const int index);
     void setColorWithRGB(const QColor& color);
     void emitSeriesTypeChanged(const int type);
-    void addNewSeries();
+    void addLineSeries();
 private:
     void setLineColor(const QColor& color);
     const QColor getLineColor(const int index);

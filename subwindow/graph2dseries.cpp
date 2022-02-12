@@ -673,7 +673,7 @@ SeriesSettingWidget::SeriesSettingWidget(QWidget *parent, QChart *graph)
         connect(seriesTypeCombo.at(i), &ComboEditLayout::currentComboIndexChanged, this, &SeriesSettingWidget::emitSeriesTypeChanged);
         connect(lineColorCombo.at(i), &ComboEditLayout::currentComboIndexChanged, this, &SeriesSettingWidget::setColorWithCombo);
         connect(lineColorCustom.at(i), &RGBEditLayout::colorEdited, this, &SeriesSettingWidget::setColorWithRGB);
-        connect(addNewSeries, &QPushButton::released, this, &SeriesSettingWidget::addNewSeries);
+        connect(addNewSeries, &QPushButton::released, this, &SeriesSettingWidget::addLineSeries);
     }
 }
 
@@ -727,7 +727,7 @@ void SeriesSettingWidget::emitSeriesTypeChanged(const int type)
     emit seriesTypeChanged(CEnum::PlotType(type), tab->currentIndex());
 }
 
-void SeriesSettingWidget::addNewSeries()
+void SeriesSettingWidget::addLineSeries()
 {
     bool flagOk = false;
     const QString type = QInputDialog::getItem(this, "graph2DSeries", "select the line type", enumToStrings(CEnum::PlotType::AreaSeries), 0, false, &flagOk);
