@@ -293,6 +293,7 @@ private slots:
     void setColorWithRGB(const QColor& color);
     void emitSeriesTypeChanged(const int type);
     void addLineSeries();
+    void addTab(CEnum::PlotType type);
 private:
     void setLineColor(const QColor& color);
     const QColor getLineColor(const int index);

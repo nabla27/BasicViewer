@@ -640,41 +640,10 @@ SeriesSettingWidget::SeriesSettingWidget(QWidget *parent, QChart *graph)
     layout->addWidget(tab);
     layout->addItem(spacer);
 
-    const qsizetype num = graph->series().size();
-    seriesTypeCombo.resize(num);
-    lineColorCombo.resize(num);
-    lineColorCustom.resize(num);
+    const qsizetype seriesCount = graph->series().size();
 
-    for(qsizetype i = 0; i < num; ++i)
-    {
-        QWidget *tabWidget = new QWidget(tab);
-        QVBoxLayout *tabWidgetLayout = new QVBoxLayout(tabWidget);
-        QSpacerItem *tabSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
-
-        seriesTypeCombo[i] = new ComboEditLayout(tabWidget, "Series type");
-        lineColorCombo[i] = new ComboEditLayout(tabWidget, "Line color");
-        lineColorCustom[i] = new RGBEditLayout(tabWidget);
-        QPushButton *addNewSeries = new QPushButton("Add series", tabWidget);
-
-        tab->addTab(tabWidget, "series " + QString::number(i));
-        tabWidget->setLayout(tabWidgetLayout);
-
-        tabWidgetLayout->addLayout(seriesTypeCombo.at(i));
-        tabWidgetLayout->addLayout(lineColorCombo.at(i));
-        tabWidgetLayout->addLayout(lineColorCustom.at(i));
-        tabWidgetLayout->addWidget(addNewSeries);
-        tabWidgetLayout->addItem(tabSpacer);
-
-        seriesTypeCombo.at(i)->insertComboItems(0, enumToStrings(CEnum::PlotType::LineSeries));
-        lineColorCombo.at(i)->insertComboItems(0, colorNameList());
-        lineColorCombo.at(i)->setComboCurrentIndex(QT_GLOBAL_COLOR_COUNT + 1);
-        lineColorCustom.at(i)->setColor(getLineColor(i));
-
-        connect(seriesTypeCombo.at(i), &ComboEditLayout::currentComboIndexChanged, this, &SeriesSettingWidget::emitSeriesTypeChanged);
-        connect(lineColorCombo.at(i), &ComboEditLayout::currentComboIndexChanged, this, &SeriesSettingWidget::setColorWithCombo);
-        connect(lineColorCustom.at(i), &RGBEditLayout::colorEdited, this, &SeriesSettingWidget::setColorWithRGB);
-        connect(addNewSeries, &QPushButton::released, this, &SeriesSettingWidget::addLineSeries);
-    }
+    for(qsizetype i = 0; i < seriesCount; ++i)
+        addTab(CEnum::PlotType::LineSeries);
 }
 
 void SeriesSettingWidget::setColorWithCombo(const int index)
@@ -735,6 +704,39 @@ void SeriesSettingWidget::addLineSeries()
     if(!flagOk) { return; }
 
     emit lineSeriesAdded(tab->currentIndex(), CEnum::PlotType(getEnumIndex<CEnum::PlotType>(type)));
+    addTab(CEnum::PlotType(getEnumIndex<CEnum::PlotType>(type)));
+}
+
+void SeriesSettingWidget::addTab(CEnum::PlotType type)
+{
+    QWidget *tabWidget = new QWidget(tab);
+    QVBoxLayout *tabWidgetLayout = new QVBoxLayout(tabWidget);
+    QSpacerItem *tabSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+
+    seriesTypeCombo.append(new ComboEditLayout(tabWidget, "Series type"));
+    lineColorCombo.append(new ComboEditLayout(tabWidget, "Line color"));
+    lineColorCustom.append(new RGBEditLayout(tabWidget));
+    QPushButton *addNewSeries = new QPushButton("Add series");
+
+    tab->addTab(tabWidget, "series " + QString::number(tab->count()));
+    tabWidget->setLayout(tabWidgetLayout);
+
+    tabWidgetLayout->addLayout(seriesTypeCombo.constLast());
+    tabWidgetLayout->addLayout(lineColorCombo.constLast());
+    tabWidgetLayout->addLayout(lineColorCustom.constLast());
+    tabWidgetLayout->addWidget(addNewSeries);
+    tabWidgetLayout->addItem(tabSpacer);
+
+    seriesTypeCombo.constLast()->insertComboItems(0, enumToStrings(CEnum::PlotType(0)));
+    seriesTypeCombo.constLast()->setComboCurrentIndex((int)type);
+    lineColorCombo.constLast()->insertComboItems(0, colorNameList());
+    lineColorCombo.constLast()->setComboCurrentIndex(QT_GLOBAL_COLOR_COUNT + 1);
+    lineColorCustom.constLast()->setColor(getLineColor(tab->count() - 1));
+
+    connect(seriesTypeCombo.constLast(), &ComboEditLayout::currentComboIndexChanged, this, &SeriesSettingWidget::emitSeriesTypeChanged);
+    connect(lineColorCombo.constLast(), &ComboEditLayout::currentComboIndexChanged, this, &SeriesSettingWidget::setColorWithCombo);
+    connect(lineColorCustom.constLast(), &RGBEditLayout::colorEdited, this, &SeriesSettingWidget::setColorWithRGB);
+    connect(addNewSeries, &QPushButton::released, this, &SeriesSettingWidget::addLineSeries);
 }
 
 
