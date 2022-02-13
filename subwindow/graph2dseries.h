@@ -290,12 +290,14 @@ private:
     QList<ComboEditLayout*> lineColorCombo;
     QList<RGBEditLayout*> lineColorCustom;
     QList<ComboEditLayout*> scatterTypeCombo;
+    QList<LineEditLayout*> scatterSizeSpin;
 
 private slots:
     void setColorWithCombo(const int index);
     void setColorWithRGB(const QColor& color);
     void emitSeriesTypeChanged(const int type);
     void setScatterType(const int type);
+    void setScatterSize(const QString& ps);
     void addLineSeries();
     void addTab(CEnum::PlotType type);
     void changeWidgetItemVisible(const CEnum::PlotType type, const int index);
