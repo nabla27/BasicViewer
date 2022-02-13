@@ -328,6 +328,9 @@ private:
     QChart *graph;
     QTabWidget *tab;
 
+public slots:
+    void addTab();
+
 private slots:
     void setPointsVisible(const bool visible);
     void setPointLabelsVisible(const bool visible);

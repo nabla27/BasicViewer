@@ -179,6 +179,7 @@ void Graph2DSeries::initializeGraphLayout()
 
     connect(seriesSettingWidget, &SeriesSettingWidget::seriesTypeChanged, this, &Graph2DSeries::changeSeriesType);
     connect(seriesSettingWidget, &SeriesSettingWidget::lineSeriesAdded, this, &Graph2DSeries::addLineSeries);
+    connect(seriesSettingWidget, &SeriesSettingWidget::lineSeriesAdded, labelSettingWidget, &LabelSettingWidget::addTab);
 }
 
 void Graph2DSeries::initializeGraphSeries()
@@ -788,28 +789,9 @@ LabelSettingWidget::LabelSettingWidget(QWidget *parent, QChart *graph)
     setLayout(layout);
     layout->addWidget(tab);
 
-    for(qsizetype i = 0; i < graph->series().size(); ++i)
-    {
-        QWidget *tabWidget = new QWidget(tab);
-        QVBoxLayout *tabLayout = new QVBoxLayout(tabWidget);
-        QCheckBox *labelVisible = new QCheckBox("show label", tabWidget);
-        QCheckBox *labelPointsVisible = new QCheckBox("show points", tabWidget);
-        QCheckBox *labelPointsClipping = new QCheckBox("label clipping", tabWidget);
-        QSpacerItem *tabSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
-
-        tab->addTab(tabWidget, "series " + QString::number(i));
-        tabWidget->setLayout(tabLayout);
-        tabLayout->addWidget(labelVisible);
-        tabLayout->addWidget(labelPointsVisible);
-        tabLayout->addWidget(labelPointsClipping);
-        tabLayout->addItem(tabSpacer);
-
-        labelPointsClipping->setChecked(true);
-
-        connect(labelVisible, &QCheckBox::toggled, this, &LabelSettingWidget::setPointsVisible);
-        connect(labelPointsVisible, &QCheckBox::toggled, this, &LabelSettingWidget::setPointLabelsVisible);
-        connect(labelPointsClipping, &QCheckBox::toggled, this, &LabelSettingWidget::setPointLabelsClipping);
-    }
+    const int seriesCount = graph->series().size();
+    for(qsizetype i = 0; i < seriesCount; ++i)
+        addTab();
 }
 
 void LabelSettingWidget::setPointsVisible(const bool visible)
@@ -856,6 +838,29 @@ void LabelSettingWidget::setPointLabelsClipping(const bool clipping)
     default:
         break;
     }
+}
+
+void LabelSettingWidget::addTab()
+{
+    QWidget *tabWidget = new QWidget(tab);
+    QVBoxLayout *tabLayout = new QVBoxLayout(tabWidget);
+    QCheckBox *labelVisible = new QCheckBox("Show label", tabWidget);
+    QCheckBox *labelPointsVisible = new QCheckBox("Show points", tabWidget);
+    QCheckBox *labelPointsClipping = new QCheckBox("label clipping", tabWidget);
+    QSpacerItem *tabSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+
+    tab->addTab(tabWidget, "series " + QString::number(tab->count()));
+    tabWidget->setLayout(tabLayout);
+    tabLayout->addWidget(labelVisible);
+    tabLayout->addWidget(labelPointsVisible);
+    tabLayout->addWidget(labelPointsClipping);
+    tabLayout->addItem(tabSpacer);
+
+    labelPointsClipping->setChecked(true);
+
+    connect(labelVisible, &QCheckBox::toggled, this, &LabelSettingWidget::setPointsVisible);
+    connect(labelPointsVisible, &QCheckBox::toggled, this, &LabelSettingWidget::setPointLabelsVisible);
+    connect(labelPointsClipping, &QCheckBox::toggled, this, &LabelSettingWidget::setPointLabelsClipping);
 }
 
 
