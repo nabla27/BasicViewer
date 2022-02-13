@@ -180,6 +180,7 @@ void Graph2DSeries::initializeGraphLayout()
     connect(seriesSettingWidget, &SeriesSettingWidget::seriesTypeChanged, this, &Graph2DSeries::changeSeriesType);
     connect(seriesSettingWidget, &SeriesSettingWidget::lineSeriesAdded, this, &Graph2DSeries::addLineSeries);
     connect(seriesSettingWidget, &SeriesSettingWidget::lineSeriesAdded, labelSettingWidget, &LabelSettingWidget::addTab);
+    connect(seriesSettingWidget, &SeriesSettingWidget::lineSeriesAdded, legendSettingWidget, &LegendSettingWidget::renewSeriesNameEditer);
 }
 
 void Graph2DSeries::initializeGraphSeries()
@@ -800,8 +801,8 @@ void SeriesSettingWidget::changeWidgetItemVisible(const CEnum::PlotType type, co
 LegendSettingWidget::LegendSettingWidget(QWidget *parent, QChart *graph)
     : QWidget(parent), graph(graph)
 {
-    QVBoxLayout *layout = new QVBoxLayout(this);
-    QCheckBox *legendVisible = new QCheckBox("show legend", this);
+    layout = new QVBoxLayout(this);
+    legendVisible = new QCheckBox("show legend", this);
     SpinBoxEditLayout *legendSize = new SpinBoxEditLayout(this, "Size");
 
     setLayout(layout);
@@ -816,13 +817,7 @@ LegendSettingWidget::LegendSettingWidget(QWidget *parent, QChart *graph)
     connect(legendSize, &SpinBoxEditLayout::spinBoxValueChanged, this, &LegendSettingWidget::setLegendPointSize);
 
     for(qsizetype i = 0; i < graph->series().size(); ++i)
-    {
-        LineEditLayout *legendName = new LineEditLayout(this, "series " + QString::number(i));
-        legendName->setVisible(false);
-        layout->addLayout(legendName);
-        connect(legendName, &LineEditLayout::lineTextEdited, graph->series().at(i), &QAbstractSeries::setName);
-        connect(legendVisible, &QCheckBox::toggled, legendName, &LineEditLayout::setVisible);
-    }
+        addSeriesNameEditer();
 
     QSpacerItem *spacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
     layout->addItem(spacer);
@@ -833,6 +828,26 @@ void LegendSettingWidget::setLegendPointSize(const int ps)
     QFont legendFont = graph->legend()->font();
     legendFont.setPointSize(ps);
     graph->legend()->setFont(legendFont);
+}
+
+void LegendSettingWidget::renewSeriesNameEditer()
+{
+    const qsizetype seriesCount = graph->series().size();
+    for(qsizetype i = 0; i < seriesCount - 1; ++i)
+        connect(legendName.at(i), &LineEditLayout::lineTextEdited, graph->series().at(i), &QAbstractSeries::setName);
+
+    addSeriesNameEditer();
+}
+
+void LegendSettingWidget::addSeriesNameEditer()
+{
+    const qsizetype seriesCount = graph->series().size();
+
+    legendName.append(new LineEditLayout(this, "series " + QString::number(seriesCount - 1)));
+    legendName.constLast()->setVisible(legendVisible->isChecked());
+    layout->insertLayout(2 + seriesCount - 1, legendName.constLast());
+    connect(legendName.constLast(), &LineEditLayout::lineTextEdited, graph->series().at(seriesCount - 1), &QAbstractSeries::setName);
+    connect(legendVisible, &QCheckBox::toggled, legendName.constLast(), &LineEditLayout::setVisible);
 }
 
 

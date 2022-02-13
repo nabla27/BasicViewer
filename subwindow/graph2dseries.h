@@ -354,10 +354,17 @@ public:
 
 private:
     QChart *graph;
+    QVBoxLayout *layout;
+    QCheckBox *legendVisible;
+    QList<LineEditLayout*> legendName;
+
+public slots:
+    void renewSeriesNameEditer();
 
 private slots:
     void setLegendPointSize(const int ps);
     void setLegendVisible(const bool visible) { graph->legend()->setVisible(visible); }
+    void addSeriesNameEditer();
 };
 
 class LabelSettingWidget : public QWidget
