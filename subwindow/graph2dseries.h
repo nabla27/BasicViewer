@@ -73,7 +73,9 @@ class CEnum : private QObject{
     Q_OBJECT
 public:
     enum class PlotType { LineSeries, SplineSeries, ScatterSeries, AreaSeries, LogressionLine };
+    enum class MarkerShape { Circle, Rectangle, RotatedRectangle, Triangle, ShapeStar };
     Q_ENUM(PlotType)
+    Q_ENUM(MarkerShape)
 };
 
 
@@ -287,13 +289,16 @@ private:
     QList<ComboEditLayout*> seriesTypeCombo;
     QList<ComboEditLayout*> lineColorCombo;
     QList<RGBEditLayout*> lineColorCustom;
+    QList<ComboEditLayout*> scatterTypeCombo;
 
 private slots:
     void setColorWithCombo(const int index);
     void setColorWithRGB(const QColor& color);
     void emitSeriesTypeChanged(const int type);
+    void setScatterType(const int type);
     void addLineSeries();
     void addTab(CEnum::PlotType type);
+    void changeWidgetItemVisible(const CEnum::PlotType type, const int index);
 private:
     void setLineColor(const QColor& color);
     const QColor getLineColor(const int index);

@@ -645,6 +645,8 @@ SeriesSettingWidget::SeriesSettingWidget(QWidget *parent, QChart *graph)
 
     for(qsizetype i = 0; i < seriesCount; ++i)
         addTab(CEnum::PlotType::LineSeries);
+
+    connect(this, &SeriesSettingWidget::seriesTypeChanged, this, &SeriesSettingWidget::changeWidgetItemVisible);
 }
 
 void SeriesSettingWidget::setColorWithCombo(const int index)
@@ -701,6 +703,12 @@ void SeriesSettingWidget::emitSeriesTypeChanged(const int type)
     emit seriesTypeChanged(CEnum::PlotType(type), tab->currentIndex());
 }
 
+void SeriesSettingWidget::setScatterType(const int type)
+{
+    const int seriesIndex = tab->currentIndex();
+    qobject_cast<QScatterSeries*>(graph->series().at(seriesIndex))->setMarkerShape(QScatterSeries::MarkerShape(type));
+}
+
 void SeriesSettingWidget::addLineSeries()
 {
     bool flagOk = false;
@@ -721,6 +729,7 @@ void SeriesSettingWidget::addTab(CEnum::PlotType type)
     seriesTypeCombo.append(new ComboEditLayout(tabWidget, "Series type"));
     lineColorCombo.append(new ComboEditLayout(tabWidget, "Color"));
     lineColorCustom.append(new RGBEditLayout(tabWidget));
+    scatterTypeCombo.append(new ComboEditLayout(tabWidget, "Type"));
     QPushButton *addNewSeries = new QPushButton("Add series");
 
     tab->addTab(tabWidget, "series " + QString::number(tab->count()));
@@ -729,6 +738,7 @@ void SeriesSettingWidget::addTab(CEnum::PlotType type)
     tabWidgetLayout->addLayout(seriesTypeCombo.constLast());
     tabWidgetLayout->addLayout(lineColorCombo.constLast());
     tabWidgetLayout->addLayout(lineColorCustom.constLast());
+    tabWidgetLayout->addLayout(scatterTypeCombo.constLast());
     tabWidgetLayout->addWidget(addNewSeries);
     tabWidgetLayout->addItem(tabSpacer);
 
@@ -737,11 +747,31 @@ void SeriesSettingWidget::addTab(CEnum::PlotType type)
     lineColorCombo.constLast()->insertComboItems(0, colorNameList());
     lineColorCombo.constLast()->setComboCurrentIndex(QT_GLOBAL_COLOR_COUNT + 1);
     lineColorCustom.constLast()->setColor(getLineColor(tab->count() - 1));
+    scatterTypeCombo.constLast()->insertComboItems(0, enumToStrings(CEnum::MarkerShape(0)));
+    scatterTypeCombo.constLast()->setVisible(type == CEnum::PlotType::ScatterSeries);
 
     connect(seriesTypeCombo.constLast(), &ComboEditLayout::currentComboIndexChanged, this, &SeriesSettingWidget::emitSeriesTypeChanged);
     connect(lineColorCombo.constLast(), &ComboEditLayout::currentComboIndexChanged, this, &SeriesSettingWidget::setColorWithCombo);
     connect(lineColorCustom.constLast(), &RGBEditLayout::colorEdited, this, &SeriesSettingWidget::setColorWithRGB);
+    connect(scatterTypeCombo.constLast(), &ComboEditLayout::currentComboIndexChanged, this, &SeriesSettingWidget::setScatterType);
     connect(addNewSeries, &QPushButton::released, this, &SeriesSettingWidget::addLineSeries);
+}
+
+void SeriesSettingWidget::changeWidgetItemVisible(const CEnum::PlotType type, const int index)
+{
+    switch(type)
+    {
+    case CEnum::PlotType::LineSeries:
+    case CEnum::PlotType::SplineSeries:
+    case CEnum::PlotType::AreaSeries:
+    case CEnum::PlotType::LogressionLine:
+        scatterTypeCombo.at(index)->setVisible(false);
+        break;
+    case CEnum::PlotType::ScatterSeries:
+        scatterTypeCombo.at(index)->setVisible(true);
+    default:
+        break;
+    }
 }
 
 
