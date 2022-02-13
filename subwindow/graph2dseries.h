@@ -327,7 +327,6 @@ private:
     QList<ComboEditLayout*> lineColorCombo;
     QList<RGBEditLayout*> lineColorCustom;
     QList<ComboEditLayout*> scatterTypeCombo;
-    QList<LineEditLayout*> scatterSizeSpin;
 
 private slots:
     void setLineVisible(const bool visible);
@@ -335,7 +334,6 @@ private slots:
     void setColorWithRGB(const QColor& color);
     void emitSeriesTypeChanged(const int type);
     void setScatterType(const int type);
-    void setScatterSize(const QString& ps);
     void addLineSeries();
     void addTab(CEnum::PlotType type);
     void changeWidgetItemVisible(const CEnum::PlotType type, const int index);
@@ -372,6 +370,7 @@ public:
 private:
     QChart *graph;
     QTabWidget *tab;
+    QList<LineEditLayout*> labelPointsSize;
 
 public slots:
     void addTab();
@@ -380,6 +379,7 @@ private slots:
     void setPointsVisible(const bool visible);
     void setPointLabelsVisible(const bool visible);
     void setPointLabelsClipping(const bool visible);
+    void setPointsSize(const QString& ps);
 };
 
 class ExportSettingWidget : public QWidget

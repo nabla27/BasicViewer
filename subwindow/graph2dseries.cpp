@@ -715,12 +715,6 @@ void SeriesSettingWidget::setScatterType(const int type)
     qobject_cast<QScatterSeries*>(graph->series().at(seriesIndex))->setMarkerShape(QScatterSeries::MarkerShape(type));
 }
 
-void SeriesSettingWidget::setScatterSize(const QString& ps)
-{
-    const int seriesIndex = tab->currentIndex();
-    qobject_cast<QScatterSeries*>(graph->series().at(seriesIndex))->setMarkerSize(ps.toDouble());
-}
-
 void SeriesSettingWidget::addLineSeries()
 {
     bool flagOk = false;
@@ -743,7 +737,6 @@ void SeriesSettingWidget::addTab(CEnum::PlotType type)
     lineColorCombo.append(new ComboEditLayout(tabWidget, "Color"));
     lineColorCustom.append(new RGBEditLayout(tabWidget));
     scatterTypeCombo.append(new ComboEditLayout(tabWidget, "Type"));
-    scatterSizeSpin.append(new LineEditLayout(tabWidget, "Size"));
     PushButtonLayout *addNewSeries = new PushButtonLayout(tabWidget, "Add series");
 
     tab->addTab(tabWidget, "series " + QString::number(tab->count()));
@@ -754,7 +747,6 @@ void SeriesSettingWidget::addTab(CEnum::PlotType type)
     tabWidgetLayout->addLayout(lineColorCombo.constLast());
     tabWidgetLayout->addLayout(lineColorCustom.constLast());
     tabWidgetLayout->addLayout(scatterTypeCombo.constLast());
-    tabWidgetLayout->addLayout(scatterSizeSpin.constLast());
     tabWidgetLayout->addLayout(new BlankSpaceLayout(0, 30));
     tabWidgetLayout->addLayout(addNewSeries);
     tabWidgetLayout->addItem(tabSpacer);
@@ -767,9 +759,6 @@ void SeriesSettingWidget::addTab(CEnum::PlotType type)
     lineColorCustom.constLast()->setColor(getLineColor(tab->count() - 1));
     scatterTypeCombo.constLast()->insertComboItems(0, enumToStrings(CEnum::MarkerShape(0)));
     scatterTypeCombo.constLast()->setVisible(type == CEnum::PlotType::ScatterSeries);
-    scatterSizeSpin.constLast()->setVisible(type == CEnum::PlotType::ScatterSeries);
-    if(type == CEnum::PlotType::ScatterSeries)
-        scatterSizeSpin.constLast()->setLineEditText(QString::number(qobject_cast<QScatterSeries*>(graph->series().constLast())->markerSize()));
     addNewSeries->setButtonMinimumWidth(SETTING_EDIT_LWIDTH);
 
     connect(lineVisible, &QCheckBox::toggled, this, &SeriesSettingWidget::setLineVisible);
@@ -777,7 +766,6 @@ void SeriesSettingWidget::addTab(CEnum::PlotType type)
     connect(lineColorCombo.constLast(), &ComboEditLayout::currentComboIndexChanged, this, &SeriesSettingWidget::setColorWithCombo);
     connect(lineColorCustom.constLast(), &RGBEditLayout::colorEdited, this, &SeriesSettingWidget::setColorWithRGB);
     connect(scatterTypeCombo.constLast(), &ComboEditLayout::currentComboIndexChanged, this, &SeriesSettingWidget::setScatterType);
-    connect(scatterSizeSpin.constLast(), &LineEditLayout::lineTextEdited, this, &SeriesSettingWidget::setScatterSize);
     connect(addNewSeries, &PushButtonLayout::buttonReleased, this, &SeriesSettingWidget::addLineSeries);
 }
 
@@ -790,11 +778,9 @@ void SeriesSettingWidget::changeWidgetItemVisible(const CEnum::PlotType type, co
     case CEnum::PlotType::AreaSeries:
     case CEnum::PlotType::LogressionLine:
         scatterTypeCombo.at(index)->setVisible(false);
-        scatterSizeSpin.at(index)->setVisible(false);
         break;
     case CEnum::PlotType::ScatterSeries:
         scatterTypeCombo.at(index)->setVisible(true);
-        scatterSizeSpin.at(index)->setVisible(true);
     default:
         break;
     }
@@ -863,8 +849,10 @@ void LabelSettingWidget::setPointsVisible(const bool visible)
     {
     case QAbstractSeries::SeriesTypeLine:
     case QAbstractSeries::SeriesTypeSpline:
-        qobject_cast<QXYSeries*>(graph->series().at(index))->setPointsVisible(visible);
-        break;
+    case QAbstractSeries::SeriesTypeScatter:
+        qobject_cast<QXYSeries*>(graph->series().at(index))->setPointsVisible(visible); break;
+    case QAbstractSeries::SeriesTypeArea:
+        qobject_cast<QAreaSeries*>(graph->series().at(index))->setPointsVisible(visible); break;
     default:
         break;
     }
@@ -879,7 +867,10 @@ void LabelSettingWidget::setPointLabelsVisible(const bool visible)
     {
     case QAbstractSeries::SeriesTypeLine:
     case QAbstractSeries::SeriesTypeSpline:
+    case QAbstractSeries::SeriesTypeScatter:
         qobject_cast<QXYSeries*>(graph->series().at(index))->setPointLabelsVisible(visible); break;
+    case QAbstractSeries::SeriesTypeArea:
+        qobject_cast<QAreaSeries*>(graph->series().at(index))->setPointLabelsVisible(visible); break;
     default:
         break;
     }
@@ -894,7 +885,26 @@ void LabelSettingWidget::setPointLabelsClipping(const bool clipping)
     {
     case QAbstractSeries::SeriesTypeLine:
     case QAbstractSeries::SeriesTypeSpline:
+    case QAbstractSeries::SeriesTypeScatter:
         qobject_cast<QXYSeries*>(graph->series().at(index))->setPointLabelsClipping(clipping); break;
+    case QAbstractSeries::SeriesTypeArea:
+        qobject_cast<QAreaSeries*>(graph->series().at(index))->setPointLabelsClipping(clipping); break;
+    default:
+        break;
+    }
+}
+
+void LabelSettingWidget::setPointsSize(const QString& ps)
+{
+    const int seriesIndex = tab->currentIndex();
+    const QAbstractSeries::SeriesType type = graph->series().at(seriesIndex)->type();
+
+    switch(type)
+    {
+    case QAbstractSeries::SeriesTypeLine:
+    case QAbstractSeries::SeriesTypeSpline:
+    case QAbstractSeries::SeriesTypeScatter:
+        qobject_cast<QXYSeries*>(graph->series().at(seriesIndex))->setMarkerSize(ps.toDouble());
     default:
         break;
     }
@@ -906,7 +916,8 @@ void LabelSettingWidget::addTab()
     QVBoxLayout *tabLayout = new QVBoxLayout(tabWidget);
     QCheckBox *labelVisible = new QCheckBox("Show label", tabWidget);
     QCheckBox *labelPointsVisible = new QCheckBox("Show points", tabWidget);
-    QCheckBox *labelPointsClipping = new QCheckBox("label clipping", tabWidget);
+    QCheckBox *labelPointsClipping = new QCheckBox("Label clipping", tabWidget);
+    labelPointsSize.append(new LineEditLayout(tabWidget, "Points size"));
     QSpacerItem *tabSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
     tab->addTab(tabWidget, "series " + QString::number(tab->count()));
@@ -914,13 +925,17 @@ void LabelSettingWidget::addTab()
     tabLayout->addWidget(labelVisible);
     tabLayout->addWidget(labelPointsVisible);
     tabLayout->addWidget(labelPointsClipping);
+    tabLayout->addLayout(labelPointsSize.constLast());
     tabLayout->addItem(tabSpacer);
 
     labelPointsClipping->setChecked(true);
+    labelPointsSize.constLast()->setVisible(false);
 
     connect(labelVisible, &QCheckBox::toggled, this, &LabelSettingWidget::setPointsVisible);
+    connect(labelVisible, &QCheckBox::toggled, labelPointsSize.constLast(), &LineEditLayout::setVisible);
     connect(labelPointsVisible, &QCheckBox::toggled, this, &LabelSettingWidget::setPointLabelsVisible);
     connect(labelPointsClipping, &QCheckBox::toggled, this, &LabelSettingWidget::setPointLabelsClipping);
+    connect(labelPointsSize.constLast(), &LineEditLayout::lineTextEdited, this, &LabelSettingWidget::setPointsSize);
 }
 
 
