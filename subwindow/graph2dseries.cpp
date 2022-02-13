@@ -649,6 +649,12 @@ SeriesSettingWidget::SeriesSettingWidget(QWidget *parent, QChart *graph)
     connect(this, &SeriesSettingWidget::seriesTypeChanged, this, &SeriesSettingWidget::changeWidgetItemVisible);
 }
 
+void SeriesSettingWidget::setLineVisible(const bool visible)
+{
+    const int seriesIndex = tab->currentIndex();
+    graph->series().at(seriesIndex)->setVisible(visible);
+}
+
 void SeriesSettingWidget::setColorWithCombo(const int index)
 {
     const int seriesNum = tab->currentIndex();
@@ -732,24 +738,28 @@ void SeriesSettingWidget::addTab(CEnum::PlotType type)
     QVBoxLayout *tabWidgetLayout = new QVBoxLayout(tabWidget);
     QSpacerItem *tabSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
+    QCheckBox *lineVisible = new QCheckBox("Visible", tabWidget);
     seriesTypeCombo.append(new ComboEditLayout(tabWidget, "Series type"));
     lineColorCombo.append(new ComboEditLayout(tabWidget, "Color"));
     lineColorCustom.append(new RGBEditLayout(tabWidget));
     scatterTypeCombo.append(new ComboEditLayout(tabWidget, "Type"));
     scatterSizeSpin.append(new LineEditLayout(tabWidget, "Size"));
-    QPushButton *addNewSeries = new QPushButton("Add series");
+    PushButtonLayout *addNewSeries = new PushButtonLayout(tabWidget, "Add series");
 
     tab->addTab(tabWidget, "series " + QString::number(tab->count()));
     tabWidget->setLayout(tabWidgetLayout);
 
+    tabWidgetLayout->addWidget(lineVisible);
     tabWidgetLayout->addLayout(seriesTypeCombo.constLast());
     tabWidgetLayout->addLayout(lineColorCombo.constLast());
     tabWidgetLayout->addLayout(lineColorCustom.constLast());
     tabWidgetLayout->addLayout(scatterTypeCombo.constLast());
     tabWidgetLayout->addLayout(scatterSizeSpin.constLast());
-    tabWidgetLayout->addWidget(addNewSeries);
+    tabWidgetLayout->addLayout(new BlankSpaceLayout(0, 30));
+    tabWidgetLayout->addLayout(addNewSeries);
     tabWidgetLayout->addItem(tabSpacer);
 
+    lineVisible->setChecked(true);
     seriesTypeCombo.constLast()->insertComboItems(0, enumToStrings(CEnum::PlotType(0)));
     seriesTypeCombo.constLast()->setComboCurrentIndex((int)type);
     lineColorCombo.constLast()->insertComboItems(0, colorNameList());
@@ -760,13 +770,15 @@ void SeriesSettingWidget::addTab(CEnum::PlotType type)
     scatterSizeSpin.constLast()->setVisible(type == CEnum::PlotType::ScatterSeries);
     if(type == CEnum::PlotType::ScatterSeries)
         scatterSizeSpin.constLast()->setLineEditText(QString::number(qobject_cast<QScatterSeries*>(graph->series().constLast())->markerSize()));
+    addNewSeries->setButtonMinimumWidth(SETTING_EDIT_LWIDTH);
 
+    connect(lineVisible, &QCheckBox::toggled, this, &SeriesSettingWidget::setLineVisible);
     connect(seriesTypeCombo.constLast(), &ComboEditLayout::currentComboIndexChanged, this, &SeriesSettingWidget::emitSeriesTypeChanged);
     connect(lineColorCombo.constLast(), &ComboEditLayout::currentComboIndexChanged, this, &SeriesSettingWidget::setColorWithCombo);
     connect(lineColorCustom.constLast(), &RGBEditLayout::colorEdited, this, &SeriesSettingWidget::setColorWithRGB);
     connect(scatterTypeCombo.constLast(), &ComboEditLayout::currentComboIndexChanged, this, &SeriesSettingWidget::setScatterType);
     connect(scatterSizeSpin.constLast(), &LineEditLayout::lineTextEdited, this, &SeriesSettingWidget::setScatterSize);
-    connect(addNewSeries, &QPushButton::released, this, &SeriesSettingWidget::addLineSeries);
+    connect(addNewSeries, &PushButtonLayout::buttonReleased, this, &SeriesSettingWidget::addLineSeries);
 }
 
 void SeriesSettingWidget::changeWidgetItemVisible(const CEnum::PlotType type, const int index)
@@ -783,7 +795,6 @@ void SeriesSettingWidget::changeWidgetItemVisible(const CEnum::PlotType type, co
     case CEnum::PlotType::ScatterSeries:
         scatterTypeCombo.at(index)->setVisible(true);
         scatterSizeSpin.at(index)->setVisible(true);
-        //qobject_cast<QScatterSeries*>(graph->series().at(index))->markerSize();
     default:
         break;
     }

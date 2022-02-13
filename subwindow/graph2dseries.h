@@ -257,6 +257,43 @@ private:
     QSpacerItem *spacer;
 };
 
+class PushButtonLayout : public QHBoxLayout
+{
+    Q_OBJECT
+
+public:
+    PushButtonLayout(QWidget *parent, const QString& text = ""){
+        button = new QPushButton(text, parent);
+        addWidget(button, 0, Qt::AlignCenter);
+        connect(button, &QPushButton::released, [this](){ emit buttonReleased(); });
+    };
+
+public:
+    void setButtonMaximumWidth(const int width) { button->setMaximumWidth(width); }
+    void setButtonMinimumWidth(const int width) { button->setMinimumWidth(width); }
+
+private:
+    QPushButton *button;
+
+signals:
+    void buttonReleased();
+};
+
+class BlankSpaceLayout : public QHBoxLayout
+{
+    Q_OBJECT
+
+public:
+    BlankSpaceLayout(const int width, const int height){
+        spacer = new QSpacerItem(width, height, QSizePolicy::Maximum, QSizePolicy::Maximum);
+        addItem(spacer);
+    }
+
+private:
+    QSpacerItem *spacer;
+};
+
+
 
 
 
@@ -293,6 +330,7 @@ private:
     QList<LineEditLayout*> scatterSizeSpin;
 
 private slots:
+    void setLineVisible(const bool visible);
     void setColorWithCombo(const int index);
     void setColorWithRGB(const QColor& color);
     void emitSeriesTypeChanged(const int type);
