@@ -667,13 +667,17 @@ void SeriesSettingWidget::setColorWithRGB(const QColor &color)
 
 void SeriesSettingWidget::setLineColor(const QColor &color)
 {
-    const int seriesNum = tab->currentIndex();
-    const QAbstractSeries::SeriesType seriesType = graph->series().at(seriesNum)->type();
+    const int seriesIndex = tab->currentIndex();
+    const QAbstractSeries::SeriesType seriesType = graph->series().at(seriesIndex)->type();
 
     switch (seriesType)
     {
     case QAbstractSeries::SeriesTypeLine:
-        qobject_cast<QXYSeries*>(graph->series().at(seriesNum))->setColor(color); break;
+    case QAbstractSeries::SeriesTypeSpline:
+    case QAbstractSeries::SeriesTypeScatter:
+        qobject_cast<QXYSeries*>(graph->series().at(seriesIndex))->setColor(color); break;
+    case QAbstractSeries::SeriesTypeArea:
+        qobject_cast<QAreaSeries*>(graph->series().at(seriesIndex))->setColor(color); break;
     default:
         break;
     }
@@ -715,7 +719,7 @@ void SeriesSettingWidget::addTab(CEnum::PlotType type)
     QSpacerItem *tabSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
     seriesTypeCombo.append(new ComboEditLayout(tabWidget, "Series type"));
-    lineColorCombo.append(new ComboEditLayout(tabWidget, "Line color"));
+    lineColorCombo.append(new ComboEditLayout(tabWidget, "Color"));
     lineColorCustom.append(new RGBEditLayout(tabWidget));
     QPushButton *addNewSeries = new QPushButton("Add series");
 
