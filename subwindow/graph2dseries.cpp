@@ -351,6 +351,9 @@ QLineSeries* Graph2DSeries::createRogressionLine(const PlotTableRange& range)
     QLineSeries *series = new QLineSeries;
     series->append(getRangeMin(Qt::Horizontal), cof.x() * getRangeMin(Qt::Horizontal) + cof.y());
     series->append(getRangeMax(Qt::Horizontal), cof.x() * getRangeMax(Qt::Horizontal) + cof.y());
+    const QString slope = (cof.x() >= 0) ? QString::number(cof.x()) : "- " + QString::number(abs(cof.x()));
+    const QString intercept = (cof.y() >= 0) ? " + " + QString::number(cof.y()) : " - " + QString::number(abs(cof.y()));
+    series->setName("Y = " + slope + "X" + intercept);
 
     return series;
 }
@@ -405,6 +408,10 @@ void Graph2DSeries::updateRogressionLine(const int index)
     qobject_cast<QLineSeries*>(graph->series().at(index))->replace(1,
                                                                    getRangeMax(Qt::Horizontal),
                                                                    cof.x() * getRangeMax(Qt::Horizontal) + cof.y());
+
+    const QString slope = (cof.x() >= 0) ? QString::number(cof.x()) : "- " + QString::number(abs(cof.x()));
+    const QString intercept = (cof.y() >= 0) ? " + " + QString::number(cof.y()) : " - " + QString::number(abs(cof.y()));
+    graph->series().at(index)->setName("Y = " + slope + "X" + intercept);
 }
 
 
@@ -691,14 +698,18 @@ void SeriesSettingWidget::setLineColor(const QColor &color)
     }
 }
 
-const QColor SeriesSettingWidget::getLineColor(const int index)
+const QColor SeriesSettingWidget::getLineColor(const int index) const
 {
     const QAbstractSeries::SeriesType seriesType = graph->series().at(index)->type();
 
     switch(seriesType)
     {
     case QAbstractSeries::SeriesTypeLine:
+    case QAbstractSeries::SeriesTypeSpline:
+    case QAbstractSeries::SeriesTypeScatter:
         return qobject_cast<QXYSeries*>(graph->series().at(index))->color();
+    case QAbstractSeries::SeriesTypeArea:
+        return qobject_cast<QAreaSeries*>(graph->series().at(index))->color();
     default:
         return QColor();
     }
@@ -777,10 +788,9 @@ void SeriesSettingWidget::changeWidgetItemVisible(const CEnum::PlotType type, co
     case CEnum::PlotType::SplineSeries:
     case CEnum::PlotType::AreaSeries:
     case CEnum::PlotType::LogressionLine:
-        scatterTypeCombo.at(index)->setVisible(false);
-        break;
+        scatterTypeCombo.at(index)->setVisible(false); break;
     case CEnum::PlotType::ScatterSeries:
-        scatterTypeCombo.at(index)->setVisible(true);
+        scatterTypeCombo.at(index)->setVisible(true); break;
     default:
         break;
     }

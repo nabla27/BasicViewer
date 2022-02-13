@@ -339,7 +339,7 @@ private slots:
     void changeWidgetItemVisible(const CEnum::PlotType type, const int index);
 private:
     void setLineColor(const QColor& color);
-    const QColor getLineColor(const int index);
+    const QColor getLineColor(const int index) const;
 signals:
     void seriesTypeChanged(const CEnum::PlotType type, const int index);
     void lineSeriesAdded(const int index, const CEnum::PlotType type);
