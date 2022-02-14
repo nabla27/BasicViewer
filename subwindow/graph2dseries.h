@@ -117,6 +117,9 @@ private:
     QList<SeriesData> seriesData;
     QList<PlotTableRange> plotTableRanges;
 
+protected :
+    void wheelEvent(QWheelEvent *event);
+
 private:
     void setTableSelectedIndex();                    //tableの選択範囲を設定
     void initializeGraphSeries();                    //グラフのseriesの初期化

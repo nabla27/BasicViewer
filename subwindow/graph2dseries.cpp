@@ -415,6 +415,18 @@ void Graph2DSeries::updateRogressionLine(const int index)
     graph->series().at(index)->setName("Y = " + slope + "X" + intercept);
 }
 
+void Graph2DSeries::wheelEvent(QWheelEvent *event)
+{
+    if(graphView->underMouse())
+    {
+        const int degree = event->angleDelta().y();
+        if(degree >= 0)
+            graph->zoom(1 + 0.1);
+        else
+            graph->zoom(1 - 0.1);
+    }
+}
+
 
 
 
@@ -1074,8 +1086,6 @@ AxisSettingGroupBox::AxisSettingGroupBox(QWidget *parent, QChart *graph, const Q
     layout->addLayout(gridColor);
     layout->addLayout(gridColorCustom);
 
-    rangeMin->setLineEditMaximumWidth(SETTING_EDIT_SWIDTH);
-    rangeMax->setLineEditMaximumWidth(SETTING_EDIT_SWIDTH);
     axisNameVisible->setChecked(true);
     axisLabelVisible->setChecked(true);
     labelColor->insertComboItems(0, colorNameList());
@@ -1130,7 +1140,7 @@ void AxisSettingGroupBox::connectRangeEdit()
     {
     case QAbstractAxis::AxisTypeValue:
         rangeMinEditConnection = connect(qobject_cast<QValueAxis*>(graph->axes(orient).constLast()), &QValueAxis::minChanged, this, &AxisSettingGroupBox::setMinEdit);
-        rangeMaxEditConnection = connect(qobject_cast<QValueAxis*>(graph->axes(orient).constLast()), &QValueAxis::minChanged, this, &AxisSettingGroupBox::setMinEdit);
+        rangeMaxEditConnection = connect(qobject_cast<QValueAxis*>(graph->axes(orient).constLast()), &QValueAxis::maxChanged, this, &AxisSettingGroupBox::setMaxEdit);
     default:
         break;
     }
