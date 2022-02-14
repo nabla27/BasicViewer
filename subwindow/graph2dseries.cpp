@@ -622,19 +622,30 @@ GraphSettingWidget::GraphSettingWidget(QWidget *parent, QChart *graph)
 {
     QVBoxLayout *layout = new QVBoxLayout(this);
     LineEditLayout *title = new LineEditLayout(this, "Title");
+    SpinBoxEditLayout *titleSize = new SpinBoxEditLayout(this, "Title size");
     ComboEditLayout *theme = new ComboEditLayout(this, "Theme");
     QSpacerItem *spacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
     setLayout(layout);
     layout->addLayout(title);
+    layout->addLayout(titleSize);
     layout->addLayout(theme);
     layout->addItem(spacer);
 
+    titleSize->setSpinBoxValue(graph->titleFont().pointSize());
     theme->insertComboItems(0, themeNameList());
     theme->setComboCurrentIndex(graph->theme());
 
     connect(title, &LineEditLayout::lineTextEdited, graph, &QChart::setTitle);
+    connect(titleSize, &SpinBoxEditLayout::spinBoxValueChanged, this, &GraphSettingWidget::setTitleSize);
     connect(theme, &ComboEditLayout::currentComboIndexChanged, this, &GraphSettingWidget::setTheme);
+}
+
+void GraphSettingWidget::setTitleSize(const int ps)
+{
+    QFont titleFont = graph->titleFont();
+    titleFont.setPointSize(ps);
+    graph->setTitleFont(titleFont);
 }
 
 

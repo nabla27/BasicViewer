@@ -310,6 +310,7 @@ private:
     QChart *graph;
 
 private slots:
+    void setTitleSize(const int ps);
     void setTheme(const int index) { graph->setTheme(QChart::ChartTheme(index)); }
 };
 
