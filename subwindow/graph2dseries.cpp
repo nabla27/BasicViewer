@@ -58,6 +58,24 @@
  * QValueAxis
  *
  *
+ *
+ *
+ *
+ *
+ * [ tableWidgetの変更が変更されたとき ]
+ * TableWidget::itemChanged()  ---->  Graph2DSeries::updateGraphSeries()  ---->  replace coordinate
+ *
+ * [ グラフのタイプがcomboで変更されたとき ]
+ * SeriesSettingWidget::seriesTypeChanged()  ---->  SeriesSettingWidget::changeWidgetItemVisible()
+ *                                           ---->  Graph2DSeries::changeSeriesType()  ---->  removeAllSeries()  ---->  Graph2DSeries::addSeriesToGraph()
+ *                                           ---->  LegendSettingWidget::reconnectSeriesNameEditor()
+ *
+ * [ グラフにseriesを追加するボタンが押されたとき ]
+ * SeriesSettingWidget::addNewSeries()  ----> SeriesSettingWidget::newSeriesAdded()  ---->  SeriesSettingWidget::addTab()
+ *                                                                                   ---->  Graph2DSeries::addNewSeries()  ---->  Graph2DSeries::addSeriesToGraph()
+ *                                                                                   ---->  LabelSettingWidget::addTab()
+ *                                                                                   ---->  LegendSettingWidget::addSeriesNameEdit()
+ *
  */
 
 #define SETTING_EDIT_LWIDTH 110
@@ -178,9 +196,10 @@ void Graph2DSeries::initializeGraphLayout()
     settingStackWidget->addWidget(exportSettingWidget);
 
     connect(seriesSettingWidget, &SeriesSettingWidget::seriesTypeChanged, this, &Graph2DSeries::changeSeriesType);
-    connect(seriesSettingWidget, &SeriesSettingWidget::lineSeriesAdded, this, &Graph2DSeries::addLineSeries);
-    connect(seriesSettingWidget, &SeriesSettingWidget::lineSeriesAdded, labelSettingWidget, &LabelSettingWidget::addTab);
-    connect(seriesSettingWidget, &SeriesSettingWidget::lineSeriesAdded, legendSettingWidget, &LegendSettingWidget::renewSeriesNameEditer);
+    connect(seriesSettingWidget, &SeriesSettingWidget::seriesTypeChanged, legendSettingWidget, &LegendSettingWidget::reconnectSeriesNameEditor);
+    connect(seriesSettingWidget, &SeriesSettingWidget::newSeriesAdded, this, &Graph2DSeries::addNewSeries);
+    connect(seriesSettingWidget, &SeriesSettingWidget::newSeriesAdded, labelSettingWidget, &LabelSettingWidget::addTab);
+    connect(seriesSettingWidget, &SeriesSettingWidget::newSeriesAdded, legendSettingWidget, &LegendSettingWidget::addSeriesNameEditer);
 }
 
 void Graph2DSeries::initializeGraphSeries()
@@ -257,34 +276,10 @@ void Graph2DSeries::changeSeriesType(const CEnum::PlotType type, const int index
 
     graph->removeAllSeries();
 
-    for(qsizetype i = 0; i < seriesData.size(); ++i)
-    {
-        const PlotTableRange range = plotTableRanges.at(seriesData.at(i).rangeIndex);
+    const int seriesCount = seriesData.size();
 
-        switch(seriesData.at(i).plotType)
-        {
-        case CEnum::PlotType::LineSeries:
-            graph->addSeries(createXYSeries<QLineSeries>(range));
-            break;
-        case CEnum::PlotType::SplineSeries:
-            graph->addSeries(createXYSeries<QSplineSeries>(range));
-            break;
-        case CEnum::PlotType::ScatterSeries:
-            graph->addSeries(createXYSeries<QScatterSeries>(range));
-            break;
-        case CEnum::PlotType::AreaSeries:
-            graph->addSeries(createAreaSeries(seriesData.at(i)));
-            break;
-        case CEnum::PlotType::LogressionLine:
-            graph->addSeries(createRogressionLine(plotTableRanges.at(seriesData.at(i).rangeIndex)));
-            break;
-        default:
-            break;
-        }
-
-        graph->series().at(i)->attachAxis(graph->axes(Qt::Horizontal).constLast());
-        graph->series().at(i)->attachAxis(graph->axes(Qt::Vertical).constLast());
-    }
+    for(qsizetype i = 0; i < seriesCount; ++i)
+        addSeriesToGraph(seriesData.at(i));
 }
 
 template<class T> T* Graph2DSeries::createXYSeries(const PlotTableRange& range)
@@ -389,14 +384,40 @@ qreal Graph2DSeries::getRangeMax(Qt::Orientation orient)
     }
 }
 
-void Graph2DSeries::addLineSeries(const int index, const CEnum::PlotType type)
+void Graph2DSeries::addNewSeries(const int index, const CEnum::PlotType type)
 {
     SeriesData newSeriesData;
     newSeriesData.plotType = type;
-    newSeriesData.rangeIndex = index;
+    newSeriesData.rangeIndex = seriesData.at(index).rangeIndex;
     seriesData.append(newSeriesData);
 
-    changeSeriesType(type);
+    addSeriesToGraph(newSeriesData);
+}
+
+void Graph2DSeries::addSeriesToGraph(const SeriesData& data)
+{
+    const CEnum::PlotType type = data.plotType;
+    const PlotTableRange range = plotTableRanges.at(data.rangeIndex);
+
+    switch(type)
+    {
+    case CEnum::PlotType::LineSeries:
+        graph->addSeries(createXYSeries<QLineSeries>(range)); break;
+    case CEnum::PlotType::SplineSeries:
+        graph->addSeries(createXYSeries<QSplineSeries>(range)); break;
+    case CEnum::PlotType::ScatterSeries:
+        graph->addSeries(createXYSeries<QScatterSeries>(range)); break;
+    case CEnum::PlotType::AreaSeries:
+        graph->addSeries(createAreaSeries(data)); break;
+    case CEnum::PlotType::LogressionLine:
+        graph->addSeries(createRogressionLine(range)); break;
+    default:
+        return;
+        break;
+    }
+
+    graph->series().constLast()->attachAxis(graph->axes(Qt::Horizontal).constLast());
+    graph->series().constLast()->attachAxis(graph->axes(Qt::Vertical).constLast());
 }
 
 void Graph2DSeries::updateRogressionLine(const int index)
@@ -752,14 +773,14 @@ void SeriesSettingWidget::setScatterType(const int type)
     qobject_cast<QScatterSeries*>(graph->series().at(seriesIndex))->setMarkerShape(QScatterSeries::MarkerShape(type));
 }
 
-void SeriesSettingWidget::addLineSeries()
+void SeriesSettingWidget::addNewSeries()
 {
     bool flagOk = false;
     const QString type = QInputDialog::getItem(this, "graph2DSeries", "select the line type", enumToStrings(CEnum::PlotType::AreaSeries), 0, false, &flagOk);
 
     if(!flagOk) { return; }
 
-    emit lineSeriesAdded(tab->currentIndex(), CEnum::PlotType(getEnumIndex<CEnum::PlotType>(type)));
+    emit newSeriesAdded(tab->currentIndex(), CEnum::PlotType(getEnumIndex<CEnum::PlotType>(type)));
     addTab(CEnum::PlotType(getEnumIndex<CEnum::PlotType>(type)));
 }
 
@@ -803,7 +824,7 @@ void SeriesSettingWidget::addTab(CEnum::PlotType type)
     connect(lineColorCombo.constLast(), &ComboEditLayout::currentComboIndexChanged, this, &SeriesSettingWidget::setColorWithCombo);
     connect(lineColorCustom.constLast(), &RGBEditLayout::colorEdited, this, &SeriesSettingWidget::setColorWithRGB);
     connect(scatterTypeCombo.constLast(), &ComboEditLayout::currentComboIndexChanged, this, &SeriesSettingWidget::setScatterType);
-    connect(addNewSeries, &PushButtonLayout::buttonReleased, this, &SeriesSettingWidget::addLineSeries);
+    connect(addNewSeries, &PushButtonLayout::buttonReleased, this, &SeriesSettingWidget::addNewSeries);
 }
 
 void SeriesSettingWidget::changeWidgetItemVisible(const CEnum::PlotType type, const int index)
@@ -855,13 +876,12 @@ void LegendSettingWidget::setLegendPointSize(const int ps)
     graph->legend()->setFont(legendFont);
 }
 
-void LegendSettingWidget::renewSeriesNameEditer()
+void LegendSettingWidget::reconnectSeriesNameEditor()
 {
-    const qsizetype seriesCount = graph->series().size();
-    for(qsizetype i = 0; i < seriesCount - 1; ++i)
-        connect(legendName.at(i), &LineEditLayout::lineTextEdited, graph->series().at(i), &QAbstractSeries::setName);
+    const int seriesCount = graph->series().size();
 
-    addSeriesNameEditer();
+    for(int i = 0; i < seriesCount; ++i)
+        connect(legendName.at(i), &LineEditLayout::lineTextEdited, graph->series().at(i), &QAbstractSeries::setName);
 }
 
 void LegendSettingWidget::addSeriesNameEditer()

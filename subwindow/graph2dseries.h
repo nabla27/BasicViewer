@@ -137,11 +137,12 @@ private:
     qreal getRangeMin(Qt::Orientation orient);
     qreal getRangeMax(Qt::Orientation orient);
 
-    void addLineSeries(const int index, const CEnum::PlotType type);
     void updateRogressionLine(const int index);
 
 private slots:
     void changeSeriesType(const CEnum::PlotType type, const int index = -1);
+    void addNewSeries(const int index, const CEnum::PlotType type);
+    void addSeriesToGraph(const SeriesData& data);
 };
 
 
@@ -338,7 +339,7 @@ private slots:
     void setColorWithRGB(const QColor& color);
     void emitSeriesTypeChanged(const int type);
     void setScatterType(const int type);
-    void addLineSeries();
+    void addNewSeries();
     void addTab(CEnum::PlotType type);
     void changeWidgetItemVisible(const CEnum::PlotType type, const int index);
 private:
@@ -346,7 +347,7 @@ private:
     const QColor getLineColor(const int index) const;
 signals:
     void seriesTypeChanged(const CEnum::PlotType type, const int index);
-    void lineSeriesAdded(const int index, const CEnum::PlotType type);
+    void newSeriesAdded(const int index, const CEnum::PlotType type);
 };
 
 class LegendSettingWidget : public QWidget
@@ -363,12 +364,12 @@ private:
     QList<LineEditLayout*> legendName;
 
 public slots:
-    void renewSeriesNameEditer();
+    void reconnectSeriesNameEditor();
+    void addSeriesNameEditer();
 
 private slots:
     void setLegendPointSize(const int ps);
     void setLegendVisible(const bool visible) { graph->legend()->setVisible(visible); }
-    void addSeriesNameEditer();
 };
 
 class LabelSettingWidget : public QWidget
