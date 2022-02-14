@@ -130,7 +130,7 @@ void Graph2DSeries::setTableSelectedIndex()
 
 void Graph2DSeries::initializeGraphLayout()
 {
-    setGeometry(0, 0, 620, 240);
+    setGeometry(0, 0, 650, 240);
     graph->legend()->setVisible(false);
 
     /* レイアウトのグラフ部分 */
@@ -624,12 +624,14 @@ GraphSettingWidget::GraphSettingWidget(QWidget *parent, QChart *graph)
     LineEditLayout *title = new LineEditLayout(this, "Title");
     SpinBoxEditLayout *titleSize = new SpinBoxEditLayout(this, "Title size");
     ComboEditLayout *theme = new ComboEditLayout(this, "Theme");
+    BlankSpaceLayout *blankSpace = new BlankSpaceLayout(250, 0);
     QSpacerItem *spacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
     setLayout(layout);
     layout->addLayout(title);
     layout->addLayout(titleSize);
     layout->addLayout(theme);
+    layout->addLayout(blankSpace);
     layout->addItem(spacer);
 
     titleSize->setSpinBoxValue(graph->titleFont().pointSize());
