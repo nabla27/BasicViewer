@@ -100,6 +100,21 @@ struct PlotTableRange
     }
 };
 
+class ChartView : public QChartView
+{
+    Q_OBJECT
+
+public:
+    ChartView(QChart *chart, QWidget *parent = nullptr) : QChartView(chart, parent) {}
+
+protected:
+    void mouseMoveEvent(QMouseEvent* event);
+
+signals:
+    void mouseCoordinateMoved(const QString& x, const QString& y);
+};
+
+
 
 class Graph2DSeries : public QWidget
 {
@@ -110,7 +125,7 @@ public:
 
 private:
     QChart *graph;
-    QChartView *graphView;
+    ChartView *graphView;
     TableWidget *table;
     QString sheetName;
     QMetaObject::Connection changedTableAction;
@@ -221,6 +236,7 @@ public:
 public:
     void setLabelMinimumWidth(const int width) { label->setMinimumWidth(width); }
     void setLineEditMaximumWidth(const int width) { lineEdit->setMaximumWidth(width); }
+    void setReadOnly(const bool flag) { lineEdit->setReadOnly(flag); }
     QString lineEditText() const { return lineEdit->text(); }
 
 public slots:
@@ -310,8 +326,13 @@ class GraphSettingWidget : public QWidget
 public:
     GraphSettingWidget(QWidget *parent, QChart *graph);
 
+public slots:
+    void setCoordinateValue(const QString& x, const QString& y);
+
 private:
     QChart *graph;
+    LineEditLayout *xCoordinate;
+    LineEditLayout *yCoordinate;
 
 private slots:
     void setTitleSize(const int ps);

@@ -71,17 +71,30 @@
  *                                           ---->  LegendSettingWidget::reconnectSeriesNameEditor()
  *
  * [ グラフにseriesを追加するボタンが押されたとき ]
- * SeriesSettingWidget::addNewSeries()  ----> SeriesSettingWidget::newSeriesAdded()  ---->  SeriesSettingWidget::addTab()
- *                                                                                   ---->  Graph2DSeries::addNewSeries()  ---->  Graph2DSeries::addSeriesToGraph()
- *                                                                                   ---->  LabelSettingWidget::addTab()
- *                                                                                   ---->  LegendSettingWidget::addSeriesNameEdit()
+ * SeriesSettingWidget::addNewSeries()  ---->  SeriesSettingWidget::newSeriesAdded()  ---->  SeriesSettingWidget::addTab()
+ *                                                                                    ---->  Graph2DSeries::addNewSeries()  ---->  Graph2DSeries::addSeriesToGraph()
+ *                                                                                    ---->  LabelSettingWidget::addTab()
+ *                                                                                    ---->  LegendSettingWidget::addSeriesNameEdit()
  *
+ * [ グラフ上のマウス移動 ]
+ * ChartView::mouseMoveEvent()  ---->  GraphSettingWidget::setCoordinateValue()
  */
 
 #define SETTING_EDIT_LWIDTH 110
 #define SETTING_EDIT_SWIDTH 35
 #define QT_GLOBAL_COLOR_COUNT 19
 #define SETTING_LABEL_WIDTH 80
+
+void ChartView::mouseMoveEvent(QMouseEvent *event)
+{
+    const QPointF p = chart()->mapToValue(event->pos());
+    emit mouseCoordinateMoved(QString::number(p.x()), QString::number(p.y()));
+}
+
+
+
+
+
 
 
 Graph2DSeries::Graph2DSeries(TableWidget *table, QWidget *parent)
@@ -152,7 +165,7 @@ void Graph2DSeries::initializeGraphLayout()
     graph->legend()->setVisible(false);
 
     /* レイアウトのグラフ部分 */
-    graphView = new QChartView(graph);   //graphViewのウィンドウサイズは4:3がいい感じ
+    graphView = new ChartView(graph);   //graphViewのウィンドウサイズは4:3がいい感じ
 
     /* レイアウトの右側設定部分 */
     QScrollArea *settingScrollArea = new QScrollArea(this);
@@ -200,6 +213,7 @@ void Graph2DSeries::initializeGraphLayout()
     connect(seriesSettingWidget, &SeriesSettingWidget::newSeriesAdded, this, &Graph2DSeries::addNewSeries);
     connect(seriesSettingWidget, &SeriesSettingWidget::newSeriesAdded, labelSettingWidget, &LabelSettingWidget::addTab);
     connect(seriesSettingWidget, &SeriesSettingWidget::newSeriesAdded, legendSettingWidget, &LegendSettingWidget::addSeriesNameEditer);
+    connect(graphView, &ChartView::mouseCoordinateMoved, graphSettingWidget, &GraphSettingWidget::setCoordinateValue);
 }
 
 void Graph2DSeries::initializeGraphSeries()
@@ -654,6 +668,8 @@ GraphSettingWidget::GraphSettingWidget(QWidget *parent, QChart *graph)
     : QWidget(parent), graph(graph)
 {
     QVBoxLayout *layout = new QVBoxLayout(this);
+    xCoordinate = new LineEditLayout(this, "X :");
+    yCoordinate = new LineEditLayout(this, "Y :");
     LineEditLayout *title = new LineEditLayout(this, "Title");
     SpinBoxEditLayout *titleSize = new SpinBoxEditLayout(this, "Title size");
     ComboEditLayout *theme = new ComboEditLayout(this, "Theme");
@@ -661,12 +677,16 @@ GraphSettingWidget::GraphSettingWidget(QWidget *parent, QChart *graph)
     QSpacerItem *spacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
     setLayout(layout);
+    layout->addLayout(xCoordinate);
+    layout->addLayout(yCoordinate);
     layout->addLayout(title);
     layout->addLayout(titleSize);
     layout->addLayout(theme);
     layout->addLayout(blankSpace);
     layout->addItem(spacer);
 
+    xCoordinate->setReadOnly(true);
+    yCoordinate->setReadOnly(true);
     titleSize->setSpinBoxValue(graph->titleFont().pointSize());
     theme->insertComboItems(0, themeNameList());
     theme->setComboCurrentIndex(graph->theme());
@@ -681,6 +701,12 @@ void GraphSettingWidget::setTitleSize(const int ps)
     QFont titleFont = graph->titleFont();
     titleFont.setPointSize(ps);
     graph->setTitleFont(titleFont);
+}
+
+void GraphSettingWidget::setCoordinateValue(const QString& x, const QString& y)
+{
+    xCoordinate->setLineEditText(x);
+    yCoordinate->setLineEditText(y);
 }
 
 
