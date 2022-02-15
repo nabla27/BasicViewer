@@ -80,10 +80,6 @@
  * ChartView::mouseMoveEvent()  ---->  GraphSettingWidget::setCoordinateValue()
  */
 
-#define SETTING_EDIT_LWIDTH 110
-#define SETTING_EDIT_SWIDTH 35
-#define QT_GLOBAL_COLOR_COUNT 19
-#define SETTING_LABEL_WIDTH 80
 
 void ChartView::mouseMoveEvent(QMouseEvent *event)
 {
@@ -255,24 +251,24 @@ void Graph2DSeries::updateGraphSeries(QTableWidgetItem *item)
 
         if(range.isInRange(changedRow, changedCol))
         {
-            const CEnum::PlotType plotType = data.plotType;
+            const ChartEnum::PlotType plotType = data.plotType;
 
             switch(plotType)
             {
-            case CEnum::PlotType::LineSeries:
-            case CEnum::PlotType::SplineSeries:
-            case CEnum::PlotType::ScatterSeries:
+            case ChartEnum::PlotType::LineSeries:
+            case ChartEnum::PlotType::SplineSeries:
+            case ChartEnum::PlotType::ScatterSeries:
                 qobject_cast<QXYSeries*>(graph->series().at(index))->replace(changedRow - range.startRow,
                                                                              table->item(changedRow, range.colX)->text().toFloat(),
                                                                              table->item(changedRow, range.colY)->text().toFloat());
                 break;
-            case CEnum::PlotType::AreaSeries:
+            case ChartEnum::PlotType::AreaSeries:
 
                 qobject_cast<QAreaSeries*>(graph->series().at(index))->upperSeries()->replace(changedRow - range.startRow,
                                                                                               table->item(changedRow, range.colX)->text().toFloat(),
                                                                                               table->item(changedRow, range.colY)->text().toFloat());
                 break;
-            case CEnum::PlotType::LogressionLine:
+            case ChartEnum::PlotType::LogressionLine:
                 updateRogressionLine(index);
                 break;
             default:
@@ -284,7 +280,7 @@ void Graph2DSeries::updateGraphSeries(QTableWidgetItem *item)
     }
 }
 
-void Graph2DSeries::changeSeriesType(const CEnum::PlotType type, const int index)
+void Graph2DSeries::changeSeriesType(const ChartEnum::PlotType type, const int index)
 {
     if(index != -1) { seriesData[index].plotType = type; }
 
@@ -398,7 +394,7 @@ qreal Graph2DSeries::getRangeMax(Qt::Orientation orient)
     }
 }
 
-void Graph2DSeries::addNewSeries(const int index, const CEnum::PlotType type)
+void Graph2DSeries::addNewSeries(const int index, const ChartEnum::PlotType type)
 {
     SeriesData newSeriesData;
     newSeriesData.plotType = type;
@@ -410,20 +406,20 @@ void Graph2DSeries::addNewSeries(const int index, const CEnum::PlotType type)
 
 void Graph2DSeries::addSeriesToGraph(const SeriesData& data)
 {
-    const CEnum::PlotType type = data.plotType;
+    const ChartEnum::PlotType type = data.plotType;
     const PlotTableRange range = plotTableRanges.at(data.rangeIndex);
 
     switch(type)
     {
-    case CEnum::PlotType::LineSeries:
+    case ChartEnum::PlotType::LineSeries:
         graph->addSeries(createXYSeries<QLineSeries>(range)); break;
-    case CEnum::PlotType::SplineSeries:
+    case ChartEnum::PlotType::SplineSeries:
         graph->addSeries(createXYSeries<QSplineSeries>(range)); break;
-    case CEnum::PlotType::ScatterSeries:
+    case ChartEnum::PlotType::ScatterSeries:
         graph->addSeries(createXYSeries<QScatterSeries>(range)); break;
-    case CEnum::PlotType::AreaSeries:
+    case ChartEnum::PlotType::AreaSeries:
         graph->addSeries(createAreaSeries(data)); break;
-    case CEnum::PlotType::LogressionLine:
+    case ChartEnum::PlotType::LogressionLine:
         graph->addSeries(createRogressionLine(range)); break;
     default:
         return;
@@ -472,61 +468,6 @@ void Graph2DSeries::wheelEvent(QWheelEvent *event)
 
 
 
-static const QStringList colorNameList()
-{
-    QStringList colorList;
-
-    colorList << "color0"
-              << "color1"
-              << "black"
-              << "white"
-              << "darkGray"
-              << "gray"
-              << "lightGray"
-              << "red"
-              << "green"
-              << "blue"
-              << "cyan"
-              << "magenta"
-              << "yellow"
-              << "darkRed"
-              << "darkGreen"
-              << "darkBlue"
-              << "darkCyan"
-              << "darkMagenta"
-              << "darkYellow"
-              << "transparent"
-              << "custom";
-
-    return colorList;
-}
-
-static const QStringList themeNameList()
-{
-    QStringList themeList;
-
-    themeList << "light"
-              << "blueCerulean"
-              << "dark"
-              << "brownSand"
-              << "blueNcs"
-              << "highContrast"
-              << "blueIcy"
-              << "qt";
-
-    return themeList;
-}
-
-static const QStringList imgFormatList()
-{
-    QStringList formatList;
-
-    for(const QByteArray& byte : QImageWriter::supportedImageFormats()){
-        formatList << byte.constData();
-    }
-
-    return formatList;
-}
 
 
 
@@ -536,126 +477,7 @@ static const QStringList imgFormatList()
 
 
 
-RGBEditLayout::RGBEditLayout(QWidget *parent)
-{
-    label = new QLabel(parent);
-    rEdit = new QLineEdit(parent);
-    gEdit = new QLineEdit(parent);
-    bEdit = new QLineEdit(parent);
-    spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
 
-    addWidget(label);
-    addWidget(rEdit);
-    addWidget(gEdit);
-    addWidget(bEdit);
-    addItem(spacer);
-
-    setEditMaximumWidth(25);
-    setLabelMinimumWidth(SETTING_LABEL_WIDTH);
-
-    connect(rEdit, &QLineEdit::textEdited, [this](){ emit colorEdited(getColor()); });
-    connect(gEdit, &QLineEdit::textEdited, [this](){ emit colorEdited(getColor()); });
-    connect(bEdit, &QLineEdit::textEdited, [this](){ emit colorEdited(getColor()); });
-}
-
-void RGBEditLayout::setColor(const QColor& color)
-{
-    rEdit->setText(QString::number(color.red()));
-    gEdit->setText(QString::number(color.green()));
-    bEdit->setText(QString::number(color.blue()));
-}
-
-void RGBEditLayout::setColor(int eNum)
-{
-    QColor color = Qt::GlobalColor(eNum);
-    rEdit->setText(QString::number(color.red()));
-    gEdit->setText(QString::number(color.green()));
-    bEdit->setText(QString::number(color.blue()));
-}
-
-void RGBEditLayout::setVisible(bool visible)
-{
-    label->setVisible(visible);
-    rEdit->setVisible(visible);
-    gEdit->setVisible(visible);
-    bEdit->setVisible(visible);
-}
-
-void RGBEditLayout::setReadOnly(bool readOnly)
-{
-    rEdit->setReadOnly(readOnly);
-    gEdit->setReadOnly(readOnly);
-    bEdit->setReadOnly(readOnly);
-}
-
-
-ComboEditLayout::ComboEditLayout(QWidget *parent, const QString& text)
-{
-    label = new QLabel(text, parent);
-    combo = new QComboBox(parent);
-    spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
-
-    addWidget(label);
-    addWidget(combo);
-    addItem(spacer);
-
-    setLabelMinimumWidth(SETTING_LABEL_WIDTH);
-    setComboMaximumWidth(SETTING_EDIT_LWIDTH);
-
-    connect(combo, &QComboBox::currentIndexChanged, [this](){ emit currentComboIndexChanged(combo->currentIndex()); });
-}
-
-void ComboEditLayout::setVisible(bool visible)
-{
-    label->setVisible(visible);
-    combo->setVisible(visible);
-}
-
-
-LineEditLayout::LineEditLayout(QWidget *parent, const QString& text)
-{
-    label = new QLabel(text, parent);
-    lineEdit = new QLineEdit(parent);
-    spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
-
-    addWidget(label);
-    addWidget(lineEdit);
-    addItem(spacer);
-
-    setLabelMinimumWidth(SETTING_LABEL_WIDTH);
-    setLineEditMaximumWidth(SETTING_EDIT_LWIDTH);
-
-    connect(lineEdit, &QLineEdit::textEdited, [this](){ emit lineTextEdited(lineEdit->text()); });
-}
-
-void LineEditLayout::setVisible(bool visible)
-{
-    label->setVisible(visible);
-    lineEdit->setVisible(visible);
-}
-
-
-SpinBoxEditLayout::SpinBoxEditLayout(QWidget *parent, const QString& text)
-{
-    label = new QLabel(text, parent);
-    spinBox = new QSpinBox(parent);
-    spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
-
-    addWidget(label);
-    addWidget(spinBox);
-    addItem(spacer);
-
-    setLabelMinimumWidth(SETTING_LABEL_WIDTH);
-    setSpinBoxMaximumWidth(SETTING_EDIT_LWIDTH);
-
-    connect(spinBox, &QSpinBox::valueChanged, [this](){ emit spinBoxValueChanged(spinBox->value()); });
-}
-
-void SpinBoxEditLayout::setVisible(bool visible)
-{
-    label->setVisible(visible);
-    spinBox->setVisible(visible);
-}
 
 
 
@@ -688,7 +510,7 @@ GraphSettingWidget::GraphSettingWidget(QWidget *parent, QChart *graph)
     xCoordinate->setReadOnly(true);
     yCoordinate->setReadOnly(true);
     titleSize->setSpinBoxValue(graph->titleFont().pointSize());
-    theme->insertComboItems(0, themeNameList());
+    theme->insertComboItems(0, enumToStrings(ChartEnum::Theme(0)));
     theme->setComboCurrentIndex(graph->theme());
 
     connect(title, &LineEditLayout::lineTextEdited, graph, &QChart::setTitle);
@@ -724,7 +546,7 @@ SeriesSettingWidget::SeriesSettingWidget(QWidget *parent, QChart *graph)
     const qsizetype seriesCount = graph->series().size();
 
     for(qsizetype i = 0; i < seriesCount; ++i)
-        addTab(CEnum::PlotType::LineSeries);
+        addTab(ChartEnum::PlotType::LineSeries);
 
     connect(this, &SeriesSettingWidget::seriesTypeChanged, this, &SeriesSettingWidget::changeWidgetItemVisible);
 }
@@ -790,7 +612,7 @@ const QColor SeriesSettingWidget::getLineColor(const int index) const
 
 void SeriesSettingWidget::emitSeriesTypeChanged(const int type)
 {
-    emit seriesTypeChanged(CEnum::PlotType(type), tab->currentIndex());
+    emit seriesTypeChanged(ChartEnum::PlotType(type), tab->currentIndex());
 }
 
 void SeriesSettingWidget::setScatterType(const int type)
@@ -802,15 +624,15 @@ void SeriesSettingWidget::setScatterType(const int type)
 void SeriesSettingWidget::addNewSeries()
 {
     bool flagOk = false;
-    const QString type = QInputDialog::getItem(this, "graph2DSeries", "select the line type", enumToStrings(CEnum::PlotType::AreaSeries), 0, false, &flagOk);
+    const QString type = QInputDialog::getItem(this, "graph2DSeries", "select the line type", enumToStrings(ChartEnum::PlotType::AreaSeries), 0, false, &flagOk);
 
     if(!flagOk) { return; }
 
-    emit newSeriesAdded(tab->currentIndex(), CEnum::PlotType(getEnumIndex<CEnum::PlotType>(type)));
-    addTab(CEnum::PlotType(getEnumIndex<CEnum::PlotType>(type)));
+    emit newSeriesAdded(tab->currentIndex(), ChartEnum::PlotType(getEnumIndex<ChartEnum::PlotType>(type)));
+    addTab(ChartEnum::PlotType(getEnumIndex<ChartEnum::PlotType>(type)));
 }
 
-void SeriesSettingWidget::addTab(CEnum::PlotType type)
+void SeriesSettingWidget::addTab(ChartEnum::PlotType type)
 {
     QWidget *tabWidget = new QWidget(tab);
     QVBoxLayout *tabWidgetLayout = new QVBoxLayout(tabWidget);
@@ -836,13 +658,13 @@ void SeriesSettingWidget::addTab(CEnum::PlotType type)
     tabWidgetLayout->addItem(tabSpacer);
 
     lineVisible->setChecked(true);
-    seriesTypeCombo.constLast()->insertComboItems(0, enumToStrings(CEnum::PlotType(0)));
+    seriesTypeCombo.constLast()->insertComboItems(0, enumToStrings(ChartEnum::PlotType(0)));
     seriesTypeCombo.constLast()->setComboCurrentIndex((int)type);
     lineColorCombo.constLast()->insertComboItems(0, colorNameList());
     lineColorCombo.constLast()->setComboCurrentIndex(QT_GLOBAL_COLOR_COUNT + 1);
     lineColorCustom.constLast()->setColor(getLineColor(tab->count() - 1));
-    scatterTypeCombo.constLast()->insertComboItems(0, enumToStrings(CEnum::MarkerShape(0)));
-    scatterTypeCombo.constLast()->setVisible(type == CEnum::PlotType::ScatterSeries);
+    scatterTypeCombo.constLast()->insertComboItems(0, enumToStrings(ChartEnum::MarkerShape(0)));
+    scatterTypeCombo.constLast()->setVisible(type == ChartEnum::PlotType::ScatterSeries);
     addNewSeries->setButtonMinimumWidth(SETTING_EDIT_LWIDTH);
 
     connect(lineVisible, &QCheckBox::toggled, this, &SeriesSettingWidget::setLineVisible);
@@ -853,16 +675,16 @@ void SeriesSettingWidget::addTab(CEnum::PlotType type)
     connect(addNewSeries, &PushButtonLayout::buttonReleased, this, &SeriesSettingWidget::addNewSeries);
 }
 
-void SeriesSettingWidget::changeWidgetItemVisible(const CEnum::PlotType type, const int index)
+void SeriesSettingWidget::changeWidgetItemVisible(const ChartEnum::PlotType type, const int index)
 {
     switch(type)
     {
-    case CEnum::PlotType::LineSeries:
-    case CEnum::PlotType::SplineSeries:
-    case CEnum::PlotType::AreaSeries:
-    case CEnum::PlotType::LogressionLine:
+    case ChartEnum::PlotType::LineSeries:
+    case ChartEnum::PlotType::SplineSeries:
+    case ChartEnum::PlotType::AreaSeries:
+    case ChartEnum::PlotType::LogressionLine:
         scatterTypeCombo.at(index)->setVisible(false); break;
-    case CEnum::PlotType::ScatterSeries:
+    case ChartEnum::PlotType::ScatterSeries:
         scatterTypeCombo.at(index)->setVisible(true); break;
     default:
         break;

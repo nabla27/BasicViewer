@@ -1,88 +1,44 @@
 #ifndef GRAPH2DSERIES_H
 #define GRAPH2DSERIES_H
-#include <QWidget>
 #include <QChart>
 #include <QChartView>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
+
 #include <QLineSeries>
-#include <QLineEdit>
-#include <QGroupBox>
-#include <QCheckBox>
-#include <QToolBox>
-#include <QLabel>
-#include <QSizePolicy>
-#include <QStackedWidget>
-#include <QComboBox>
-#include <QSpacerItem>
+#include <QSplineSeries>
+#include <QScatterSeries>
+#include <QAreaSeries>
+
 #include <QValueAxis>
-#include <QSpinBox>
-#include <QPushButton>
+#include <QLogValueAxis>
+
 #include <QPixmap>
-#include <QImageWriter>
 #include <QInputDialog>
 #include <QFileDialog>
 #include <QMessageBox>
-#include <QColor>
-#include "tablewidget.h"
-
-#include <QSplineSeries>
-#include <QBoxPlotSeries>
-#include <QAreaSeries>
-#include <QBarSeries>
-#include <QBarSet>
-#include <QCandlestickSeries>
-#include <QCandlestickSet>
-#include <QPieSeries>
-#include <QPieSlice>
-#include <QLogValueAxis>
-#include <QScatterSeries>
 #include <QPointF>
-#include <QMetaEnum>
 
-template <typename QEnum>
-QString enumToString(const QEnum value) { return QString(QMetaEnum::fromType<QEnum>().valueToKey((int)value)); }
+#include "tablewidget.h"
+#include "layoutparts.h"
+#include "utility.h"
 
-template <class QEnum>
-QStringList enumToStrings(const QEnum){
-    QStringList enumStrList;
-    const int enumCount = QMetaEnum::fromType<QEnum>().keyCount();
-    for(int i = 0; i < enumCount; ++i){
-        enumStrList << QStringList(QMetaEnum::fromType<QEnum>().valueToKey(i));
-    }
 
-    return enumStrList;
-}
 
-template <class QEnum>
-int getEnumCount(const QEnum){
-    return QMetaEnum::fromType<QEnum>().keyCount();
-}
-
-template <class QEnum>
-int getEnumIndex(const QString enumStr){
-    const int enumCount = getEnumCount(QEnum(0));
-    for(int i = 0; i < enumCount; ++i){
-        if(QMetaEnum::fromType<QEnum>().valueToKey(i) == enumStr) { return i; }
-    }
-
-    return -1;
-}
-
-class CEnum : private QObject{
+class ChartEnum : private QObject{
     Q_OBJECT
 public:
     enum class PlotType { LineSeries, SplineSeries, ScatterSeries, AreaSeries, LogressionLine };
     enum class MarkerShape { Circle, Rectangle, RotatedRectangle, Triangle, ShapeStar };
+    enum class Theme { Light, BlueCerulean, Dark, BrownSand, BlueNcs, HighContrast, BlueIcy, Qt };
     Q_ENUM(PlotType)
     Q_ENUM(MarkerShape)
+    Q_ENUM(Theme)
 };
 
 
 
 struct SeriesData
 {
-    CEnum::PlotType plotType = CEnum::PlotType::LineSeries;
+    ChartEnum::PlotType plotType = ChartEnum::PlotType::LineSeries;
     qsizetype rangeIndex = 0;
 };
 
@@ -155,8 +111,8 @@ private:
     void updateRogressionLine(const int index);
 
 private slots:
-    void changeSeriesType(const CEnum::PlotType type, const int index = -1);
-    void addNewSeries(const int index, const CEnum::PlotType type);
+    void changeSeriesType(const ChartEnum::PlotType type, const int index = -1);
+    void addNewSeries(const int index, const ChartEnum::PlotType type);
     void addSeriesToGraph(const SeriesData& data);
 };
 
@@ -164,154 +120,6 @@ private slots:
 
 
 
-
-
-class RGBEditLayout : public QHBoxLayout
-{
-    Q_OBJECT
-
-public:
-    RGBEditLayout(QWidget *parent);
-
-public:
-    void setLabelMinimumWidth(const int width) { label->setMinimumWidth(width); }
-    void setEditMaximumWidth(const int width) { rEdit->setMaximumWidth(width);
-                                                gEdit->setMaximumWidth(width);
-                                                bEdit->setMaximumWidth(width); }
-
-public slots:
-    void setColor(const QColor& color);
-    void setColor(int eNum);
-    void setVisible(bool visible);
-    void setReadOnly(bool readOnly);
-
-signals:
-    void colorEdited(const QColor& color);
-
-private:
-    QColor getColor() { return QColor(rEdit->text().toInt(), gEdit->text().toInt(), bEdit->text().toInt()); }
-
-private:
-    QLabel *label;
-    QLineEdit *rEdit;
-    QLineEdit *gEdit;
-    QLineEdit *bEdit;
-    QSpacerItem *spacer;
-};
-
-class ComboEditLayout : public QHBoxLayout
-{
-    Q_OBJECT
-
-public:
-    ComboEditLayout(QWidget *parent, const QString& text = "");
-
-public:
-    void setLabelMinimumWidth(const int width) { label->setMinimumWidth(width); }
-    void setComboMaximumWidth(const int width) { combo->setMaximumWidth(width); }
-    void insertComboItems(int index, const QStringList& texts) { combo->insertItems(index, texts); }
-    int currentComboIndex() const { return combo->currentIndex(); }
-    QString currentComboText() const { return combo->currentText(); }
-
-public slots:
-    void setComboCurrentIndex(const int index) { combo->setCurrentIndex(index); }
-    void setVisible(bool visible);
-
-signals:
-    void currentComboIndexChanged(int index);
-
-private:
-    QLabel *label;
-    QComboBox *combo;
-    QSpacerItem *spacer;
-};
-
-class LineEditLayout : public QHBoxLayout
-{
-    Q_OBJECT
-
-public:
-    LineEditLayout(QWidget *parent, const QString& text = "");
-
-public:
-    void setLabelMinimumWidth(const int width) { label->setMinimumWidth(width); }
-    void setLineEditMaximumWidth(const int width) { lineEdit->setMaximumWidth(width); }
-    void setReadOnly(const bool flag) { lineEdit->setReadOnly(flag); }
-    QString lineEditText() const { return lineEdit->text(); }
-
-public slots:
-    void setLineEditText(const QString& text) { lineEdit->setText(text); }
-    void setVisible(bool visible);
-
-signals:
-    void lineTextEdited(const QString& text);
-
-private:
-    QLabel *label;
-    QLineEdit *lineEdit;
-    QSpacerItem *spacer;
-};
-
-class SpinBoxEditLayout : public QHBoxLayout
-{
-    Q_OBJECT
-
-public:
-    SpinBoxEditLayout(QWidget *parent, const QString& text = "");
-
-public:
-    void setLabelMinimumWidth(const int width) { label->setMinimumWidth(width); }
-    void setSpinBoxMaximumWidth(const int width) { spinBox->setMaximumWidth(width); }
-    int spinBoxValue() const { return spinBox->value(); }
-
-public slots:
-    void setSpinBoxValue(const int value) { spinBox->setValue(value); }
-    void setVisible(bool visible);
-
-signals:
-    void spinBoxValueChanged(const int value);
-
-private:
-    QLabel *label;
-    QSpinBox *spinBox;
-    QSpacerItem *spacer;
-};
-
-class PushButtonLayout : public QHBoxLayout
-{
-    Q_OBJECT
-
-public:
-    PushButtonLayout(QWidget *parent, const QString& text = ""){
-        button = new QPushButton(text, parent);
-        addWidget(button, 0, Qt::AlignCenter);
-        connect(button, &QPushButton::released, [this](){ emit buttonReleased(); });
-    };
-
-public:
-    void setButtonMaximumWidth(const int width) { button->setMaximumWidth(width); }
-    void setButtonMinimumWidth(const int width) { button->setMinimumWidth(width); }
-
-private:
-    QPushButton *button;
-
-signals:
-    void buttonReleased();
-};
-
-class BlankSpaceLayout : public QHBoxLayout
-{
-    Q_OBJECT
-
-public:
-    BlankSpaceLayout(const int width, const int height){
-        spacer = new QSpacerItem(width, height, QSizePolicy::Maximum, QSizePolicy::Maximum);
-        addItem(spacer);
-    }
-
-private:
-    QSpacerItem *spacer;
-};
 
 
 
@@ -361,14 +169,14 @@ private slots:
     void emitSeriesTypeChanged(const int type);
     void setScatterType(const int type);
     void addNewSeries();
-    void addTab(CEnum::PlotType type);
-    void changeWidgetItemVisible(const CEnum::PlotType type, const int index);
+    void addTab(ChartEnum::PlotType type);
+    void changeWidgetItemVisible(const ChartEnum::PlotType type, const int index);
 private:
     void setLineColor(const QColor& color);
     const QColor getLineColor(const int index) const;
 signals:
-    void seriesTypeChanged(const CEnum::PlotType type, const int index);
-    void newSeriesAdded(const int index, const CEnum::PlotType type);
+    void seriesTypeChanged(const ChartEnum::PlotType type, const int index);
+    void newSeriesAdded(const int index, const ChartEnum::PlotType type);
 };
 
 class LegendSettingWidget : public QWidget
