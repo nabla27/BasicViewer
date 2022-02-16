@@ -68,17 +68,17 @@ protected:
     void mousePressEvent(QMouseEvent *event);
 
 private:
-    void moveGraphHorizontal(const qreal& x);
-    void moveGraphVertical(const qreal& y);
+    void moveGraph(const QPoint& cursorPos);
 
     struct DragStartPoint{
-        qreal minX = 0;
-        qreal maxX = 0;
-        qreal minY = 0;
-        qreal maxY = 0;
-        QPointF coord;
+        qreal minX;
+        qreal maxX;
+        qreal minY;
+        qreal maxY;
+        qreal pixelWidthH;
+        qreal pixelWidthV;
+        QPoint pos;
     } dragStartPoint;
-    QPoint previousCursorPos;
 
 signals:
     void mouseCoordinateMoved(const QString& x, const QString& y);

@@ -87,20 +87,15 @@ void ChartView::mouseMoveEvent(QMouseEvent *event)
     const QPointF coordinate = chart()->mapToValue(cursorPos);
     emit mouseCoordinateMoved(QString::number(coordinate.x()), QString::number(coordinate.y()));
 
-    if(event->buttons() == Qt::RightButton){
-        if(previousCursorPos.x() != cursorPos.x()) moveGraphHorizontal(coordinate.x());
-        if(previousCursorPos.y() != cursorPos.y()) moveGraphVertical(coordinate.y());
-    }
-
-    previousCursorPos = cursorPos;
+    if(event->buttons() == Qt::RightButton)
+        moveGraph(cursorPos);
 }
 
 void ChartView::mousePressEvent(QMouseEvent *event)
 {
     if(event->button() == Qt::RightButton)
     {
-        const QPoint cursorPos = event->pos();
-        dragStartPoint.coord = chart()->mapToValue(cursorPos);
+        dragStartPoint.pos = event->pos();
 
         const QAbstractAxis::AxisType typeHorizontal = chart()->axes(Qt::Horizontal).constLast()->type();
         const QAbstractAxis::AxisType typeVertical = chart()->axes(Qt::Vertical).constLast()->type();
@@ -110,6 +105,7 @@ void ChartView::mousePressEvent(QMouseEvent *event)
             const QValueAxis *axis = qobject_cast<QValueAxis*>(chart()->axes(Qt::Horizontal).constLast());
             dragStartPoint.minX = axis->min();
             dragStartPoint.maxX = axis->max();
+            dragStartPoint.pixelWidthH = (axis->max() - axis->min()) / chart()->plotArea().width();
             break;
         }
         default:
@@ -121,6 +117,7 @@ void ChartView::mousePressEvent(QMouseEvent *event)
             const QValueAxis *axis = qobject_cast<QValueAxis*>(chart()->axes(Qt::Vertical).constLast());
             dragStartPoint.minY = axis->min();
             dragStartPoint.maxY = axis->max();
+            dragStartPoint.pixelWidthV = (axis->max() - axis->min()) / chart()->plotArea().height();
             break;
         }
         default:
@@ -129,22 +126,17 @@ void ChartView::mousePressEvent(QMouseEvent *event)
     }
 }
 
-void ChartView::moveGraphHorizontal(const qreal& x)
+void ChartView::moveGraph(const QPoint& cursorPos)
 {
     QAbstractAxis *const axisX = chart()->axes(Qt::Horizontal).constLast();
-    const qreal horizontalMove = x - dragStartPoint.coord.x();
-
+    const qreal horizontalMove = dragStartPoint.pixelWidthH * (cursorPos.x() - dragStartPoint.pos.x());
     axisX->setMin(dragStartPoint.minX - horizontalMove);
     axisX->setMax(dragStartPoint.maxX - horizontalMove);
-}
 
-void ChartView::moveGraphVertical(const qreal& y)
-{
     QAbstractAxis *const axisY = chart()->axes(Qt::Vertical).constLast();
-    const qreal verticalMove = y - dragStartPoint.coord.y();
-
-    axisY->setMin(dragStartPoint.minY - verticalMove);
-    axisY->setMax(dragStartPoint.maxY - verticalMove);
+    const qreal verticalMove = dragStartPoint.pixelWidthV * (cursorPos.y() - dragStartPoint.pos.y());
+    axisY->setMin(dragStartPoint.minY + verticalMove);
+    axisY->setMax(dragStartPoint.maxY + verticalMove);
 }
 
 
