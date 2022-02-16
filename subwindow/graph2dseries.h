@@ -61,11 +61,12 @@ class ChartView : public QChartView
     Q_OBJECT
 
 public:
-    ChartView(QChart *chart, QWidget *parent = nullptr) : QChartView(chart, parent) {}
+    ChartView(QChart *chart, QWidget *parent = nullptr);
 
 protected:
     void mouseMoveEvent(QMouseEvent* event);
     void mousePressEvent(QMouseEvent *event);
+    void mouseDoubleClickEvent(QMouseEvent *event);
 
 private:
     void moveGraph(const QPoint& cursorPos);
@@ -76,6 +77,11 @@ private:
         QPointF pixelWidth;
         QPoint pos;
     } dragStartPoint;
+
+    QMenu *itemMenu;
+
+private slots:
+    void addTextItem();
 
 signals:
     void mouseCoordinateMoved(const QString& x, const QString& y);

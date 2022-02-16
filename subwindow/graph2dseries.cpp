@@ -81,6 +81,17 @@
  */
 
 
+ChartView::ChartView(QChart *chart, QWidget *parent)
+    : QChartView(chart, parent)
+{
+    itemMenu = new QMenu(this);
+
+    QAction *addText = new QAction("text", itemMenu);
+    itemMenu->addAction(addText);
+    connect(addText, &QAction::triggered, this, &ChartView::addTextItem);
+
+}
+
 void ChartView::mouseMoveEvent(QMouseEvent *event)
 {
     const QPoint cursorPos = event->pos();
@@ -126,6 +137,11 @@ void ChartView::mousePressEvent(QMouseEvent *event)
     }
 }
 
+void ChartView::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    itemMenu->exec(viewport()->mapToGlobal(event->pos()));
+}
+
 void ChartView::moveGraph(const QPoint& cursorPos)
 {
     QAbstractAxis *const axisX = chart()->axes(Qt::Horizontal).constLast();
@@ -137,6 +153,13 @@ void ChartView::moveGraph(const QPoint& cursorPos)
     const qreal verticalMove = dragStartPoint.pixelWidth.y() * (cursorPos.y() - dragStartPoint.pos.y());
     axisY->setMin(dragStartPoint.min.y() + verticalMove);
     axisY->setMax(dragStartPoint.max.y() + verticalMove);
+}
+
+void ChartView::addTextItem()
+{
+    qDebug() << __LINE__;
+    QGraphicsSimpleTextItem *textItem = new QGraphicsSimpleTextItem("text", chart());
+    textItem->setPos(chart()->mapToValue(cursor().pos()));
 }
 
 
