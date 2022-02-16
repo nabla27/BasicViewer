@@ -71,12 +71,9 @@ private:
     void moveGraph(const QPoint& cursorPos);
 
     struct DragStartPoint{
-        qreal minX;
-        qreal maxX;
-        qreal minY;
-        qreal maxY;
-        qreal pixelWidthH;
-        qreal pixelWidthV;
+        QPointF min;
+        QPointF max;
+        QPointF pixelWidth;
         QPoint pos;
     } dragStartPoint;
 

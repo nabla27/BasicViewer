@@ -103,9 +103,9 @@ void ChartView::mousePressEvent(QMouseEvent *event)
         switch (typeHorizontal) {
         case QAbstractAxis::AxisTypeValue:{
             const QValueAxis *axis = qobject_cast<QValueAxis*>(chart()->axes(Qt::Horizontal).constLast());
-            dragStartPoint.minX = axis->min();
-            dragStartPoint.maxX = axis->max();
-            dragStartPoint.pixelWidthH = (axis->max() - axis->min()) / chart()->plotArea().width();
+            dragStartPoint.min.setX(axis->min());
+            dragStartPoint.max.setX(axis->max());
+            dragStartPoint.pixelWidth.setX((axis->max() - axis->min()) / chart()->plotArea().width());
             break;
         }
         default:
@@ -115,9 +115,9 @@ void ChartView::mousePressEvent(QMouseEvent *event)
         switch(typeVertical) {
         case QAbstractAxis::AxisTypeValue:{
             const QValueAxis *axis = qobject_cast<QValueAxis*>(chart()->axes(Qt::Vertical).constLast());
-            dragStartPoint.minY = axis->min();
-            dragStartPoint.maxY = axis->max();
-            dragStartPoint.pixelWidthV = (axis->max() - axis->min()) / chart()->plotArea().height();
+            dragStartPoint.min.setY(axis->min());
+            dragStartPoint.max.setY(axis->max());
+            dragStartPoint.pixelWidth.setY((axis->max() - axis->min()) / chart()->plotArea().height());
             break;
         }
         default:
@@ -129,14 +129,14 @@ void ChartView::mousePressEvent(QMouseEvent *event)
 void ChartView::moveGraph(const QPoint& cursorPos)
 {
     QAbstractAxis *const axisX = chart()->axes(Qt::Horizontal).constLast();
-    const qreal horizontalMove = dragStartPoint.pixelWidthH * (cursorPos.x() - dragStartPoint.pos.x());
-    axisX->setMin(dragStartPoint.minX - horizontalMove);
-    axisX->setMax(dragStartPoint.maxX - horizontalMove);
+    const qreal horizontalMove = dragStartPoint.pixelWidth.x() * (cursorPos.x() - dragStartPoint.pos.x());
+    axisX->setMin(dragStartPoint.min.x() - horizontalMove);
+    axisX->setMax(dragStartPoint.max.x() - horizontalMove);
 
     QAbstractAxis *const axisY = chart()->axes(Qt::Vertical).constLast();
-    const qreal verticalMove = dragStartPoint.pixelWidthV * (cursorPos.y() - dragStartPoint.pos.y());
-    axisY->setMin(dragStartPoint.minY + verticalMove);
-    axisY->setMax(dragStartPoint.maxY + verticalMove);
+    const qreal verticalMove = dragStartPoint.pixelWidth.y() * (cursorPos.y() - dragStartPoint.pos.y());
+    axisY->setMin(dragStartPoint.min.y() + verticalMove);
+    axisY->setMax(dragStartPoint.max.y() + verticalMove);
 }
 
 
