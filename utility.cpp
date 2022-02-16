@@ -1,6 +1,7 @@
 #include "utility.h"
 
-
+const QString BasicSet::tmpDirectory = "tmp/";
+const QString BasicSet::settingFile = "setwindow.xml";
 
 const QStringList colorNameList()
 {

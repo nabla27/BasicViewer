@@ -10,7 +10,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QInputDialog>
-#include "basicset.h"
+#include "utility.h"
 
 class FileTree : public QTreeWidget
 {

@@ -9,7 +9,7 @@
 #include <QRegularExpressionMatchIterator>
 #include <QDir>
 #include "textbrowser.h"
-#include "basicset.h"
+#include "utility.h"
 
 
 class Gnuplot

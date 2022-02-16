@@ -10,7 +10,7 @@
 #include <QDir>
 #include "syntaxhighlighter.h"
 #include "completer/cpl_gnuplot.h"
-#include "basicset.h"
+#include "utility.h"
 
 class TextEdit : public QPlainTextEdit
 {

@@ -35,6 +35,14 @@ int getEnumIndex(const QString enumStr){
     return -1;
 }
 
+
+class BasicSet{
+public:
+    static const QString tmpDirectory;
+    static const QString settingFile;
+};
+
+
 const QStringList colorNameList();
 
 const QStringList imgFormatList();
