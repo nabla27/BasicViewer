@@ -64,9 +64,9 @@ public:
     ChartView(QChart *chart, QWidget *parent = nullptr);
 
 protected:
-    void mouseMoveEvent(QMouseEvent* event);
-    void mousePressEvent(QMouseEvent *event);
-    void mouseDoubleClickEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent* event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseDoubleClickEvent(QMouseEvent *event) override;
 
 private:
     void moveGraph(const QPoint& cursorPos);
@@ -86,6 +86,28 @@ private slots:
 signals:
     void mouseCoordinateMoved(const QString& x, const QString& y);
 };
+
+
+
+
+class GraphicsTextItem : public QGraphicsTextItem
+{
+    Q_OBJECT
+
+public:
+    GraphicsTextItem(const QString& text, QGraphicsItem *parent = nullptr);
+
+protected:
+    void wheelEvent(QGraphicsSceneWheelEvent *event) override;
+    void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
+    void hoverMoveEvent(QGraphicsSceneHoverEvent *event) override;
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
+
+};
+
+
+
+
 
 
 

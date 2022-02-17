@@ -100,6 +100,8 @@ void ChartView::mouseMoveEvent(QMouseEvent *event)
 
     if(event->buttons() == Qt::RightButton)
         moveGraph(cursorPos);
+
+    QChartView::mouseMoveEvent(event);
 }
 
 void ChartView::mousePressEvent(QMouseEvent *event)
@@ -135,11 +137,15 @@ void ChartView::mousePressEvent(QMouseEvent *event)
                 break;
         }
     }
+
+    QChartView::mousePressEvent(event);
 }
 
 void ChartView::mouseDoubleClickEvent(QMouseEvent *event)
 {
     itemMenu->exec(viewport()->mapToGlobal(event->pos()));
+
+    QChartView::mouseDoubleClickEvent(event);
 }
 
 void ChartView::moveGraph(const QPoint& cursorPos)
@@ -157,10 +163,47 @@ void ChartView::moveGraph(const QPoint& cursorPos)
 
 void ChartView::addTextItem()
 {
-    qDebug() << __LINE__;
-    QGraphicsSimpleTextItem *textItem = new QGraphicsSimpleTextItem("text", chart());
-    textItem->setPos(chart()->mapToValue(cursor().pos()));
+    chart()->setAcceptHoverEvents(true);
+    GraphicsTextItem *textItem = new GraphicsTextItem("text", chart());
+    textItem->setPos(cursor().pos());
+    textItem->setAcceptHoverEvents(true);
 }
+
+void GraphicsTextItem::wheelEvent(QGraphicsSceneWheelEvent *event)
+{
+
+}
+
+void GraphicsTextItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
+{
+
+}
+
+void GraphicsTextItem::hoverMoveEvent(QGraphicsSceneHoverEvent *event)
+{
+
+}
+
+void GraphicsTextItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
+{
+
+}
+
+
+
+
+
+
+
+
+GraphicsTextItem::GraphicsTextItem(const QString& text, QGraphicsItem *parent)
+    : QGraphicsTextItem(text, parent)
+{
+
+}
+
+
+
 
 
 
