@@ -11,6 +11,8 @@
 #include <QValueAxis>
 #include <QLogValueAxis>
 
+#include <QGraphicsSceneHelpEvent>
+
 #include <QPixmap>
 #include <QInputDialog>
 #include <QFileDialog>
@@ -100,8 +102,10 @@ public:
 protected:
     void wheelEvent(QGraphicsSceneWheelEvent *event) override;
     void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
-    void hoverMoveEvent(QGraphicsSceneHoverEvent *event) override;
     void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
 
 };
 

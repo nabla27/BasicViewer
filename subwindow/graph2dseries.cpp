@@ -165,7 +165,7 @@ void ChartView::addTextItem()
 {
     chart()->setAcceptHoverEvents(true);
     GraphicsTextItem *textItem = new GraphicsTextItem("text", chart());
-    textItem->setPos(cursor().pos());
+    textItem->setPos(mapFromGlobal(cursor().pos()));
     textItem->setAcceptHoverEvents(true);
 }
 
@@ -176,19 +176,28 @@ void GraphicsTextItem::wheelEvent(QGraphicsSceneWheelEvent *event)
 
 void GraphicsTextItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
 {
-
-}
-
-void GraphicsTextItem::hoverMoveEvent(QGraphicsSceneHoverEvent *event)
-{
-
+    QApplication::setOverrideCursor(Qt::OpenHandCursor);
 }
 
 void GraphicsTextItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
 {
-
+    QApplication::setOverrideCursor(Qt::ArrowCursor);
 }
 
+void GraphicsTextItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    QApplication::setOverrideCursor(Qt::ClosedHandCursor);
+}
+
+void GraphicsTextItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+    setPos(mapToParent(event->pos() - event->buttonDownPos(Qt::LeftButton)));
+}
+
+void GraphicsTextItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+{
+    QApplication::setOverrideCursor(Qt::OpenHandCursor);
+}
 
 
 
