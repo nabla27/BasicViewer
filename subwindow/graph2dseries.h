@@ -66,8 +66,9 @@ public:
     ChartView(QChart *chart, QWidget *parent = nullptr);
 
 protected:
-    void mouseMoveEvent(QMouseEvent* event) override;
+    void wheelEvent(QWheelEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
     void mouseDoubleClickEvent(QMouseEvent *event) override;
 
 private:
@@ -130,9 +131,6 @@ private:
     QMetaObject::Connection changedTableAction;
     QList<SeriesData> seriesData;
     QList<PlotTableRange> plotTableRanges;
-
-protected :
-    void wheelEvent(QWheelEvent *event);
 
 private:
     void setTableSelectedIndex();                    //tableの選択範囲を設定

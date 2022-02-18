@@ -104,6 +104,20 @@ void ChartView::mouseMoveEvent(QMouseEvent *event)
     QChartView::mouseMoveEvent(event);
 }
 
+void ChartView::wheelEvent(QWheelEvent *event)
+{
+    if(event->buttons() != Qt::LeftButton)
+    {
+        const int degree = event->angleDelta().y();
+        if(degree >= 0)
+            chart()->zoom(1 + 0.1);
+        else
+            chart()->zoom(1 - 0.1);
+    }
+
+    QChartView::wheelEvent(event);
+}
+
 void ChartView::mousePressEvent(QMouseEvent *event)
 {
     if(event->button() == Qt::RightButton)
@@ -171,7 +185,10 @@ void ChartView::addTextItem()
 
 void GraphicsTextItem::wheelEvent(QGraphicsSceneWheelEvent *event)
 {
-
+    if(event->delta() > 0)
+        setRotation(rotation() - 2);
+    else
+        setRotation(rotation() + 2);
 }
 
 void GraphicsTextItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
@@ -575,17 +592,7 @@ void Graph2DSeries::updateRogressionLine(const int index)
     graph->series().at(index)->setName("Y = " + slope + "X" + intercept);
 }
 
-void Graph2DSeries::wheelEvent(QWheelEvent *event)
-{
-    if(graphView->underMouse())
-    {
-        const int degree = event->angleDelta().y();
-        if(degree >= 0)
-            graph->zoom(1 + 0.1);
-        else
-            graph->zoom(1 - 0.1);
-    }
-}
+
 
 
 
