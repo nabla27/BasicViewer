@@ -60,6 +60,19 @@
  *
  *
  *
+ * QGraphicsItem ---|--- QAbstractGraphicsShapeItem ---|--- QGraphicsEllipseItem
+ *                  |                                  |--- QGraphicsPathItem
+ *                  |                                  |--- QGraphicsPolygonItem
+ *                  |                                  |--- QGraphicsRectItem
+ *                  |                                  |--- QGraphicsSimpleItem
+ *                  |
+ *                  |--- QGraphicsObject --------------|--- QGraphicsSvgItem
+ *                  |                                  |--- QGraphicsTextItem
+ *                  |                                  |--- QGraphicsWidget
+ *                  |
+ *                  |
+ *
+ *
  *
  *
  * [ tableWidgetの変更が変更されたとき ]
@@ -89,7 +102,6 @@ ChartView::ChartView(QChart *chart, QWidget *parent)
     QAction *addText = new QAction("text", itemMenu);
     itemMenu->addAction(addText);
     connect(addText, &QAction::triggered, this, &ChartView::addTextItem);
-
 }
 
 void ChartView::mouseMoveEvent(QMouseEvent *event)
@@ -183,6 +195,18 @@ void ChartView::addTextItem()
     textItem->setAcceptHoverEvents(true);
 }
 
+
+
+
+
+
+
+GraphicsTextItem::GraphicsTextItem(const QString& text, QGraphicsItem *parent)
+    : QGraphicsSimpleTextItem(text, parent)
+{
+
+}
+
 void GraphicsTextItem::wheelEvent(QGraphicsSceneWheelEvent *event)
 {
     if(event->delta() > 0)
@@ -216,17 +240,6 @@ void GraphicsTextItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     QApplication::setOverrideCursor(Qt::OpenHandCursor);
 }
 
-
-
-
-
-
-
-GraphicsTextItem::GraphicsTextItem(const QString& text, QGraphicsItem *parent)
-    : QGraphicsTextItem(text, parent)
-{
-
-}
 
 
 
@@ -1231,6 +1244,74 @@ void ExportSettingWidget::exportToImage()
 
 
 
+
+
+
+
+
+GraphicsTextItemSettingWidget::GraphicsTextItemSettingWidget(QWidget *parent)
+    : QWidget(parent)
+{
+    QVBoxLayout *layout = new QVBoxLayout(this);
+    textEdit = new LineEditLayout(this, "Text");
+    textSizeEdit = new SpinBoxEditLayout(this, "Size");
+    rotationEdit = new LineEditLayout(this, "Rotation");
+    QSpacerItem *spacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+
+    setLayout(layout);
+    layout->addLayout(textEdit);
+    layout->addLayout(textSizeEdit);
+    layout->addLayout(rotationEdit);
+    layout->addItem(spacer);
+
+    connect(textEdit, &LineEditLayout::lineTextEdited, this, &GraphicsTextItemSettingWidget::setItemText);
+    connect(textSizeEdit, &SpinBoxEditLayout::spinBoxValueChanged, this, &GraphicsTextItemSettingWidget::setItemTextSize);
+}
+
+void GraphicsTextItemSettingWidget::setGraphicsItem(GraphicsTextItem *const textItem)
+{
+    this->textItem = textItem;
+
+    textEdit->setLineEditText(textItem->text());
+    textSizeEdit->setSpinBoxValue(textItem->font().pointSize());
+    rotationEdit->setLineEditText(QString::number(textItem->rotation()));
+}
+
+void GraphicsTextItemSettingWidget::setItemText(const QString& text)
+{
+    textItem->setText(text);
+}
+
+void GraphicsTextItemSettingWidget::setItemTextSize(const int ps)
+{
+    QFont textFont = textItem->font();
+    textFont.setPointSize(ps);
+    textItem->setFont(textFont);
+}
+
+void GraphicsTextItemSettingWidget::setItemRotation(const QString& rotation)
+{
+    textItem->setRotation(rotation.toDouble());
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ItemSettingWidget::ItemSettingWidget(QWidget *parent)
     : QWidget(parent)
 {
@@ -1238,21 +1319,37 @@ ItemSettingWidget::ItemSettingWidget(QWidget *parent)
     QHBoxLayout *adderLayout = new QHBoxLayout;
     itemTypeCombo = new QComboBox(this);
     QPushButton *addItemButton = new QPushButton("Add", this);
+    settingPage = new QStackedWidget(this);
+    textItemWidget = new GraphicsTextItemSettingWidget(settingPage);
     QSpacerItem *spacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
     setLayout(layout);
     layout->addLayout(adderLayout);
     adderLayout->addWidget(itemTypeCombo);
     adderLayout->addWidget(addItemButton);
+    layout->addWidget(settingPage);
+    settingPage->addWidget(textItemWidget);
     layout->addItem(spacer);
 
     addItemButton->setMaximumWidth(70);
 }
 
-void ItemSettingWidget::setItemSettingWidget(QGraphicsItem *const item)
+template <class T>
+void ItemSettingWidget::setItemSettingWidget(T *const item)
 {
+    const ChartEnum::ItemType type = item->itemType();
 
+    switch (type)
+    {
+    case ChartEnum::ItemType::Text:
+        settingPage->setCurrentIndex((int)type);
+        textItemWidget->setGraphicsItem(item);
+        break;
+    default:
+        break;
+    }
 }
+
 
 
 

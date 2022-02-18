@@ -1,6 +1,5 @@
 #include "filetree.h"
 
-/* コンストラクタ */
 FileTree::FileTree(QWidget *parent)
     : QTreeWidget(parent)
 {
@@ -45,7 +44,6 @@ FileTree::FileTree(QWidget *parent)
     reloadFileTree();
 }
 
-/* デストラクタ */
 FileTree::~FileTree()
 {
     foreach(QProcess *const process, scriptList){

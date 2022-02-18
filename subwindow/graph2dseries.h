@@ -31,9 +31,11 @@ public:
     enum class PlotType { LineSeries, SplineSeries, ScatterSeries, AreaSeries, LogressionLine };
     enum class MarkerShape { Circle, Rectangle, RotatedRectangle, Triangle, ShapeStar };
     enum class Theme { Light, BlueCerulean, Dark, BrownSand, BlueNcs, HighContrast, BlueIcy, Qt };
+    enum class ItemType { Text };
     Q_ENUM(PlotType)
     Q_ENUM(MarkerShape)
     Q_ENUM(Theme)
+    Q_ENUM(ItemType)
 };
 
 
@@ -91,14 +93,15 @@ signals:
 };
 
 
+class ItemSettingWidget;
 
-
-class GraphicsTextItem : public QGraphicsTextItem
+class GraphicsTextItem : public QGraphicsSimpleTextItem
 {
-    Q_OBJECT
-
 public:
     GraphicsTextItem(const QString& text, QGraphicsItem *parent = nullptr);
+
+public:
+    static const ChartEnum::ItemType itemType() { return ChartEnum::ItemType::Text; }
 
 protected:
     void wheelEvent(QGraphicsSceneWheelEvent *event) override;
@@ -107,7 +110,6 @@ protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
-
 };
 
 
@@ -335,6 +337,30 @@ private slots:
     void exportToImage();
 };
 
+
+
+class GraphicsTextItemSettingWidget : public QWidget
+{
+    Q_OBJECT
+
+public:
+    GraphicsTextItemSettingWidget(QWidget *parent = nullptr);
+    void setGraphicsItem(GraphicsTextItem *const textItem);
+
+private slots:
+    void setItemText(const QString& text);
+    void setItemTextSize(const int ps);
+    void setItemRotation(const QString& rotation);
+
+private:
+    GraphicsTextItem *textItem;
+    LineEditLayout *textEdit;
+    SpinBoxEditLayout *textSizeEdit;
+    LineEditLayout *rotationEdit;
+};
+
+
+
 class ItemSettingWidget : public QWidget
 {
     Q_OBJECT
@@ -343,16 +369,14 @@ public:
     ItemSettingWidget(QWidget *parent = nullptr);
 
 public:
-    void setItemSettingWidget(QGraphicsItem *const item);
+    template <class T> void setItemSettingWidget(T *const item);
 
 private:
     QGraphicsItem *item;
     QComboBox *itemTypeCombo;
+    QStackedWidget *settingPage;
+    GraphicsTextItemSettingWidget *textItemWidget;
 };
-
-
-
-
 
 
 
