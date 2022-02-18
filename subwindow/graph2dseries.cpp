@@ -200,12 +200,15 @@ void ChartView::addTextItem()
 
 
 
-
 GraphicsTextItem::GraphicsTextItem(const QString& text, QGraphicsItem *parent)
     : QGraphicsSimpleTextItem(text, parent)
 {
 
 }
+
+ItemSettingWidget* GraphicsTextItem::settingWidget;
+
+void GraphicsTextItem::setSettingWidget(ItemSettingWidget *widget) { settingWidget = widget; }
 
 void GraphicsTextItem::wheelEvent(QGraphicsSceneWheelEvent *event)
 {
@@ -217,17 +220,18 @@ void GraphicsTextItem::wheelEvent(QGraphicsSceneWheelEvent *event)
 
 void GraphicsTextItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
 {
-    QApplication::setOverrideCursor(Qt::OpenHandCursor);
+    setCursor(Qt::OpenHandCursor);
 }
 
 void GraphicsTextItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
 {
-    QApplication::setOverrideCursor(Qt::ArrowCursor);
+    setCursor(Qt::ArrowCursor);
 }
 
 void GraphicsTextItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-    QApplication::setOverrideCursor(Qt::ClosedHandCursor);
+    setCursor(Qt::ClosedHandCursor);
+    settingWidget->setItemSettingWidget(this);
 }
 
 void GraphicsTextItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
@@ -237,7 +241,7 @@ void GraphicsTextItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
 void GraphicsTextItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
-    QApplication::setOverrideCursor(Qt::OpenHandCursor);
+    setCursor(Qt::OpenHandCursor);
 }
 
 
@@ -372,6 +376,8 @@ void Graph2DSeries::initializeGraphLayout()
     connect(seriesSettingWidget, &SeriesSettingWidget::newSeriesAdded, labelSettingWidget, &LabelSettingWidget::addTab);
     connect(seriesSettingWidget, &SeriesSettingWidget::newSeriesAdded, legendSettingWidget, &LegendSettingWidget::addSeriesNameEditer);
     connect(graphView, &ChartView::mouseCoordinateMoved, graphSettingWidget, &GraphSettingWidget::setCoordinateValue);
+
+    GraphicsTextItem::setSettingWidget(itemSettingWidget);
 }
 
 void Graph2DSeries::initializeGraphSeries()
@@ -1319,30 +1325,32 @@ ItemSettingWidget::ItemSettingWidget(QWidget *parent)
     QHBoxLayout *adderLayout = new QHBoxLayout;
     itemTypeCombo = new QComboBox(this);
     QPushButton *addItemButton = new QPushButton("Add", this);
-    settingPage = new QStackedWidget(this);
-    textItemWidget = new GraphicsTextItemSettingWidget(settingPage);
+    settingStack = new QStackedWidget(this);
+    textItemWidget = new GraphicsTextItemSettingWidget(settingStack);
     QSpacerItem *spacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
     setLayout(layout);
     layout->addLayout(adderLayout);
     adderLayout->addWidget(itemTypeCombo);
     adderLayout->addWidget(addItemButton);
-    layout->addWidget(settingPage);
-    settingPage->addWidget(textItemWidget);
+    layout->addWidget(settingStack);
+    settingStack->addWidget(textItemWidget);
     layout->addItem(spacer);
 
     addItemButton->setMaximumWidth(70);
+    settingStack->setVisible(false);
 }
 
 template <class T>
 void ItemSettingWidget::setItemSettingWidget(T *const item)
 {
+    settingStack->setVisible(true);
     const ChartEnum::ItemType type = item->itemType();
 
     switch (type)
     {
     case ChartEnum::ItemType::Text:
-        settingPage->setCurrentIndex((int)type);
+        settingStack->setCurrentIndex((int)type);
         textItemWidget->setGraphicsItem(item);
         break;
     default:

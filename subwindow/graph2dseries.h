@@ -102,6 +102,7 @@ public:
 
 public:
     static const ChartEnum::ItemType itemType() { return ChartEnum::ItemType::Text; }
+    static void setSettingWidget(ItemSettingWidget *widget);
 
 protected:
     void wheelEvent(QGraphicsSceneWheelEvent *event) override;
@@ -110,10 +111,10 @@ protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+
+private:
+    static ItemSettingWidget *settingWidget;
 };
-
-
-
 
 
 
@@ -374,7 +375,7 @@ public:
 private:
     QGraphicsItem *item;
     QComboBox *itemTypeCombo;
-    QStackedWidget *settingPage;
+    QStackedWidget *settingStack;
     GraphicsTextItemSettingWidget *textItemWidget;
 };
 
