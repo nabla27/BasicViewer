@@ -264,25 +264,6 @@ private slots:
     void setPointsSize(const QString& ps);
 };
 
-class ExportSettingWidget : public QWidget
-{
-    Q_OBJECT
-
-public:
-    ExportSettingWidget(QWidget *parent, QChart *graph, QChartView *graphView);
-
-private:
-    QChart *graph;
-    QChartView *graphView;
-    ComboEditLayout *type;
-    LineEditLayout *fileName;
-    ComboEditLayout *imageFormat;
-
-private slots:
-    void exportFile();
-    void exportToImage();
-};
-
 class AxisSettingGroupBox : public QGroupBox
 {
     Q_OBJECT
@@ -335,8 +316,39 @@ private:
     QChart *graph;
 };
 
+class ExportSettingWidget : public QWidget
+{
+    Q_OBJECT
 
+public:
+    ExportSettingWidget(QWidget *parent, QChart *graph, QChartView *graphView);
 
+private:
+    QChart *graph;
+    QChartView *graphView;
+    ComboEditLayout *type;
+    LineEditLayout *fileName;
+    ComboEditLayout *imageFormat;
+
+private slots:
+    void exportFile();
+    void exportToImage();
+};
+
+class ItemSettingWidget : public QWidget
+{
+    Q_OBJECT
+
+public:
+    ItemSettingWidget(QWidget *parent = nullptr);
+
+public:
+    void setItemSettingWidget(QGraphicsItem *const item);
+
+private:
+    QGraphicsItem *item;
+    QComboBox *itemTypeCombo;
+};
 
 
 

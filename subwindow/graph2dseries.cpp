@@ -334,6 +334,7 @@ void Graph2DSeries::initializeGraphLayout()
     selectPageCombo->addItem("Label");
     selectPageCombo->addItem("Axis");
     selectPageCombo->addItem("Export");
+    selectPageCombo->addItem("Item");
     connect(selectPageCombo, &QComboBox::activated, settingStackWidget, &QStackedWidget::setCurrentIndex);
 
     GraphSettingWidget *graphSettingWidget = new GraphSettingWidget(settingStackWidget, graph);
@@ -342,6 +343,7 @@ void Graph2DSeries::initializeGraphLayout()
     LabelSettingWidget *labelSettingWidget = new LabelSettingWidget(settingStackWidget, graph);
     AxisSettingWidget *axisSettingWidget = new AxisSettingWidget(settingStackWidget, graph);
     ExportSettingWidget *exportSettingWidget = new ExportSettingWidget(settingStackWidget, graph, graphView);
+    ItemSettingWidget *itemSettingWidget = new ItemSettingWidget(settingStackWidget);
 
     settingStackWidget->addWidget(graphSettingWidget);
     settingStackWidget->addWidget(seriesSettingWidget);
@@ -349,6 +351,7 @@ void Graph2DSeries::initializeGraphLayout()
     settingStackWidget->addWidget(labelSettingWidget);
     settingStackWidget->addWidget(axisSettingWidget);
     settingStackWidget->addWidget(exportSettingWidget);
+    settingStackWidget->addWidget(itemSettingWidget);
 
     connect(seriesSettingWidget, &SeriesSettingWidget::seriesTypeChanged, this, &Graph2DSeries::changeSeriesType);
     connect(seriesSettingWidget, &SeriesSettingWidget::seriesTypeChanged, legendSettingWidget, &LegendSettingWidget::reconnectSeriesNameEditor);
@@ -993,68 +996,6 @@ void LabelSettingWidget::addTab()
 }
 
 
-ExportSettingWidget::ExportSettingWidget(QWidget *parent, QChart *graph, QChartView *graphView)
-    : QWidget(parent), graph(graph), graphView(graphView)
-{
-    QVBoxLayout *layout = new QVBoxLayout(this);
-    fileName = new LineEditLayout(this, "File name");
-    type = new ComboEditLayout(this, "Export to");
-    QPushButton *button = new QPushButton("Export", this);
-    QStackedWidget *stackWidget = new QStackedWidget(this);
-    QSpacerItem *spacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
-
-    setLayout(layout);
-    layout->addLayout(fileName);
-    layout->addLayout(type);
-    layout->addWidget(button);
-    layout->addWidget(stackWidget);
-    layout->addItem(spacer);
-
-    type->insertComboItems(0, QStringList() << "Image");
-
-    connect(type, &ComboEditLayout::currentComboIndexChanged, stackWidget, &QStackedWidget::setCurrentIndex);
-    connect(button, &QPushButton::released, this, &ExportSettingWidget::exportFile);
-
-    QGroupBox *exportImageBox = new QGroupBox("Image", stackWidget);
-    QVBoxLayout *exportImageLayout = new QVBoxLayout(exportImageBox);
-    imageFormat = new ComboEditLayout(exportImageBox, "Format");
-    QSpacerItem *exportImageSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
-
-    stackWidget->addWidget(exportImageBox);
-    exportImageBox->setLayout(exportImageLayout);
-    exportImageLayout->addLayout(imageFormat);
-    exportImageLayout->addItem(exportImageSpacer);
-
-    imageFormat->insertComboItems(0, imgFormatList());
-
-}
-
-void ExportSettingWidget::exportFile()
-{
-    switch(type->currentComboIndex())
-    {
-    case 0:
-        exportToImage(); break;
-    default:
-        break;
-    }
-}
-
-void ExportSettingWidget::exportToImage()
-{
-    const QString directoryPath = QFileDialog::getExistingDirectory(this);
-    const QString exportFileName = fileName->lineEditText();
-    const QString format = imageFormat->currentComboText();
-
-    if(directoryPath.isEmpty()) { return; }
-
-    QImage img = graphView->grab().toImage();
-    const bool success = img.save(directoryPath + "/" + exportFileName + "." + format,
-                                  format.toLocal8Bit().constData());
-    if(success) { return; }
-
-    QMessageBox::critical(this, "Error", "Failed to save.");
-}
 
 
 AxisSettingGroupBox::AxisSettingGroupBox(QWidget *parent, QChart *graph, const QString& text, const Qt::Orientation orient)
@@ -1224,6 +1165,94 @@ AxisSettingWidget::AxisSettingWidget(QWidget *parent, QChart *graph)
 
 
 
+
+ExportSettingWidget::ExportSettingWidget(QWidget *parent, QChart *graph, QChartView *graphView)
+    : QWidget(parent), graph(graph), graphView(graphView)
+{
+    QVBoxLayout *layout = new QVBoxLayout(this);
+    fileName = new LineEditLayout(this, "File name");
+    type = new ComboEditLayout(this, "Export to");
+    QPushButton *button = new QPushButton("Export", this);
+    QStackedWidget *stackWidget = new QStackedWidget(this);
+    QSpacerItem *spacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+
+    setLayout(layout);
+    layout->addLayout(fileName);
+    layout->addLayout(type);
+    layout->addWidget(button);
+    layout->addWidget(stackWidget);
+    layout->addItem(spacer);
+
+    type->insertComboItems(0, QStringList() << "Image");
+
+    connect(type, &ComboEditLayout::currentComboIndexChanged, stackWidget, &QStackedWidget::setCurrentIndex);
+    connect(button, &QPushButton::released, this, &ExportSettingWidget::exportFile);
+
+    QGroupBox *exportImageBox = new QGroupBox("Image", stackWidget);
+    QVBoxLayout *exportImageLayout = new QVBoxLayout(exportImageBox);
+    imageFormat = new ComboEditLayout(exportImageBox, "Format");
+    QSpacerItem *exportImageSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+
+    stackWidget->addWidget(exportImageBox);
+    exportImageBox->setLayout(exportImageLayout);
+    exportImageLayout->addLayout(imageFormat);
+    exportImageLayout->addItem(exportImageSpacer);
+
+    imageFormat->insertComboItems(0, imgFormatList());
+
+}
+
+void ExportSettingWidget::exportFile()
+{
+    switch(type->currentComboIndex())
+    {
+    case 0:
+        exportToImage(); break;
+    default:
+        break;
+    }
+}
+
+void ExportSettingWidget::exportToImage()
+{
+    const QString directoryPath = QFileDialog::getExistingDirectory(this);
+    const QString exportFileName = fileName->lineEditText();
+    const QString format = imageFormat->currentComboText();
+
+    if(directoryPath.isEmpty()) { return; }
+
+    QImage img = graphView->grab().toImage();
+    const bool success = img.save(directoryPath + "/" + exportFileName + "." + format,
+                                  format.toLocal8Bit().constData());
+    if(success) { return; }
+
+    QMessageBox::critical(this, "Error", "Failed to save.");
+}
+
+
+
+ItemSettingWidget::ItemSettingWidget(QWidget *parent)
+    : QWidget(parent)
+{
+    QVBoxLayout *layout = new QVBoxLayout(this);
+    QHBoxLayout *adderLayout = new QHBoxLayout;
+    itemTypeCombo = new QComboBox(this);
+    QPushButton *addItemButton = new QPushButton("Add", this);
+    QSpacerItem *spacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+
+    setLayout(layout);
+    layout->addLayout(adderLayout);
+    adderLayout->addWidget(itemTypeCombo);
+    adderLayout->addWidget(addItemButton);
+    layout->addItem(spacer);
+
+    addItemButton->setMaximumWidth(70);
+}
+
+void ItemSettingWidget::setItemSettingWidget(QGraphicsItem *const item)
+{
+
+}
 
 
 
