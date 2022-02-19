@@ -195,12 +195,15 @@ void ChartView::addTextItem()
 {
     GraphicsTextItem *textItem = new GraphicsTextItem("text", chart());
     textItem->setPos(mapFromGlobal(cursor().pos()));
-    textItem->setAcceptHoverEvents(true);
 }
 
 void ChartView::addLineItem()
 {
-
+    GraphicsLineItem *lineItem = new GraphicsLineItem(QLineF(0, 0, 50, 50), chart());
+    QPen linePen = lineItem->pen();
+    linePen.setWidth(2);
+    lineItem->setPen(linePen);
+    lineItem->setPos(mapFromGlobal(cursor().pos()));
 }
 
 
@@ -211,7 +214,7 @@ void ChartView::addLineItem()
 GraphicsTextItem::GraphicsTextItem(const QString& text, QGraphicsItem *parent)
     : QGraphicsSimpleTextItem(text, parent)
 {
-
+    setAcceptHoverEvents(true);
 }
 
 ItemSettingWidget* GraphicsTextItem::settingWidget;
@@ -251,6 +254,53 @@ void GraphicsTextItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     setCursor(Qt::OpenHandCursor);
 }
+
+
+
+GraphicsLineItem::GraphicsLineItem(const QLineF& line, QGraphicsItem *parent)
+    : QGraphicsLineItem(line, parent)
+{
+    setAcceptHoverEvents(true);
+}
+
+ItemSettingWidget* GraphicsLineItem::settingWidget;
+
+void GraphicsLineItem::setSettingWidget(ItemSettingWidget *widget) { settingWidget = widget; }
+
+void GraphicsLineItem::wheelEvent(QGraphicsSceneWheelEvent *event)
+{
+    if(event->delta() > 0)
+        setRotation(rotation() - 2);
+    else
+        setRotation(rotation() + 2);
+}
+
+void GraphicsLineItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
+{
+    setCursor(Qt::OpenHandCursor);
+}
+
+void GraphicsLineItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
+{
+    setCursor(Qt::ArrowCursor);
+}
+
+void GraphicsLineItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    setCursor(Qt::ClosedHandCursor);
+    //settingWidget->setItemSettingWidget(this);
+}
+
+void GraphicsLineItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+    setPos(mapToParent(event->pos() - event->buttonDownPos(Qt::LeftButton)));
+}
+
+void GraphicsLineItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+{
+    setCursor(Qt::OpenHandCursor);
+}
+
 
 
 
@@ -1359,7 +1409,9 @@ void ItemSettingWidget::setItemSettingWidget(T *const item)
     {
     case ChartEnum::ItemType::Text:
         settingStack->setCurrentIndex((int)type);
-        textItemWidget->setGraphicsItem(item);
+        textItemWidget->setGraphicsItem((GraphicsTextItem *const)item);
+        break;
+    case ChartEnum::ItemType::Line:
         break;
     default:
         break;

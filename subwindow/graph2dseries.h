@@ -33,7 +33,7 @@ public:
     enum class PlotType { LineSeries, SplineSeries, ScatterSeries, AreaSeries, LogressionLine };
     enum class MarkerShape { Circle, Rectangle, RotatedRectangle, Triangle, ShapeStar };
     enum class Theme { Light, BlueCerulean, Dark, BrownSand, BlueNcs, HighContrast, BlueIcy, Qt };
-    enum class ItemType { Text };
+    enum class ItemType { Text, Line };
     Q_ENUM(PlotType)
     Q_ENUM(MarkerShape)
     Q_ENUM(Theme)
@@ -141,6 +141,27 @@ public:
 
 public:
     static const ChartEnum::ItemType itemType() { return ChartEnum::ItemType::Text; }
+    static void setSettingWidget(ItemSettingWidget *widget);
+
+protected:
+    void wheelEvent(QGraphicsSceneWheelEvent *event) override;
+    void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+
+private:
+    static ItemSettingWidget *settingWidget;
+};
+
+class GraphicsLineItem : public QGraphicsLineItem
+{
+public:
+    GraphicsLineItem(const QLineF& line, QGraphicsItem *parent = nullptr);
+
+public:
+    static const ChartEnum::ItemType itemType() { return ChartEnum::ItemType::Line; }
     static void setSettingWidget(ItemSettingWidget *widget);
 
 protected:
