@@ -23,8 +23,10 @@
 #include "layoutparts.h"
 #include "utility.h"
 
-
-
+/************************
+ *グラフで用いる列挙型
+ ***********************/
+/* Qtで用意されている列挙型でもMetaObject化するためや、改名・追加のために再列挙する */
 class ChartEnum : private QObject{
     Q_OBJECT
 public:
@@ -40,11 +42,23 @@ public:
 
 
 
+
+
+
+
+/**************************************
+ *グラフのSeriesそれぞれが一つ保持するデータ。
+ **************************************/
+
 struct SeriesData
 {
     ChartEnum::PlotType plotType = ChartEnum::PlotType::LineSeries;
     qsizetype rangeIndex = 0;
 };
+
+/**************************************************************
+ * Graph2DSeriesの初期化時に一度設定される、Tableの選択範囲を保持する
+ **************************************************************/
 
 struct PlotTableRange
 {
@@ -59,6 +73,18 @@ struct PlotTableRange
         return false;
     }
 };
+
+
+
+
+
+
+
+
+
+/***************************
+ *グラフを描写するWidget
+ ***************************/
 
 class ChartView : public QChartView
 {
@@ -87,11 +113,24 @@ private:
 
 private slots:
     void addTextItem();
+    void addLineItem();
 
 signals:
     void mouseCoordinateMoved(const QString& x, const QString& y);
 };
 
+
+
+
+
+
+
+
+
+
+/*********************************
+ *グラフ上にドラッグで配置できるアイテム型
+ *********************************/
 
 class ItemSettingWidget;
 
@@ -118,6 +157,22 @@ private:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**********
+ *グラフ
+ **********/
 
 class Graph2DSeries : public QWidget
 {
@@ -169,7 +224,9 @@ private slots:
 
 
 
-
+/******************************
+ *グラフの各設定を行うためのWidget
+ ******************************/
 
 class GraphSettingWidget : public QWidget
 {
@@ -339,6 +396,21 @@ private slots:
 };
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+/**************************************
+ *グラフに配置されたアイテムを編集するWidget
+ **************************************/
 
 class GraphicsTextItemSettingWidget : public QWidget
 {

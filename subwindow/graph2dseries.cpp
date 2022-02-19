@@ -102,6 +102,10 @@ ChartView::ChartView(QChart *chart, QWidget *parent)
     QAction *addText = new QAction("text", itemMenu);
     itemMenu->addAction(addText);
     connect(addText, &QAction::triggered, this, &ChartView::addTextItem);
+
+    QAction*addLine = new QAction("line", itemMenu);
+    itemMenu->addAction(addLine);
+    connect(addLine, &QAction::triggered, this, &ChartView::addLineItem);
 }
 
 void ChartView::mouseMoveEvent(QMouseEvent *event)
@@ -189,10 +193,14 @@ void ChartView::moveGraph(const QPoint& cursorPos)
 
 void ChartView::addTextItem()
 {
-    chart()->setAcceptHoverEvents(true);
     GraphicsTextItem *textItem = new GraphicsTextItem("text", chart());
     textItem->setPos(mapFromGlobal(cursor().pos()));
     textItem->setAcceptHoverEvents(true);
+}
+
+void ChartView::addLineItem()
+{
+
 }
 
 
