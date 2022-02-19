@@ -194,12 +194,12 @@ void ChartView::moveGraph(const QPoint& cursorPos)
 void ChartView::addTextItem()
 {
     GraphicsTextItem *textItem = new GraphicsTextItem("text", chart());
-    textItem->setPos(mapFromGlobal(cursor().pos()));
+    textItem->setPos(mapFromGlobal(cursor().pos()));  //cursor().pos()はグローバル座標を返す。setPos()はChartViewでの座標で指定。
 }
 
 void ChartView::addLineItem()
 {
-    GraphicsLineItem *lineItem = new GraphicsLineItem(QLineF(0, 0, 50, 50), chart());
+    GraphicsLineItem *lineItem = new GraphicsLineItem(QLineF(-25, -25, 25, 25), chart());
     QPen linePen = lineItem->pen();
     linePen.setWidth(2);
     lineItem->setPen(linePen);
@@ -253,6 +253,7 @@ void GraphicsTextItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 void GraphicsTextItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     setCursor(Qt::OpenHandCursor);
+    settingWidget->setItemSettingWidget(this);
 }
 
 
@@ -269,10 +270,16 @@ void GraphicsLineItem::setSettingWidget(ItemSettingWidget *widget) { settingWidg
 
 void GraphicsLineItem::wheelEvent(QGraphicsSceneWheelEvent *event)
 {
-    if(event->delta() > 0)
-        setRotation(rotation() - 2);
-    else
-        setRotation(rotation() + 2);
+#if 0
+    double theta = (2.0 / 180.0) * 3.1415; qDebug() << theta;
+    if(event->delta() < 0) { theta = -theta; }
+
+    const QPointF previousP1 = line().p1();
+    const QPointF previousP2 = line().p2();
+
+    setLine(QLineF(QPointF(previousP1.x() * cos(theta) - previousP1.y() * sin(theta), previousP1.y() * sin(theta) + previousP1.y() * cos(theta)),
+                   QPointF(previousP2.x() * cos(theta) - previousP2.y() * sin(theta), previousP2.y() * sin(theta) + previousP2.y() * cos(theta))));
+#endif
 }
 
 void GraphicsLineItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
@@ -288,7 +295,7 @@ void GraphicsLineItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
 void GraphicsLineItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     setCursor(Qt::ClosedHandCursor);
-    //settingWidget->setItemSettingWidget(this);
+    settingWidget->setItemSettingWidget(this);
 }
 
 void GraphicsLineItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
@@ -299,6 +306,7 @@ void GraphicsLineItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 void GraphicsLineItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     setCursor(Qt::OpenHandCursor);
+    settingWidget->setItemSettingWidget(this);
 }
 
 
@@ -436,6 +444,7 @@ void Graph2DSeries::initializeGraphLayout()
     connect(graphView, &ChartView::mouseCoordinateMoved, graphSettingWidget, &GraphSettingWidget::setCoordinateValue);
 
     GraphicsTextItem::setSettingWidget(itemSettingWidget);
+    GraphicsLineItem::setSettingWidget(itemSettingWidget);
 }
 
 void Graph2DSeries::initializeGraphSeries()
@@ -1362,6 +1371,84 @@ void GraphicsTextItemSettingWidget::setItemRotation(const QString& rotation)
 
 
 
+GraphicsLineItemSettingWidget::GraphicsLineItemSettingWidget(QWidget *parent)
+    : QWidget(parent)
+{
+    QVBoxLayout *layout = new QVBoxLayout(this);
+    QHBoxLayout *point1Layout = new QHBoxLayout;
+    x1Edit = new LineEditLayout(this, "x1");
+    y1Edit = new LineEditLayout(this, "y1");
+    QHBoxLayout *point2Layout = new QHBoxLayout;
+    x2Edit = new LineEditLayout(this, "x2");
+    y2Edit = new LineEditLayout(this, "y2");
+    lineWidthEdit = new SpinBoxEditLayout(this, "Width");
+    QSpacerItem *spacer = new QSpacerItem(0, 0, QSizePolicy::Maximum, QSizePolicy::Expanding);
+
+    setLayout(layout);
+    layout->addLayout(point1Layout);
+    point1Layout->addLayout(x1Edit);
+    point1Layout->addLayout(y1Edit);
+    layout->addLayout(point2Layout);
+    point2Layout->addLayout(x2Edit);
+    point2Layout->addLayout(y2Edit);
+    layout->addLayout(lineWidthEdit);
+    layout->addItem(spacer);
+
+    x1Edit->setLabelMinimumWidth(0);
+    y1Edit->setLabelMinimumWidth(0);
+    x2Edit->setLabelMinimumWidth(0);
+    y2Edit->setLabelMinimumWidth(0);
+
+    connect(x1Edit, &LineEditLayout::lineTextEdited, this, &GraphicsLineItemSettingWidget::setPoint1);
+    connect(y1Edit, &LineEditLayout::lineTextEdited, this, &GraphicsLineItemSettingWidget::setPoint1);
+    connect(x2Edit, &LineEditLayout::lineTextEdited, this, &GraphicsLineItemSettingWidget::setPoint2);
+    connect(y2Edit, &LineEditLayout::lineTextEdited, this, &GraphicsLineItemSettingWidget::setPoint2);
+    connect(lineWidthEdit, &SpinBoxEditLayout::spinBoxValueChanged, this, &GraphicsLineItemSettingWidget::setLineWidth);
+}
+
+void GraphicsLineItemSettingWidget::setGraphicsItem(GraphicsLineItem *const lineItem)
+{
+    this->lineItem = lineItem;
+
+    x1Edit->setLineEditText(QString::number(lineItem->getChartP1Coord().x()));
+    y1Edit->setLineEditText(QString::number(lineItem->getChartP1Coord().y()));
+    x2Edit->setLineEditText(QString::number(lineItem->getChartP2Coord().x()));
+    y2Edit->setLineEditText(QString::number(lineItem->getChartP2Coord().y()));
+    lineWidthEdit->setSpinBoxValue(lineItem->pen().width());
+}
+
+void GraphicsLineItemSettingWidget::setPoint1()
+{
+    const QPointF p1ChartCoord = QPointF(x1Edit->lineEditText().toDouble(), y1Edit->lineEditText().toDouble());
+    const QPointF p1ScenePos = lineItem->getChart()->mapToPosition(p1ChartCoord);
+    const QPointF p1Coord = p1ScenePos - lineItem->pos();
+
+    QLineF line = lineItem->line();
+    line.setP1(p1Coord);
+    lineItem->setLine(line);
+}
+
+void GraphicsLineItemSettingWidget::setPoint2()
+{
+    const QPointF p2ChartCoord = QPointF(x2Edit->lineEditText().toDouble(), y2Edit->lineEditText().toDouble());
+    const QPointF p2ScenePos = lineItem->getChart()->mapToPosition(p2ChartCoord);
+    const QPointF p2Coord = p2ScenePos - lineItem->pos();
+
+    QLineF line = lineItem->line();
+    line.setP2(p2Coord);
+    lineItem->setLine(line);
+}
+
+void GraphicsLineItemSettingWidget::setLineWidth(const int lw)
+{
+    QPen pen = lineItem->pen();
+    pen.setWidth(lw);
+    lineItem->setPen(pen);
+}
+
+
+
+
 
 
 
@@ -1385,6 +1472,7 @@ ItemSettingWidget::ItemSettingWidget(QWidget *parent)
     QPushButton *addItemButton = new QPushButton("Add", this);
     settingStack = new QStackedWidget(this);
     textItemWidget = new GraphicsTextItemSettingWidget(settingStack);
+    lineItemWidget = new GraphicsLineItemSettingWidget(settingStack);
     QSpacerItem *spacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
     setLayout(layout);
@@ -1393,6 +1481,7 @@ ItemSettingWidget::ItemSettingWidget(QWidget *parent)
     adderLayout->addWidget(addItemButton);
     layout->addWidget(settingStack);
     settingStack->addWidget(textItemWidget);
+    settingStack->addWidget(lineItemWidget);
     layout->addItem(spacer);
 
     addItemButton->setMaximumWidth(70);
@@ -1404,15 +1493,14 @@ void ItemSettingWidget::setItemSettingWidget(T *const item)
 {
     settingStack->setVisible(true);
     const ChartEnum::ItemType type = item->itemType();
+    settingStack->setCurrentIndex((int)type);
 
     switch (type)
     {
     case ChartEnum::ItemType::Text:
-        settingStack->setCurrentIndex((int)type);
-        textItemWidget->setGraphicsItem((GraphicsTextItem *const)item);
-        break;
+        textItemWidget->setGraphicsItem((GraphicsTextItem *const)item); break;
     case ChartEnum::ItemType::Line:
-        break;
+        lineItemWidget->setGraphicsItem((GraphicsLineItem *const)item); break;
     default:
         break;
     }

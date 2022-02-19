@@ -163,6 +163,10 @@ public:
 public:
     static const ChartEnum::ItemType itemType() { return ChartEnum::ItemType::Line; }
     static void setSettingWidget(ItemSettingWidget *widget);
+    QChart *const getChart() const { return qobject_cast<ChartView*>(scene()->views().constLast())->chart(); }
+    const QPointF getChartCoord() const { return getChart()->mapToValue(scenePos()); }
+    const QPointF getChartP1Coord() const { return getChart()->mapToValue(scenePos() + line().p1()); }
+    const QPointF getChartP2Coord() const { return getChart()->mapToValue(scenePos() + line().p2()); }
 
 protected:
     void wheelEvent(QGraphicsSceneWheelEvent *event) override;
@@ -453,6 +457,28 @@ private:
     LineEditLayout *rotationEdit;
 };
 
+class GraphicsLineItemSettingWidget : public QWidget
+{
+    Q_OBJECT
+
+public:
+    GraphicsLineItemSettingWidget(QWidget *parent = nullptr);
+    void setGraphicsItem(GraphicsLineItem *const lineItem);
+
+private slots:
+    void setPoint1();
+    void setPoint2();
+    void setLineWidth(const int lw);
+
+private:
+    GraphicsLineItem *lineItem;
+    LineEditLayout *x1Edit;
+    LineEditLayout *y1Edit;
+    LineEditLayout *x2Edit;
+    LineEditLayout *y2Edit;
+    SpinBoxEditLayout *lineWidthEdit;
+};
+
 
 
 class ItemSettingWidget : public QWidget
@@ -470,6 +496,7 @@ private:
     QComboBox *itemTypeCombo;
     QStackedWidget *settingStack;
     GraphicsTextItemSettingWidget *textItemWidget;
+    GraphicsLineItemSettingWidget *lineItemWidget;
 };
 
 
