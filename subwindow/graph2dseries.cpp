@@ -1384,6 +1384,8 @@ GraphicsLineItemSettingWidget::GraphicsLineItemSettingWidget(QWidget *parent)
     lineWidthEdit = new SpinBoxEditLayout(this, "Width");
     styleEdit = new ComboEditLayout(this, "Style");
     customStyleEdit = new LineEditLayout(this, "Pattern");
+    colorEdit = new ComboEditLayout(this, "Color");
+    customColorEdit = new RGBEditLayout(this);
     QSpacerItem *spacer = new QSpacerItem(0, 0, QSizePolicy::Maximum, QSizePolicy::Expanding);
 
     setLayout(layout);
@@ -1396,6 +1398,8 @@ GraphicsLineItemSettingWidget::GraphicsLineItemSettingWidget(QWidget *parent)
     layout->addLayout(lineWidthEdit);
     layout->addLayout(styleEdit);
     layout->addLayout(customStyleEdit);
+    layout->addLayout(colorEdit);
+    layout->addLayout(customColorEdit);
     layout->addItem(spacer);
 
     x1Edit->setLabelMinimumWidth(0);
@@ -1404,6 +1408,7 @@ GraphicsLineItemSettingWidget::GraphicsLineItemSettingWidget(QWidget *parent)
     y2Edit->setLabelMinimumWidth(0);
     styleEdit->insertComboItems(0, enumToStrings(ChartEnum::PenStyle(0)));
     customStyleEdit->setVisible(false);
+    colorEdit->insertComboItems(0, colorNameList());
 
     connect(x1Edit, &LineEditLayout::lineTextEdited, this, &GraphicsLineItemSettingWidget::setPoint1);
     connect(y1Edit, &LineEditLayout::lineTextEdited, this, &GraphicsLineItemSettingWidget::setPoint1);
@@ -1412,6 +1417,8 @@ GraphicsLineItemSettingWidget::GraphicsLineItemSettingWidget(QWidget *parent)
     connect(lineWidthEdit, &SpinBoxEditLayout::spinBoxValueChanged, this, &GraphicsLineItemSettingWidget::setLineWidth);
     connect(styleEdit, &ComboEditLayout::currentComboIndexChanged, this, &GraphicsLineItemSettingWidget::setPenStyle);
     connect(customStyleEdit, &LineEditLayout::lineTextEdited, this, &GraphicsLineItemSettingWidget::setCustomDash);
+    connect(colorEdit, &ComboEditLayout::currentComboIndexChanged, this, &GraphicsLineItemSettingWidget::setLineColor);
+    connect(customColorEdit, &RGBEditLayout::colorEdited, this, &GraphicsLineItemSettingWidget::setCustomLineColor);
 }
 
 void GraphicsLineItemSettingWidget::setGraphicsItem(GraphicsLineItem *const lineItem)
@@ -1423,6 +1430,11 @@ void GraphicsLineItemSettingWidget::setGraphicsItem(GraphicsLineItem *const line
     x2Edit->setLineEditText(QString::number(lineItem->getChartP2Coord().x()));
     y2Edit->setLineEditText(QString::number(lineItem->getChartP2Coord().y()));
     lineWidthEdit->setSpinBoxValue(lineItem->pen().width());
+    setPenStyle(lineItem->pen().style() - 1);
+    styleEdit->setComboCurrentIndex(lineItem->pen().style() - 1);
+    colorEdit->setComboCurrentIndex(QT_GLOBAL_COLOR_COUNT + 1);
+    customColorEdit->setColor(lineItem->pen().color());
+    customColorEdit->setReadOnly(false);
 }
 
 void GraphicsLineItemSettingWidget::setPoint1()
@@ -1496,6 +1508,27 @@ void GraphicsLineItemSettingWidget::setCustomDash(const QString& _dashes)
     linePen.setDashPattern(customDash);
     lineItem->setPen(linePen);
 }
+
+void GraphicsLineItemSettingWidget::setLineColor(const int index)
+{
+    if(index > QT_GLOBAL_COLOR_COUNT){
+        customColorEdit->setReadOnly(false); return;
+    }
+
+    customColorEdit->setReadOnly(true);
+    customColorEdit->setColor(index);
+    QPen linePen = lineItem->pen();
+    linePen.setColor(Qt::GlobalColor(index));
+    lineItem->setPen(linePen);
+}
+
+void GraphicsLineItemSettingWidget::setCustomLineColor(const QColor& color)
+{
+    QPen linePen = lineItem->pen();
+    linePen.setColor(color);
+    lineItem->setPen(linePen);
+}
+
 
 
 

@@ -473,6 +473,8 @@ private slots:
     void setLineWidth(const int lw);
     void setPenStyle(const int index);
     void setCustomDash(const QString& dashes);
+    void setLineColor(const int index);
+    void setCustomLineColor(const QColor& color);
 
 private:
     GraphicsLineItem *lineItem;
@@ -483,6 +485,8 @@ private:
     SpinBoxEditLayout *lineWidthEdit;
     ComboEditLayout *styleEdit;
     LineEditLayout *customStyleEdit;
+    ComboEditLayout *colorEdit;
+    RGBEditLayout *customColorEdit;
 };
 
 
