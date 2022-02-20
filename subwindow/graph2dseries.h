@@ -34,10 +34,12 @@ public:
     enum class MarkerShape { Circle, Rectangle, RotatedRectangle, Triangle, ShapeStar };
     enum class Theme { Light, BlueCerulean, Dark, BrownSand, BlueNcs, HighContrast, BlueIcy, Qt };
     enum class ItemType { Text, Line };
+    enum class PenStyle { Solid, Dash, Dot, DashDot, DashDotDot, CustomDash };
     Q_ENUM(PlotType)
     Q_ENUM(MarkerShape)
     Q_ENUM(Theme)
     Q_ENUM(ItemType)
+    Q_ENUM(PenStyle)
 };
 
 
@@ -469,6 +471,8 @@ private slots:
     void setPoint1();
     void setPoint2();
     void setLineWidth(const int lw);
+    void setPenStyle(const int index);
+    void setCustomDash(const QString& dashes);
 
 private:
     GraphicsLineItem *lineItem;
@@ -477,6 +481,8 @@ private:
     LineEditLayout *x2Edit;
     LineEditLayout *y2Edit;
     SpinBoxEditLayout *lineWidthEdit;
+    ComboEditLayout *styleEdit;
+    LineEditLayout *customStyleEdit;
 };
 
 

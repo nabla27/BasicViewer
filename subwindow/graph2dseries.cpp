@@ -1382,6 +1382,8 @@ GraphicsLineItemSettingWidget::GraphicsLineItemSettingWidget(QWidget *parent)
     x2Edit = new LineEditLayout(this, "x2");
     y2Edit = new LineEditLayout(this, "y2");
     lineWidthEdit = new SpinBoxEditLayout(this, "Width");
+    styleEdit = new ComboEditLayout(this, "Style");
+    customStyleEdit = new LineEditLayout(this, "Pattern");
     QSpacerItem *spacer = new QSpacerItem(0, 0, QSizePolicy::Maximum, QSizePolicy::Expanding);
 
     setLayout(layout);
@@ -1392,18 +1394,24 @@ GraphicsLineItemSettingWidget::GraphicsLineItemSettingWidget(QWidget *parent)
     point2Layout->addLayout(x2Edit);
     point2Layout->addLayout(y2Edit);
     layout->addLayout(lineWidthEdit);
+    layout->addLayout(styleEdit);
+    layout->addLayout(customStyleEdit);
     layout->addItem(spacer);
 
     x1Edit->setLabelMinimumWidth(0);
     y1Edit->setLabelMinimumWidth(0);
     x2Edit->setLabelMinimumWidth(0);
     y2Edit->setLabelMinimumWidth(0);
+    styleEdit->insertComboItems(0, enumToStrings(ChartEnum::PenStyle(0)));
+    customStyleEdit->setVisible(false);
 
     connect(x1Edit, &LineEditLayout::lineTextEdited, this, &GraphicsLineItemSettingWidget::setPoint1);
     connect(y1Edit, &LineEditLayout::lineTextEdited, this, &GraphicsLineItemSettingWidget::setPoint1);
     connect(x2Edit, &LineEditLayout::lineTextEdited, this, &GraphicsLineItemSettingWidget::setPoint2);
     connect(y2Edit, &LineEditLayout::lineTextEdited, this, &GraphicsLineItemSettingWidget::setPoint2);
     connect(lineWidthEdit, &SpinBoxEditLayout::spinBoxValueChanged, this, &GraphicsLineItemSettingWidget::setLineWidth);
+    connect(styleEdit, &ComboEditLayout::currentComboIndexChanged, this, &GraphicsLineItemSettingWidget::setPenStyle);
+    connect(customStyleEdit, &LineEditLayout::lineTextEdited, this, &GraphicsLineItemSettingWidget::setCustomDash);
 }
 
 void GraphicsLineItemSettingWidget::setGraphicsItem(GraphicsLineItem *const lineItem)
@@ -1445,6 +1453,53 @@ void GraphicsLineItemSettingWidget::setLineWidth(const int lw)
     pen.setWidth(lw);
     lineItem->setPen(pen);
 }
+
+void GraphicsLineItemSettingWidget::setPenStyle(const int index)
+{
+    switch(ChartEnum::PenStyle(index))
+    {
+    case ChartEnum::PenStyle::Solid:
+    case ChartEnum::PenStyle::Dash:
+    case ChartEnum::PenStyle::Dot:
+    case ChartEnum::PenStyle::DashDot:
+    case ChartEnum::PenStyle::DashDotDot:{
+        customStyleEdit->setVisible(false);
+        break;
+    }
+    case ChartEnum::PenStyle::CustomDash:{
+        customStyleEdit->setLineEditText("1");
+        customStyleEdit->setVisible(true);
+        break;
+    }
+    default:
+        return; break;
+    }
+
+    QPen linePen = lineItem->pen();
+    linePen.setStyle(Qt::PenStyle(index + 1));  //本来、Qt::PenStyleインデックス0にQt::NoPenがあるが、ChartEnum::PenStyleではないので、一つずらす
+    lineItem->setPen(linePen);
+}
+
+void GraphicsLineItemSettingWidget::setCustomDash(const QString& _dashes)
+{
+    /* カンマ区切りで空白や語尾のカンマを処理して、QStringList型に変換する。 */
+    QString dashes = _dashes;
+    QStringList dashSeries = dashes.remove(' ').split(",");
+    if(dashSeries.constLast().isEmpty()) dashSeries.removeLast();
+
+    /* QStringList型をQList<qreal>型に変換 */
+    QList<qreal> customDash;
+    for(const QString& dash : dashSeries) customDash << dash.toDouble();
+
+    /* dashPatternを設定 */
+    QPen linePen = lineItem->pen();
+    linePen.setDashPattern(customDash);
+    lineItem->setPen(linePen);
+}
+
+
+
+
 
 
 
