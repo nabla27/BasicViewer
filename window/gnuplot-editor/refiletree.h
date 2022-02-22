@@ -31,6 +31,35 @@ private:
 
 
 
+class TreeSheetItem : public QTreeWidgetItem
+{
+public:
+    TreeSheetItem(QTreeWidgetItem *parent, const QString& name);
+    ~TreeSheetItem();
+
+public:
+    static const QString getFormat() { return format; }
+    static void setFormat(const QString& _format) { format = _format; }
+
+private:
+    static QString format;
+};
+
+
+
+class TreeOtherItem : public QTreeWidgetItem
+{
+public:
+    TreeOtherItem(QTreeWidgetItem *parent, const QString& name);
+
+public:
+    const QString getFormat() { return format; }
+
+private:
+    QString format;
+};
+
+
 
 
 
