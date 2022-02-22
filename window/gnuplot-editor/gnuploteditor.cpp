@@ -3,6 +3,9 @@
 GnuplotEditor::GnuplotEditor(QWidget *parent)
     : QMainWindow(parent)
 {
+    //ウィンドウを画面に対して(0.4,0.5)のサイズに設定
+    setGeometry(getRectFromScreenRatio(screen()->size(), 0.4f, 0.5f));
+
     //メニュバーの生成
     initializeMenuBar();
 }

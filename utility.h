@@ -4,6 +4,7 @@
 #include <QString>
 #include <QMetaEnum>
 #include <QImageWriter>
+#include <QRect>
 
 
 template <typename QEnum>
@@ -46,5 +47,11 @@ public:
 const QStringList colorNameList();
 
 const QStringList imgFormatList();
+
+inline const QRect getRectFromScreenRatio(const QSize& screenSize, const float& rw, const float& rh){
+    const float px = (1.0f - rw) * screenSize.width() / 2.0f;
+    const float py = (1.0f - rh) * screenSize.height() / 2.0f;
+    return QRect(px, py, screenSize.width() * rw, screenSize.height() * rh);
+}
 
 #endif // UTILITY_H
