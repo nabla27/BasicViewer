@@ -10,6 +10,9 @@ class GnuplotEditor : public QMainWindow
 public:
     explicit GnuplotEditor(QWidget *parent = nullptr);
 
+private:
+    void initializeMenuBar();
+
 signals:
 
 };

@@ -21,6 +21,22 @@ signals:
 };
 
 
+class EditorMenu : public QMenu
+{
+    Q_OBJECT
+
+public:
+    EditorMenu(const QString& title, QWidget *parent);
+};
+
+
+class HelpMenu : public QMenu
+{
+    Q_OBJECT
+
+public:
+    HelpMenu(const QString& title, QWidget *parent);
+};
 
 
 

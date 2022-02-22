@@ -44,3 +44,67 @@ void FileMenu::reloadFolderAction()
 {
 
 }
+
+
+
+
+
+
+EditorMenu::EditorMenu(const QString& title, QWidget *parent)
+    : QMenu(title, parent)
+{
+
+}
+
+
+
+
+
+HelpMenu::HelpMenu(const QString& title, QWidget *parent)
+    : QMenu(title, parent)
+{
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
