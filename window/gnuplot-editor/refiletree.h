@@ -10,54 +10,58 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QInputDialog>
+#include <QHash>
 #include "utility.h"
 
-class TreeScriptItem : public QTreeWidgetItem
+class TextEdit;
+
+class ScriptList : public QObject
 {
-    //Q_OBJECT
+    Q_OBJECT
 
 public:
-    TreeScriptItem(QTreeWidgetItem *parent, const QString& name);
-    ~TreeScriptItem();
+    ScriptList(QObject *parent) : QObject(parent) {}
+
+    class ScriptInfo{
+    public:
+        ScriptInfo(QProcess *process) : process(process) {}
+        QProcess *process;
+    };
 
 public:
-    static const QString getFormat() { return format; }
-    static void setFormat(const QString& _format) { format = _format; }
+    void addScript(QTreeWidgetItem *parent, const QString& fileName);
+    bool isContains(const QString& fileName) { return scriptList.contains(fileName); }
+    ScriptInfo *const getScriptInfo(const QString& fileName) { return scriptList.value(fileName); }
 
 private:
-    static QString format;
-    QProcess *gnuplotProcess;
+    QHash<QString, ScriptInfo*> scriptList;
+};
+
+class SheetList : public QObject
+{
+    Q_OBJECT
+
+public:
+    SheetList(QObject *parent) : QObject(parent) {}
+
+public:
+
+private:
 };
 
 
 
-class TreeSheetItem : public QTreeWidgetItem
-{
-public:
-    TreeSheetItem(QTreeWidgetItem *parent, const QString& name);
-    ~TreeSheetItem();
-
-public:
-    static const QString getFormat() { return format; }
-    static void setFormat(const QString& _format) { format = _format; }
-
-private:
-    static QString format;
-};
 
 
 
-class TreeOtherItem : public QTreeWidgetItem
-{
-public:
-    TreeOtherItem(QTreeWidgetItem *parent, const QString& name);
 
-public:
-    const QString getFormat() { return format; }
 
-private:
-    QString format;
-};
+
+
+
+
+
+
 
 
 
@@ -70,7 +74,11 @@ class ReFileTree : public QTreeWidget
 public:
     ReFileTree();
 
+private:
+    void updateFileTree();
 
+private:
+    const QString folderPath = BasicSet::tmpDirectory;
 };
 
 #endif // FILETREE_H
