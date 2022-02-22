@@ -9,7 +9,7 @@
 #include <QObject>
 #include <QRegularExpressionMatchIterator>
 #include <QDir>
-#include "textbrowser.h"
+#include "retextbrowser.h"
 #include "utility.h"
 
 
@@ -19,7 +19,7 @@ public:
     ReGnuplot();
 public:
     void exc(QProcess *process, const QList<QString>& cmdlist);
-    void setOutBrowser(TextBrowser *output) { this->output = output; }
+    void setOutBrowser(ReTextBrowser *output) { this->output = output; }
     void setExePath(const QString& path) { this->path = path; }
     void setPreCmd(const QString& preCmd) { this->preCmdList = preCmd.split('\n'); }
     void setOptionCmd(const QString& optionCmd) { this->optionCmd = optionCmd; }
@@ -27,7 +27,7 @@ public:
     int getErrorLineNumber() const { return errorLineNumber; }
 
 private:
-    TextBrowser *output;
+    ReTextBrowser *output;
     QString path = "gnuplot.exe";
     QString optionCmd = "with linespoints";
     QList<QString> initCmdList;

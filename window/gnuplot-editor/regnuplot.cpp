@@ -17,7 +17,7 @@ void ReGnuplot::exc(QProcess *process, const QList<QString>& cmdlist)
         const QString output = process->readAllStandardOutput();
         if(this->output != nullptr){
             this->output->outMessage(output, "gnuplot");
-            this->output->verticalScrollBar()->setValue(this->output->verticalScrollBar()->maximum());
+            this->output->setScrollBarMaximum();
         }
     });
 
@@ -27,7 +27,7 @@ void ReGnuplot::exc(QProcess *process, const QList<QString>& cmdlist)
         if(err.isEmpty()) return;
         if(this->output != nullptr){
             this->output->outMessage(err, "gnuplot");
-            this->output->verticalScrollBar()->setValue(this->output->verticalScrollBar()->maximum());
+            this->output->setScrollBarMaximum();
         }
 
         /* エラー行の取得 */
