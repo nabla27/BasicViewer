@@ -39,6 +39,22 @@ public:
 };
 
 
+class ScriptMenu : public QMenu
+{
+    Q_OBJECT
+
+public:
+    ScriptMenu(const QString& title, QWidget *parent);
+};
+
+
+class SheetMenu : public QMenu
+{
+    Q_OBJECT
+
+public:
+    SheetMenu(const QString& title, QWidget *parent);
+};
 
 
 

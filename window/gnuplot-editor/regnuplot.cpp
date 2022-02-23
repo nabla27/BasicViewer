@@ -10,35 +10,13 @@ void ReGnuplot::exc(QProcess *process, const QList<QString>& cmdlist)
 {
     if(process == nullptr) { return; }
 
-    errorLineNumber = -1;  //エラー行。戻り値。エラーなしの0にリセット
+    currentProcess = process;
 
     /* 標準出力 */
-    QObject::connect(process, &QProcess::readyReadStandardOutput, [process, this](){
-        const QString output = process->readAllStandardOutput();
-        if(this->output != nullptr){
-            this->output->outMessage(output, "gnuplot");
-            this->output->setScrollBarMaximum();
-        }
-    });
+    QObject::connect(process, &QProcess::readyReadStandardOutput, this, &ReGnuplot::readStandardOutput);
 
     /* 標準エラー */
-    QObject::connect(process, &QProcess::readyReadStandardError, [process, this](){
-        const QString err = process->readAllStandardError();
-        if(err.isEmpty()) return;
-        if(this->output != nullptr){
-            this->output->outMessage(err, "gnuplot");
-            this->output->setScrollBarMaximum();
-        }
-
-        /* エラー行の取得 */
-        QList<int> list;  //エラー行を格納するリスト
-        QRegularExpressionMatchIterator iter = QRegularExpression("line \\d+:").globalMatch(err);
-        while(iter.hasNext()){
-            QRegularExpressionMatch match = iter.next();
-            list << match.captured(0).sliced(5, match.captured(0).size() - 6).toInt() - 1;
-        }
-        errorLineNumber = (list.size() < 1) ? 0 : list.at(0);
-    });
+    QObject::connect(process, &QProcess::readyReadStandardError, this, &ReGnuplot::readStandardError);
 
     /* プロセスの開始 */
     if(process->state() == QProcess::ProcessState::NotRunning)
@@ -46,7 +24,7 @@ void ReGnuplot::exc(QProcess *process, const QList<QString>& cmdlist)
         process->start(path, QStringList() << "-persist");
         if(process->error() == QProcess::ProcessError::FailedToStart){
             process->close();
-            this->output->outMessage("failed to start a process. check the path of setting.", "gnuplot");
+            emit startProcessFailed();
         }
     }
 
@@ -61,4 +39,37 @@ void ReGnuplot::exc(QProcess *process, const QList<QString>& cmdlist)
     /* コマンドの実行 */
     for(const QString& cmd : cmdlist)
         process->write(cmd.toUtf8().constData());
+}
+
+int ReGnuplot::getErrorLineNumber(const QString &err)
+{
+    /* エラー行の取得 */
+    QList<int> list;  //エラー行を格納するリスト
+    QRegularExpressionMatchIterator iter = QRegularExpression("line \\d+:").globalMatch(err);
+    while(iter.hasNext()){
+        QRegularExpressionMatch match = iter.next();
+        list << match.captured(0).sliced(5, match.captured(0).size() - 6).toInt() - 1;
+    }
+
+    return (list.size() < 1) ? -1 : list.at(0);
+}
+
+void ReGnuplot::readStandardOutput()
+{
+    const QString output = currentProcess->readAllStandardOutput();
+
+    if(output.isEmpty()) return;
+
+    emit standardOutputPassed(output);
+}
+
+void ReGnuplot::readStandardError()
+{
+    const QString err = currentProcess->readAllStandardError();
+
+    if(err.isEmpty()) return;
+
+    const int errLine = getErrorLineNumber(err);
+
+    emit standardErrorPassed(err, errLine);
 }

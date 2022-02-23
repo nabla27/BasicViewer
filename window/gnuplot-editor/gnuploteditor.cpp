@@ -25,10 +25,16 @@ void GnuplotEditor::initializeMenuBar()
     FileMenu *fileMenu = new FileMenu("File", menuBar);
     EditorMenu *editorMenu = new EditorMenu("Editor", menuBar);
     HelpMenu *helpMenu = new HelpMenu("Help", menuBar);
+    QMenu *blank1 = new QMenu("         ", menuBar);
+    scriptMenu = new ScriptMenu("Script", menuBar);
+    sheetMenu = new SheetMenu("Sheet", menuBar);
 
     menuBar->addMenu(fileMenu);
     menuBar->addMenu(editorMenu);
     menuBar->addMenu(helpMenu);
+    menuBar->addMenu(blank1);
+    menuBar->addMenu(scriptMenu);
+    menuBar->addMenu(sheetMenu);
 
     setMenuBar(menuBar);
 }
@@ -70,7 +76,7 @@ void GnuplotEditor::initializeLayout()
     displayTab->setMinimumHeight(150);
 }
 
-void GnuplotEditor::setEditorWidget(ReTextEdit *editor, QProcess *process)
+void GnuplotEditor::setEditorWidget(const QString& fileName, ReTextEdit *editor, QProcess *process)
 {
     /* 前にセットされてたものは削除 */
     if(gnuplotWidget->widget(gnuplotWidget->currentIndex()) != nullptr)
@@ -84,9 +90,12 @@ void GnuplotEditor::setEditorWidget(ReTextEdit *editor, QProcess *process)
 
     /* タブをGnuplotに設定 */
     editorTab->setCurrentIndex(0);
+
+    /* メニューバーの名前変更 */
+    scriptMenu->setTitle(fileName);
 }
 
-void GnuplotEditor::setSheetWidget(ReTableWidget *sheet)
+void GnuplotEditor::setSheetWidget(const QString& fileName, ReTableWidget *sheet)
 {
     /* 前にセットされてたものは削除 */
     if(sheetWidget->widget(sheetWidget->currentIndex()) != nullptr)
@@ -96,7 +105,10 @@ void GnuplotEditor::setSheetWidget(ReTableWidget *sheet)
     sheetWidget->addWidget(sheet);
 
     /* タブをSheetに設定 */
-    editorTab->setCurrentIndex(1); qDebug() << __LINE__;
+    editorTab->setCurrentIndex(1);
+
+    /* メニューバーの名前変更 */
+    sheetMenu->setTitle(fileName);
 }
 
 

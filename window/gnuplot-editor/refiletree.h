@@ -152,8 +152,8 @@ private slots:
     void pushClickedItem(QTreeWidgetItem *item, int column);
 
 signals:
-    void scriptSelected(ReTextEdit *editor, QProcess *process);
-    void sheetSelected(ReTableWidget *sheet);
+    void scriptSelected(const QString& fileName, ReTextEdit *editor, QProcess *process);
+    void sheetSelected(const QString& fileName, ReTableWidget *sheet);
 
 private:
     const QString folderPath = BasicSet::tmpDirectory;

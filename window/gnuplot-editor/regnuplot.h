@@ -19,19 +19,27 @@ public:
     ReGnuplot();
 public:
     void exc(QProcess *process, const QList<QString>& cmdlist);
-    void setOutBrowser(ReTextBrowser *output) { this->output = output; }
     void setExePath(const QString& path) { this->path = path; }
     void setPreCmd(const QString& preCmd) { this->preCmdList = preCmd.split('\n'); }
     void setOptionCmd(const QString& optionCmd) { this->optionCmd = optionCmd; }
-    QString getOptionCmd() const { return optionCmd; }
-    int getErrorLineNumber() const { return errorLineNumber; }
 
 private:
-    ReTextBrowser *output;
+    int getErrorLineNumber(const QString& err);
+
+private slots:
+    void readStandardOutput();
+    void readStandardError();
+
+private:
     QString path = "gnuplot.exe";
     QString optionCmd = "with linespoints";
     QList<QString> initCmdList;
     QList<QString> preCmdList;
-    int errorLineNumber = -1;
+    QProcess *currentProcess;
+
+signals:
+    void standardOutputPassed(const QString& out);
+    void standardErrorPassed(const QString& out, const int line);
+    void startProcessFailed();
 };
 #endif // REGNUPLOT_H

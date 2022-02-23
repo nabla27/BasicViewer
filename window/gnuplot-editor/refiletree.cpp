@@ -205,12 +205,14 @@ void ReFileTree::pushClickedItem(QTreeWidgetItem *item, int column)
 
     if(folderName == "Script")
     {
-        emit scriptSelected(scriptList.getScriptInfo(fileName)->textEditor,
+        emit scriptSelected(fileName,
+                            scriptList.getScriptInfo(fileName)->textEditor,
                             scriptList.getScriptInfo(fileName)->process);
     }
     else if(folderName == "Sheet")
     {
-        emit sheetSelected(sheetList.getSheet(fileName));
+        emit sheetSelected(fileName,
+                           sheetList.getSheet(fileName));
     }
 }
 

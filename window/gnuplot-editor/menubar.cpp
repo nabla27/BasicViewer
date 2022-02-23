@@ -71,6 +71,27 @@ HelpMenu::HelpMenu(const QString& title, QWidget *parent)
 
 
 
+ScriptMenu::ScriptMenu(const QString& title, QWidget *parent)
+    : QMenu(title, parent)
+{
+
+}
+
+
+
+
+
+
+SheetMenu::SheetMenu(const QString& title, QWidget *parent)
+    : QMenu(title, parent)
+{
+
+}
+
+
+
+
+
 
 
 

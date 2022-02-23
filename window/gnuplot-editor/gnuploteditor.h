@@ -25,10 +25,13 @@ private:
     void initializeLayout();
 
 private slots:
-    void setEditorWidget(ReTextEdit *editor, QProcess *process);
-    void setSheetWidget(ReTableWidget *sheet);
+    void setEditorWidget(const QString& fileName, ReTextEdit *editor, QProcess *process);
+    void setSheetWidget(const QString& fileName, ReTableWidget *sheet);
 
 private:
+    ScriptMenu *scriptMenu;
+    SheetMenu *sheetMenu;
+
     ReFileTree *fileTree;
     QTabWidget *editorTab;
     QTabWidget *displayTab;
