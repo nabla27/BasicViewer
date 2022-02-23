@@ -11,9 +11,11 @@
 #include <QMessageBox>
 #include <QInputDialog>
 #include <QHash>
+#include <QSet>
 #include "utility.h"
 #include "retexteditor.h"
 #include "retablewidget.h"
+#include "io/iofile.h"
 
 class ScriptList : public QObject
 {
@@ -32,14 +34,23 @@ public:
 
 public:
     void addScript(QTreeWidgetItem *parent, const QString& fileName);
-    bool isContains(const QString& fileName) { return scriptList.contains(fileName); }
-    ScriptInfo* getScriptInfo(const QString& fileName) { return scriptList.value(fileName); }
+    bool isContains(const QString& fileName) { return fileList.contains(fileName); }
+    ScriptInfo* getScriptInfo(const QString& fileName) { return fileList.value(fileName); }
+    bool loadScript(const QString& folderPath, const QString& fileName);
+    bool loadAllScript(const QString& folderPath);
+    bool saveScript(const QString& folderPath, const QString& fileName);
+    bool saveAllScript(const QString& folderPath);
     static QString format;
 
 private:
     QWidget *parentWidget;
-    QHash<QString, ScriptInfo*> scriptList;
+    QHash<QString, ScriptInfo*> fileList;
 };
+
+
+
+
+
 
 
 class SheetList : public QObject
@@ -47,18 +58,66 @@ class SheetList : public QObject
     Q_OBJECT
 
 public:
-    SheetList(QObject *parent) : QObject(parent) {}
+    SheetList(QWidget *parent) : QObject(parent), parentWidget(parent) {}
 
 public:
     void addSheet(QTreeWidgetItem *parent, const QString& fileName);
-    bool isContains(const QString& fileName) { return sheetList.contains(fileName); }
-    ReTableWidget* getSheet(const QString& fileName) const { return sheetList.value(fileName); }
+    bool isContains(const QString& fileName) { return fileList.contains(fileName); }
+    ReTableWidget* getSheet(const QString& fileName) const { return fileList.value(fileName); }
+    bool loadSheet(const QString& folderPath, const QString& fileName);
+    bool loadAllSheet(const QString& folderPath);
+    bool saveSheet(const QString& folderPath, const QString& fileName);
+    bool saveAllSheet(const QString& folderPath);
     static QString format;
 
 private:
     QWidget *parentWidget;
-    QHash<QString, ReTableWidget*> sheetList;
+    QHash<QString, ReTableWidget*> fileList;
 };
+
+
+
+
+
+
+
+class OtherList : public QObject
+{
+    Q_OBJECT
+
+public:
+    OtherList(QObject *parent) : QObject(parent) {}
+
+public:
+    void addOther(QTreeWidgetItem *parent, const QString& fileName);
+    bool isContains(const QString& fileName) { return fileList.contains(fileName); }
+
+private:
+    QSet<QString> fileList;
+};
+
+
+
+
+
+
+class CustomList : public QObject
+{
+    Q_OBJECT
+
+public:
+    CustomList(QObject *parent, const QString& format) : QObject(parent), format(format) {}
+
+public:
+    void addCustom(QTreeWidgetItem *parent, const QString& fileName);
+    bool isContains(const QString& fileName) { return fileList.contains(fileName); }
+    QString format;
+
+private:
+    QSet<QString> fileList;
+};
+
+
 
 
 
@@ -90,7 +149,7 @@ private:
     void updateFileTree();
 
 private slots:
-    void getClickedItem(QTreeWidgetItem *item, int column);
+    void pushClickedItem(QTreeWidgetItem *item, int column);
 
 signals:
     void scriptSelected(ReTextEdit *editor, QProcess *process);
@@ -100,6 +159,7 @@ private:
     const QString folderPath = BasicSet::tmpDirectory;
     ScriptList scriptList;
     SheetList sheetList;
+    OtherList otherList;
     QTreeWidgetItem *scriptTree;
     QTreeWidgetItem *sheetTree;
     QTreeWidgetItem *otherTree;

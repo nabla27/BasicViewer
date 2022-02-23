@@ -5,7 +5,7 @@
 #include <QFile>
 #include <QTextStream>
 
-bool toFileTxt(const QString& fileName, const QString& data)
+inline bool toFileTxt(const QString& fileName, const QString& data)
 {
     QFile file(fileName);
 
@@ -20,7 +20,7 @@ bool toFileTxt(const QString& fileName, const QString& data)
     return false;
 }
 
-bool toFileCsv(const QString& filename, const QList<QList<QString> >& sheet)
+inline bool toFileCsv(const QString& filename, const QList<QList<QString> >& sheet)
 {
     QString data;
     for(qsizetype row = 0; row < sheet.size(); ++row){
@@ -35,7 +35,7 @@ bool toFileCsv(const QString& filename, const QList<QList<QString> >& sheet)
     return toFileTxt(filename, data);
 }
 
-QString readFileTxt(const QString& fileName)
+inline QString readFileTxt(const QString& fileName)
 {
     QFile file(fileName);
 
@@ -49,9 +49,10 @@ QString readFileTxt(const QString& fileName)
     return "\0";
 }
 
-QList<QList<QString> > readFileCsv(const QString& fileName)
+inline QList<QList<QString> > readFileCsv(const QString& fileName)
 {
     const QString data = readFileTxt(fileName);  //ファイルの内容(text)をQString型で保持
+
     QList<QList<QString> > sheet(1);             //csvデータを2次元のQString型で返す
     qsizetype row = 0;                           //行数
     QString stack = "";                          //スタック

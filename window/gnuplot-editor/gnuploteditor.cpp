@@ -77,7 +77,7 @@ void GnuplotEditor::setEditorWidget(ReTextEdit *editor, QProcess *process)
         gnuplotWidget->removeWidget(gnuplotWidget->currentWidget());
 
     /* 新しくセット */
-    gnuplotWidget->addWidget(editor);
+    gnuplotWidget->addWidget(editor);       //editorのparentは自動的にgnuplotWidgetとなる
 
     /* プロセスをセット */
     gnuplotProcess = process;
