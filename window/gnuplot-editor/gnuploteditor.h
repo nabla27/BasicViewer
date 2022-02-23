@@ -3,8 +3,12 @@
 #include <QMainWindow>
 #include <QMenuBar>
 #include <QScreen>
+#include <QVBoxLayout>
+#include <QPalette>
 #include "menubar.h"
 #include "utility.h"
+#include "refiletree.h"
+#include "retexteditor.h"
 
 class GnuplotEditor : public QMainWindow
 {
@@ -14,6 +18,16 @@ public:
 
 private:
     void initializeMenuBar();
+    void initializeLayout();
+
+private:
+    ReFileTree *fileTree;
+    QTabWidget *editorTab;
+    QTabWidget *displayTab;
+    QWidget *gnuplotWidget;
+    QWidget *sheetWidget;
+    QWidget *consoleWidget;
+    QWidget *stdoutWidget;
 
 signals:
 

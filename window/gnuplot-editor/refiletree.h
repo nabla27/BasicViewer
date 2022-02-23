@@ -12,30 +12,35 @@
 #include <QInputDialog>
 #include <QHash>
 #include "utility.h"
-
-class TextEdit;
+#include "retexteditor.h"
+#include "retablewidget.h"
 
 class ScriptList : public QObject
 {
     Q_OBJECT
 
 public:
-    ScriptList(QObject *parent) : QObject(parent) {}
+    ScriptList(QWidget *parent) : QObject(parent), parentWidget(parent) {}
 
     class ScriptInfo{
     public:
-        ScriptInfo(QProcess *process) : process(process) {}
+        ScriptInfo(QProcess *process, ReTextEdit *textEditor)
+            : process(process), textEditor(textEditor) {}
         QProcess *process;
+        ReTextEdit *textEditor;
     };
 
 public:
     void addScript(QTreeWidgetItem *parent, const QString& fileName);
     bool isContains(const QString& fileName) { return scriptList.contains(fileName); }
     ScriptInfo *const getScriptInfo(const QString& fileName) { return scriptList.value(fileName); }
+    static QString format;
 
 private:
+    QWidget *parentWidget;
     QHash<QString, ScriptInfo*> scriptList;
 };
+
 
 class SheetList : public QObject
 {
@@ -45,8 +50,13 @@ public:
     SheetList(QObject *parent) : QObject(parent) {}
 
 public:
+    void addSheet(QTreeWidgetItem *parent, const QString& fileName);
+    bool isContains(const QString& fileName) { return sheetList.contains(fileName); }
+    static QString format;
 
 private:
+    QWidget *parentWidget;
+    QHash<QString, ReTableWidget*> sheetList;
 };
 
 
@@ -72,13 +82,19 @@ class ReFileTree : public QTreeWidget
     //Q_OBJECT
 
 public:
-    ReFileTree();
+    ReFileTree(QWidget *parent);
 
 private:
+    void loadFileTree();
     void updateFileTree();
 
 private:
     const QString folderPath = BasicSet::tmpDirectory;
+    ScriptList scriptList;
+    SheetList sheetList;
+    QTreeWidgetItem *scriptTree;
+    QTreeWidgetItem *sheetTree;
+    QTreeWidgetItem *otherTree;
 };
 
 #endif // FILETREE_H
