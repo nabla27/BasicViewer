@@ -5,10 +5,14 @@
 #include <QScreen>
 #include <QVBoxLayout>
 #include <QPalette>
+#include <QStackedWidget>
+
 #include "menubar.h"
 #include "utility.h"
 #include "refiletree.h"
 #include "retexteditor.h"
+#include "retablewidget.h"
+#include "retextbrowser.h"
 
 class GnuplotEditor : public QMainWindow
 {
@@ -20,14 +24,19 @@ private:
     void initializeMenuBar();
     void initializeLayout();
 
+private slots:
+    void setEditorWidget(ReTextEdit *editor, QProcess *process);
+    void setSheetWidget(ReTableWidget *sheet);
+
 private:
     ReFileTree *fileTree;
     QTabWidget *editorTab;
     QTabWidget *displayTab;
-    QWidget *gnuplotWidget;
-    QWidget *sheetWidget;
+    QStackedWidget *gnuplotWidget;
+    QStackedWidget *sheetWidget;
     QWidget *consoleWidget;
-    QWidget *stdoutWidget;
+    QWidget *outputWidget;
+    QProcess *gnuplotProcess;
 
 signals:
 

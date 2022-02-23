@@ -38,6 +38,8 @@ ReFileTree::ReFileTree(QWidget *parent)
     : QTreeWidget(parent), scriptList(parent), sheetList(parent)
 {
     loadFileTree();
+
+    connect(this, &ReFileTree::itemDoubleClicked, this, &ReFileTree::getClickedItem);
 }
 
 void ReFileTree::loadFileTree()
@@ -87,7 +89,25 @@ void ReFileTree::updateFileTree()
     }
 }
 
+void ReFileTree::getClickedItem(QTreeWidgetItem *item, int column)
+{
+    /* フォルダーがクリックされた場合は無効 */
+    if(item->parent() == nullptr) return;
 
+    /* クリックされたがファイルのフォルダー名(Script, Sheet, Other)を取得 */
+    const QString folderName = item->parent()->text(column);
+    const QString fileName = item->text(0);
+
+    if(folderName == "Script")
+    {
+        emit scriptSelected(scriptList.getScriptInfo(fileName)->textEditor,
+                            scriptList.getScriptInfo(fileName)->process);
+    }
+    else if(folderName == "Sheet")
+    {
+        emit sheetSelected(sheetList.getSheet(fileName));
+    }
+}
 
 
 

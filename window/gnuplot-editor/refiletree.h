@@ -33,7 +33,7 @@ public:
 public:
     void addScript(QTreeWidgetItem *parent, const QString& fileName);
     bool isContains(const QString& fileName) { return scriptList.contains(fileName); }
-    ScriptInfo *const getScriptInfo(const QString& fileName) { return scriptList.value(fileName); }
+    ScriptInfo* getScriptInfo(const QString& fileName) { return scriptList.value(fileName); }
     static QString format;
 
 private:
@@ -52,6 +52,7 @@ public:
 public:
     void addSheet(QTreeWidgetItem *parent, const QString& fileName);
     bool isContains(const QString& fileName) { return sheetList.contains(fileName); }
+    ReTableWidget* getSheet(const QString& fileName) const { return sheetList.value(fileName); }
     static QString format;
 
 private:
@@ -79,7 +80,7 @@ private:
 
 class ReFileTree : public QTreeWidget
 {
-    //Q_OBJECT
+    Q_OBJECT
 
 public:
     ReFileTree(QWidget *parent);
@@ -87,6 +88,13 @@ public:
 private:
     void loadFileTree();
     void updateFileTree();
+
+private slots:
+    void getClickedItem(QTreeWidgetItem *item, int column);
+
+signals:
+    void scriptSelected(ReTextEdit *editor, QProcess *process);
+    void sheetSelected(ReTableWidget *sheet);
 
 private:
     const QString folderPath = BasicSet::tmpDirectory;
