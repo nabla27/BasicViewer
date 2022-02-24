@@ -46,6 +46,8 @@ void GnuplotEditor::initializeMenuBar()
 
     setMenuBar(menuBar);
 
+
+
     connect(runAction, &QAction::triggered, this, &GnuplotEditor::executeGnuplot);
 }
 
@@ -72,18 +74,26 @@ void GnuplotEditor::initializeLayout()
     fileTree->setMaximumWidth(150);
 
     /* 各ウィジェット内のアイテムの初期化 */
-    gnuplotWidget = new QStackedWidget(centralWidget());
-    sheetWidget = new QStackedWidget(centralWidget());
-    consoleWidget = new QWidget(centralWidget());
-    browserWidget = new BrowserWidget(centralWidget());
+    gnuplotWidget = new QStackedWidget(editorTab);
+    sheetWidget = new QStackedWidget(editorTab);
+    consoleWidget = new QWidget(displayTab);
+    browserWidget = new BrowserWidget(displayTab);
     /* 配置 */
     editorTab->addTab(gnuplotWidget, "&Gnuplot");
     editorTab->addTab(sheetWidget, "&Sheet");
     displayTab->addTab(consoleWidget, "&Console");
     displayTab->addTab(browserWidget, "&Output");
     /* 設定 */
-    displayTab->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
-    displayTab->setMinimumHeight(150);
+    displayTab->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
+    displayTab->setMaximumHeight(150);
+
+    /* 配色設定 */
+    setPalette(QPalette(QPalette::Window, Qt::black));
+    fileTree->setPalette(QPalette(QPalette::Window, Qt::white));
+    for(int i = 0; i < editorTab->count(); ++i) editorTab->tabBar()->setTabTextColor(i, Qt::black);
+    for(int i = 0; i < displayTab->count(); ++i) displayTab->tabBar()->setTabTextColor(i, Qt::black);
+    sheetWidget->setPalette(QPalette(QPalette::Window, Qt::white));
+    browserWidget->setPalette(QPalette(QPalette::Window, Qt::white));
 }
 
 void GnuplotEditor::setEditorWidget(const QString& fileName, ReTextEdit *editor, QProcess *process)
