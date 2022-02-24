@@ -3,7 +3,7 @@
 ReGnuplot::ReGnuplot(QObject *parent)
     : QObject(parent)
 {
-    initCmdList << "cd '" + QDir::currentPath() + "/" + BasicSet::tmpDirectory;
+    initCmdList << "cd '" + workingPath + "'";
     initCmdList << "set datafile separator ','";
 }
 

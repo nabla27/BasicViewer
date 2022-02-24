@@ -1,4 +1,4 @@
-#include "outputwidget.h"
+#include "browserwidget.h"
 
 
 BrowserSyntaxHighlighter::BrowserSyntaxHighlighter(QTextDocument *document)

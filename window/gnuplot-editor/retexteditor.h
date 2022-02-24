@@ -48,7 +48,7 @@ private:
 public:
     void lineNumberAreaPaintEvent(QPaintEvent *event);
     int lineNumberAreaWidth();
-    void setErrorLineNumber(const int num) { errorLineNumber = num; }
+    void setErrorLineNumber(const int num) { errorLineNumber = num;  }
 public slots:
     void highlightLine();
 protected:

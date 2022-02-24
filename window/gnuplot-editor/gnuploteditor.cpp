@@ -26,14 +26,14 @@ void GnuplotEditor::initializeMenuBar()
 
     QMenuBar *menuBar = new QMenuBar(this);
 
-    FileMenu *fileMenu = new FileMenu("File", menuBar);
-    EditorMenu *editorMenu = new EditorMenu("Editor", menuBar);
-    HelpMenu *helpMenu = new HelpMenu("Help", menuBar);
-    QMenu *blank1 = new QMenu("         ", menuBar);
+    FileMenu *const fileMenu = new FileMenu("File", menuBar);
+    EditorMenu *const editorMenu = new EditorMenu("Editor", menuBar);
+    HelpMenu *const helpMenu = new HelpMenu("Help", menuBar);
+    QMenu *const blank1 = new QMenu("         ", menuBar);
     scriptMenu = new ScriptMenu("Script", menuBar);
     sheetMenu = new SheetMenu("Sheet", menuBar);
-    QMenu *blank2 = new QMenu("         ", menuBar);
-    QAction *runAction = new QAction("&Run", menuBar);
+    QMenu *const blank2 = new QMenu("         ", menuBar);
+    QAction *const runAction = new QAction("&Run", menuBar);
 
     menuBar->addMenu(fileMenu);
     menuBar->addMenu(editorMenu);
@@ -56,9 +56,9 @@ void GnuplotEditor::initializeLayout()
     setCentralWidget(new QWidget(this));
 
     /* ウィンドウ内の大枠となるレイアウトとウィジェットの初期化 */
-    QHBoxLayout *hLayout = new QHBoxLayout(this);
+    QHBoxLayout *hLayout = new QHBoxLayout;
     fileTree = new ReFileTree(centralWidget());
-    QVBoxLayout *vLayout = new QVBoxLayout(this);
+    QVBoxLayout *vLayout = new QVBoxLayout;
     editorTab = new QTabWidget(this);
     displayTab = new QTabWidget(centralWidget());
     /* 配置 */
@@ -121,14 +121,28 @@ void GnuplotEditor::setSheetWidget(const QString& fileName, ReTableWidget *sheet
     sheetMenu->setTitle(fileName);
 }
 
+void GnuplotEditor::setFolderPath(const QString& folderPath)
+{
+    fileTree->setFolderPath(folderPath);
+    fileTree->loadFileTree();
+
+    gnuplot->setWorkingPath(folderPath);
+}
+
 void GnuplotEditor::executeGnuplot()
 {
     //ファイルが選ばれていない場合は無効
     if(gnuplotWidget->count() < 1) return;
 
-    const QString script =  qobject_cast<ReTextEdit*>(gnuplotWidget->widget(0))->toPlainText() + "\n";
+    /* エラー行のリセット */
+    qobject_cast<ReTextEdit*>(gnuplotWidget->widget(0))->setErrorLineNumber(-1);
 
-    gnuplot->exc(gnuplotProcess, script.split("\n"));
+    /* ファイルの保存 */
+    fileTree->scriptList.saveScript(fileTree->getFolderPath(), scriptMenu->title());
+    fileTree->scriptList.saveScript(fileTree->getFolderPath(), sheetMenu->title());
+
+    /* gnuplotにコマンドを渡す */
+    gnuplot->exc(gnuplotProcess, QList<QString>() << "load '" + scriptMenu->title() + "'");
 }
 
 void GnuplotEditor::receiveGnuplotStdOut(const QString& text)
@@ -147,6 +161,10 @@ void GnuplotEditor::receiveGnuplotStdErr(const QString& text, const int line)
 
     /* タブの切り替え */
     displayTab->setCurrentIndex(1);
+
+    /* エラー行の設定とハイライト */
+    qobject_cast<ReTextEdit*>(gnuplotWidget->widget(0))->setErrorLineNumber(line - 1);
+    qobject_cast<ReTextEdit*>(gnuplotWidget->widget(0))->highlightLine();
 }
 
 

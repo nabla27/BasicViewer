@@ -12,6 +12,7 @@
 #include <QInputDialog>
 #include <QHash>
 #include <QSet>
+#include <QDir>
 #include "utility.h"
 #include "retexteditor.h"
 #include "retablewidget.h"
@@ -144,25 +145,29 @@ class ReFileTree : public QTreeWidget
 public:
     ReFileTree(QWidget *parent);
 
-private:
+public:
+    ScriptList scriptList;
+    SheetList sheetList;
+    OtherList otherList;
+
+public:
     void loadFileTree();
     void updateFileTree();
+    void setFolderPath(const QString& folderPath) { this->folderPath = folderPath; }
+    const QString& getFolderPath() const { return folderPath; }
 
 private slots:
     void pushClickedItem(QTreeWidgetItem *item, int column);
 
-signals:
-    void scriptSelected(const QString& fileName, ReTextEdit *editor, QProcess *process);
-    void sheetSelected(const QString& fileName, ReTableWidget *sheet);
-
 private:
-    const QString folderPath = BasicSet::tmpDirectory;
-    ScriptList scriptList;
-    SheetList sheetList;
-    OtherList otherList;
+    QString folderPath = QDir::currentPath() + "/" + BasicSet::tmpDirectory;
     QTreeWidgetItem *scriptTree;
     QTreeWidgetItem *sheetTree;
     QTreeWidgetItem *otherTree;
+
+signals:
+    void scriptSelected(const QString& fileName, ReTextEdit *editor, QProcess *process);
+    void sheetSelected(const QString& fileName, ReTableWidget *sheet);
 };
 
 #endif // FILETREE_H

@@ -36,6 +36,8 @@ bool ScriptList::loadAllScript(const QString &folderPath)
 
 bool ScriptList::saveScript(const QString &folderPath, const QString &fileName)
 {
+    if(!fileList.contains(fileName)) return false;
+
     return toFileTxt(folderPath + fileName, fileList.value(fileName)->textEditor->toPlainText());
 }
 
@@ -86,6 +88,8 @@ bool SheetList::loadAllSheet(const QString &folderPath)
 
 bool SheetList::saveSheet(const QString &folderPath, const QString &fileName)
 {
+    if(!fileList.contains(fileName)) return false;
+
     return toFileCsv(folderPath + fileName, fileList.value(fileName)->getData<QString>());
 }
 

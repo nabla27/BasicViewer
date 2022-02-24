@@ -12,7 +12,7 @@
 #include "refiletree.h"
 #include "retexteditor.h"
 #include "retablewidget.h"
-#include "outputwidget.h"
+#include "browserwidget.h"
 
 class GnuplotEditor : public QMainWindow
 {
@@ -27,6 +27,7 @@ private:
 private slots:
     void setEditorWidget(const QString& fileName, ReTextEdit *editor, QProcess *process);
     void setSheetWidget(const QString& fileName, ReTableWidget *sheet);
+    void setFolderPath(const QString& folderPath);
     void executeGnuplot();
     void receiveGnuplotStdOut(const QString& text);
     void receiveGnuplotStdErr(const QString& text, const int line);

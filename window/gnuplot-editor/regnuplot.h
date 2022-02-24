@@ -24,7 +24,7 @@ public:
     void exc(QProcess *process, const QList<QString>& cmdlist);
     void setExePath(const QString& path) { this->path = path; }
     void setPreCmd(const QString& preCmd) { this->preCmdList = preCmd.split('\n'); }
-    void setOptionCmd(const QString& optionCmd) { this->optionCmd = optionCmd; }
+    void setWorkingPath(const QString& workingPath) { this->workingPath = workingPath; }
 
 private:
     int getErrorLineNumber(const QString& err);
@@ -35,7 +35,7 @@ private slots:
 
 private:
     QString path = "gnuplot.exe";
-    QString optionCmd = "with linespoints";
+    QString workingPath = QDir::currentPath() + "/" + BasicSet::tmpDirectory;
     QList<QString> initCmdList;
     QList<QString> preCmdList;
     QProcess *currentProcess;
