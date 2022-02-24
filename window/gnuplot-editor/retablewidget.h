@@ -14,27 +14,29 @@ class ReTableWidget : public QTableWidget
 public:
     ReTableWidget(QWidget *parent = nullptr);
     ~ReTableWidget();
+
 public:
     template <class T> void setData(const QList<QList<T> >& data);
     template <class T> QList<QList<T> > getData() const;
     template <class T> QList<QList<QList<T> > > selectedData() const;
     void setGnuplot(ReGnuplot *gnuplot) { this->gnuplot = gnuplot; }
-    void setSheetName(const QString& sheetName) { this->sheetName = sheetName; }
-    QString getSheetName() const { return sheetName; }
+
 public slots:
     void appendLineRow() { insertRow(rowCount()); }
     void removeLineRow() { removeRow(rowCount() - 1); }
     void appendLineCol() { insertColumn(columnCount()); }
     void removeLineCol() { removeColumn(columnCount() - 1); }
+
 private:
     QString createPlotCmd(const QString& sheetName);
-    QString sheetName;
+    QString optionCmd;
     QMenu *normalMenu;
     QProcess *process;
     QShortcut *scCtrC;
     QShortcut *scCtrV;
     QShortcut *scCtrX;
     ReGnuplot *gnuplot;
+
 private slots:
     void onCustomContextMenu(const QPoint& point);
     void copyCell();

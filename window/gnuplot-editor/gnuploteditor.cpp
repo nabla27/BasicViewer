@@ -12,8 +12,12 @@ GnuplotEditor::GnuplotEditor(QWidget *parent)
     //レイアウト生成
     initializeLayout();
 
+    gnuplot = new ReGnuplot(this);
+
     connect(fileTree, &ReFileTree::scriptSelected, this, &GnuplotEditor::setEditorWidget);
     connect(fileTree, &ReFileTree::sheetSelected, this, &GnuplotEditor::setSheetWidget);
+    connect(gnuplot, &ReGnuplot::standardOutputPassed, this, &GnuplotEditor::receiveGnuplotStdOut);
+    connect(gnuplot, &ReGnuplot::standardErrorPassed, this, &GnuplotEditor::receiveGnuplotStdErr);
 }
 
 void GnuplotEditor::initializeMenuBar()
@@ -28,6 +32,8 @@ void GnuplotEditor::initializeMenuBar()
     QMenu *blank1 = new QMenu("         ", menuBar);
     scriptMenu = new ScriptMenu("Script", menuBar);
     sheetMenu = new SheetMenu("Sheet", menuBar);
+    QMenu *blank2 = new QMenu("         ", menuBar);
+    QAction *runAction = new QAction("&Run", menuBar);
 
     menuBar->addMenu(fileMenu);
     menuBar->addMenu(editorMenu);
@@ -35,8 +41,12 @@ void GnuplotEditor::initializeMenuBar()
     menuBar->addMenu(blank1);
     menuBar->addMenu(scriptMenu);
     menuBar->addMenu(sheetMenu);
+    menuBar->addMenu(blank2);
+    menuBar->addAction(runAction);
 
     setMenuBar(menuBar);
+
+    connect(runAction, &QAction::triggered, this, &GnuplotEditor::executeGnuplot);
 }
 
 void GnuplotEditor::initializeLayout()
@@ -65,12 +75,12 @@ void GnuplotEditor::initializeLayout()
     gnuplotWidget = new QStackedWidget(centralWidget());
     sheetWidget = new QStackedWidget(centralWidget());
     consoleWidget = new QWidget(centralWidget());
-    outputWidget = new QWidget(centralWidget());
+    browserWidget = new BrowserWidget(centralWidget());
     /* 配置 */
-    editorTab->addTab(gnuplotWidget, "Gnuplot");
-    editorTab->addTab(sheetWidget, "Sheet");
-    displayTab->addTab(consoleWidget, "Console");
-    displayTab->addTab(outputWidget, "Output");
+    editorTab->addTab(gnuplotWidget, "&Gnuplot");
+    editorTab->addTab(sheetWidget, "&Sheet");
+    displayTab->addTab(consoleWidget, "&Console");
+    displayTab->addTab(browserWidget, "&Output");
     /* 設定 */
     displayTab->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
     displayTab->setMinimumHeight(150);
@@ -109,6 +119,34 @@ void GnuplotEditor::setSheetWidget(const QString& fileName, ReTableWidget *sheet
 
     /* メニューバーの名前変更 */
     sheetMenu->setTitle(fileName);
+}
+
+void GnuplotEditor::executeGnuplot()
+{
+    //ファイルが選ばれていない場合は無効
+    if(gnuplotWidget->count() < 1) return;
+
+    const QString script =  qobject_cast<ReTextEdit*>(gnuplotWidget->widget(0))->toPlainText() + "\n";
+
+    gnuplot->exc(gnuplotProcess, script.split("\n"));
+}
+
+void GnuplotEditor::receiveGnuplotStdOut(const QString& text)
+{
+    /* 出力の表示 */
+    browserWidget->outputText(text, BrowserWidget::MessageType::GnuplotStdOut);
+
+    /* タブの切り替え */
+    displayTab->setCurrentIndex(1);
+}
+
+void GnuplotEditor::receiveGnuplotStdErr(const QString& text, const int line)
+{
+    /* 出力の表示 */
+    browserWidget->outputText(text, BrowserWidget::MessageType::GnuplotStdErr);
+
+    /* タブの切り替え */
+    displayTab->setCurrentIndex(1);
 }
 
 

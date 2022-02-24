@@ -386,7 +386,7 @@ void ReTableWidget::reverseCol()
 void ReTableWidget::plot()
 {
     /* gnuplotが初期化されていなかったら(=nullptr)無効 */
-    if(gnuplot == nullptr) {qDebug() << "null"; return;}
+    if(gnuplot == nullptr) return;
 
     /* 選択された範囲を取得 */
     const QList<QTableWidgetSelectionRange> selectedRangeList = selectedRanges();
@@ -401,7 +401,7 @@ void ReTableWidget::plot()
     else if(dim == 1 || dim == 2) cmd += "plot ";
     else if(dim == 3) cmd += "splot ";
     else return;
-    cmd += "\"-\" " + gnuplot->getOptionCmd() + "\n";
+    cmd += "\"-\" " + optionCmd + "\n";
 
     /* セルの選択範囲の値を参照しながらコマンドを生成 */
     for(const QTableWidgetSelectionRange& selected : selectedRangeList)

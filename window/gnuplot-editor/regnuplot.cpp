@@ -1,6 +1,7 @@
 #include "regnuplot.h"
 
-ReGnuplot::ReGnuplot()
+ReGnuplot::ReGnuplot(QObject *parent)
+    : QObject(parent)
 {
     initCmdList << "cd '" + QDir::currentPath() + "/" + BasicSet::tmpDirectory;
     initCmdList << "set datafile separator ','";
@@ -38,7 +39,7 @@ void ReGnuplot::exc(QProcess *process, const QList<QString>& cmdlist)
 
     /* コマンドの実行 */
     for(const QString& cmd : cmdlist)
-        process->write(cmd.toUtf8().constData());
+        process->write((cmd + "\n").toUtf8().constData());
 }
 
 int ReGnuplot::getErrorLineNumber(const QString &err)
@@ -48,7 +49,7 @@ int ReGnuplot::getErrorLineNumber(const QString &err)
     QRegularExpressionMatchIterator iter = QRegularExpression("line \\d+:").globalMatch(err);
     while(iter.hasNext()){
         QRegularExpressionMatch match = iter.next();
-        list << match.captured(0).sliced(5, match.captured(0).size() - 6).toInt() - 1;
+        list << match.captured(0).sliced(5, match.captured(0).size() - 6).toInt();
     }
 
     return (list.size() < 1) ? -1 : list.at(0);

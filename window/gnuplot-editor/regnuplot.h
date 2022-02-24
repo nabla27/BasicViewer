@@ -13,10 +13,13 @@
 #include "utility.h"
 
 
-class ReGnuplot
+class ReGnuplot : public QObject
 {
+    Q_OBJECT
+
 public:
-    ReGnuplot();
+    ReGnuplot(QObject *parent);
+
 public:
     void exc(QProcess *process, const QList<QString>& cmdlist);
     void setExePath(const QString& path) { this->path = path; }

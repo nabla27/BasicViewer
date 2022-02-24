@@ -12,7 +12,7 @@
 #include "refiletree.h"
 #include "retexteditor.h"
 #include "retablewidget.h"
-#include "retextbrowser.h"
+#include "outputwidget.h"
 
 class GnuplotEditor : public QMainWindow
 {
@@ -27,10 +27,15 @@ private:
 private slots:
     void setEditorWidget(const QString& fileName, ReTextEdit *editor, QProcess *process);
     void setSheetWidget(const QString& fileName, ReTableWidget *sheet);
+    void executeGnuplot();
+    void receiveGnuplotStdOut(const QString& text);
+    void receiveGnuplotStdErr(const QString& text, const int line);
 
 private:
     ScriptMenu *scriptMenu;
     SheetMenu *sheetMenu;
+
+    ReGnuplot *gnuplot;
 
     ReFileTree *fileTree;
     QTabWidget *editorTab;
@@ -38,7 +43,7 @@ private:
     QStackedWidget *gnuplotWidget;
     QStackedWidget *sheetWidget;
     QWidget *consoleWidget;
-    QWidget *outputWidget;
+    BrowserWidget *browserWidget;
     QProcess *gnuplotProcess;
 
 signals:

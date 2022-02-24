@@ -63,7 +63,8 @@ EditorMenu::EditorMenu(const QString& title, QWidget *parent)
 HelpMenu::HelpMenu(const QString& title, QWidget *parent)
     : QMenu(title, parent)
 {
-
+    QAction *closeProcess = new QAction("Close this process", this);
+    addAction(closeProcess);
 }
 
 
