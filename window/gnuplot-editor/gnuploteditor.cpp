@@ -29,19 +29,21 @@ void GnuplotEditor::initializeMenuBar()
     FileMenu *const fileMenu = new FileMenu("File", menuBar);
     EditorMenu *const editorMenu = new EditorMenu("Editor", menuBar);
     HelpMenu *const helpMenu = new HelpMenu("Help", menuBar);
-    QMenu *const blank1 = new QMenu("         ", menuBar);
+    QAction *const blank1 = new QAction("         ", menuBar);
     scriptMenu = new ScriptMenu("Script", menuBar);
     sheetMenu = new SheetMenu("Sheet", menuBar);
-    QMenu *const blank2 = new QMenu("         ", menuBar);
+    QAction *const blank2 = new QAction("         ", menuBar);
     QAction *const runAction = new QAction("&Run", menuBar);
 
     menuBar->addMenu(fileMenu);
     menuBar->addMenu(editorMenu);
     menuBar->addMenu(helpMenu);
-    menuBar->addMenu(blank1);
+    menuBar->addAction(blank1);
+    QAction *a = menuBar->addSeparator();
+    menuBar->insertSeparator(a);
     menuBar->addMenu(scriptMenu);
     menuBar->addMenu(sheetMenu);
-    menuBar->addMenu(blank2);
+    menuBar->addAction(blank2);
     menuBar->addAction(runAction);
 
     setMenuBar(menuBar);
