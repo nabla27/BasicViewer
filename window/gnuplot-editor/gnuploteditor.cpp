@@ -24,7 +24,7 @@ void GnuplotEditor::initializeMenuBar()
 {
     if(menuBar() != nullptr) delete menuBar();
 
-    QMenuBar *menuBar = new QMenuBar(this);
+    WindowMenuBar *menuBar = new WindowMenuBar(this);
 
     FileMenu *const fileMenu = new FileMenu("File", menuBar);
     EditorMenu *const editorMenu = new EditorMenu("Editor", menuBar);
@@ -45,8 +45,6 @@ void GnuplotEditor::initializeMenuBar()
     menuBar->addAction(runAction);
 
     setMenuBar(menuBar);
-
-
 
     connect(runAction, &QAction::triggered, this, &GnuplotEditor::executeGnuplot);
 }
@@ -88,12 +86,12 @@ void GnuplotEditor::initializeLayout()
     displayTab->setMaximumHeight(150);
 
     /* 配色設定 */
-    setPalette(QPalette(QPalette::Window, Qt::black));
-    fileTree->setPalette(QPalette(QPalette::Window, Qt::white));
-    for(int i = 0; i < editorTab->count(); ++i) editorTab->tabBar()->setTabTextColor(i, Qt::black);
-    for(int i = 0; i < displayTab->count(); ++i) displayTab->tabBar()->setTabTextColor(i, Qt::black);
-    sheetWidget->setPalette(QPalette(QPalette::Window, Qt::white));
-    browserWidget->setPalette(QPalette(QPalette::Window, Qt::white));
+    //setPalette(QPalette(QPalette::Window, Qt::black));
+    //fileTree->setPalette(QPalette(QPalette::Window, Qt::white));
+    //for(int i = 0; i < editorTab->count(); ++i) editorTab->tabBar()->setTabTextColor(i, Qt::black);
+    //for(int i = 0; i < displayTab->count(); ++i) displayTab->tabBar()->setTabTextColor(i, Qt::black);
+    //sheetWidget->setPalette(QPalette(QPalette::Window, Qt::white));
+    //browserWidget->setPalette(QPalette(QPalette::Window, Qt::white));
 }
 
 void GnuplotEditor::setEditorWidget(const QString& fileName, ReTextEdit *editor, QProcess *process)

@@ -13,6 +13,7 @@
 #include "retexteditor.h"
 #include "retablewidget.h"
 #include "browserwidget.h"
+#include "windowmenubar.h"
 
 class GnuplotEditor : public QMainWindow
 {

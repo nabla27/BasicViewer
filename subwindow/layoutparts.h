@@ -219,4 +219,15 @@ private:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 #endif // LAYOUTPARTS_H
