@@ -140,6 +140,16 @@ void OtherList::addOther(QTreeWidgetItem *parent, const QString &fileName)
 ReFileTree::ReFileTree(QWidget *parent)
     : QTreeWidget(parent), scriptList(parent), sheetList(parent), otherList(parent)
 {
+    /* 右クリックメニューの設定 */
+    setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
+    normalMenu = new QMenu(this);
+    connect(this, &ReFileTree::customContextMenuRequested, this, &ReFileTree::onCustomContextMenu);
+
+    /* ファイルの変更があれば更新するようにする */
+    dirWatcher = new QFileSystemWatcher(QStringList() << folderPath);
+    connect(dirWatcher, &QFileSystemWatcher::directoryChanged, this, &ReFileTree::updateFileTree);
+
+    /* ファイルツリーを更新 */
     loadFileTree();
 
     connect(this, &ReFileTree::itemDoubleClicked, this, &ReFileTree::pushClickedItem);
@@ -191,11 +201,19 @@ void ReFileTree::updateFileTree()
         }
         else if(fileName == "." || fileName == "..")
             continue;
-        else if(!otherList.isContains(fileName))
+        else if(!otherList.isContains(fileName) && !fileName.contains(scriptList.format) && !fileName.contains(sheetList.format))
             otherList.addOther(otherTree, fileName);
         else
             continue;
     }
+}
+
+void ReFileTree::setFolderPath(const QString &folderPath)
+{
+    dirWatcher->removePath(this->folderPath);
+    dirWatcher->addPath(folderPath);
+    this->folderPath = folderPath;
+    loadFileTree();
 }
 
 void ReFileTree::pushClickedItem(QTreeWidgetItem *item, int column)
@@ -218,6 +236,14 @@ void ReFileTree::pushClickedItem(QTreeWidgetItem *item, int column)
         emit sheetSelected(fileName,
                            sheetList.getSheet(fileName));
     }
+}
+
+void ReFileTree::onCustomContextMenu(const QPoint& point)
+{
+    if(selectedItems().count() < 1) return;
+
+    //Widgetでのカーソル位置をグローバル座標に変換して渡す
+    normalMenu->exec(viewport()->mapToGlobal(point));
 }
 
 

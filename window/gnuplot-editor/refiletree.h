@@ -153,17 +153,21 @@ public:
 public:
     void loadFileTree();
     void updateFileTree();
-    void setFolderPath(const QString& folderPath) { this->folderPath = folderPath; }
+    void setFolderPath(const QString& folderPath);
     const QString& getFolderPath() const { return folderPath; }
 
 private slots:
     void pushClickedItem(QTreeWidgetItem *item, int column);
+    void onCustomContextMenu(const QPoint& point);
 
 private:
     QString folderPath = QDir::currentPath() + "/" + BasicSet::tmpDirectory;
     QTreeWidgetItem *scriptTree;
     QTreeWidgetItem *sheetTree;
     QTreeWidgetItem *otherTree;
+    QFileSystemWatcher *dirWatcher;
+
+    QMenu *normalMenu;
 
 signals:
     void scriptSelected(const QString& fileName, ReTextEdit *editor, QProcess *process);
