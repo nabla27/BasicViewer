@@ -58,18 +58,24 @@ void GnuplotEditor::initializeLayout()
     /* ウィンドウ内の大枠となるレイアウトとウィジェットの初期化 */
     QHBoxLayout *hLayout = new QHBoxLayout;
     fileTree = new ReFileTree(centralWidget());
+    VerticalDragBar *fileTreeDragBar = new VerticalDragBar(centralWidget());
     QVBoxLayout *vLayout = new QVBoxLayout;
     editorTab = new QTabWidget(this);
+    HorizontalDragBar *displayTabDragBar = new HorizontalDragBar(centralWidget());
     displayTab = new QTabWidget(centralWidget());
     /* 配置 */
     centralWidget()->setLayout(hLayout);
     hLayout->addWidget(fileTree);
+    hLayout->addWidget(fileTreeDragBar);
     hLayout->addLayout(vLayout);
     vLayout->addWidget(editorTab);
+    vLayout->addWidget(displayTabDragBar);
     vLayout->addWidget(displayTab);
     /* 設定 */
+    hLayout->setSpacing(0);
     fileTree->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Expanding);
     fileTree->setMaximumWidth(150);
+    vLayout->setSpacing(0);
 
     /* 各ウィジェット内のアイテムの初期化 */
     gnuplotWidget = new QStackedWidget(editorTab);
@@ -84,6 +90,11 @@ void GnuplotEditor::initializeLayout()
     /* 設定 */
     displayTab->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
     displayTab->setMaximumHeight(150);
+    editorTab->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+
+    centralWidget()->layout()->setContentsMargins(0, 0, 0, 0);
+    displayTab->setTabPosition(QTabWidget::TabPosition::South);
+    browserWidget->setFrameShape(QFrame::Shape::NoFrame);
 
     /* 配色設定 */
     //setPalette(QPalette(QPalette::Window, Qt::black));
@@ -92,6 +103,9 @@ void GnuplotEditor::initializeLayout()
     //for(int i = 0; i < displayTab->count(); ++i) displayTab->tabBar()->setTabTextColor(i, Qt::black);
     //sheetWidget->setPalette(QPalette(QPalette::Window, Qt::white));
     //browserWidget->setPalette(QPalette(QPalette::Window, Qt::white));
+
+    connect(fileTreeDragBar, &VerticalDragBar::barDraged, this, &GnuplotEditor::setFileTreeWidth);
+    connect(displayTabDragBar, &HorizontalDragBar::barDraged, this, &GnuplotEditor::setDisplayTabHeight);
 }
 
 void GnuplotEditor::setEditorWidget(const QString& fileName, ReTextEdit *editor, QProcess *process)
@@ -144,6 +158,7 @@ void GnuplotEditor::executeGnuplot()
 
     /* エラー行のリセット */
     qobject_cast<ReTextEdit*>(gnuplotWidget->widget(0))->setErrorLineNumber(-1);
+    qobject_cast<ReTextEdit*>(gnuplotWidget->widget(0))->highlightLine();
 
     /* ファイルの保存 */
     fileTree->scriptList.saveScript(fileTree->getFolderPath(), scriptMenu->title());
@@ -174,6 +189,21 @@ void GnuplotEditor::receiveGnuplotStdErr(const QString& text, const int line)
     qobject_cast<ReTextEdit*>(gnuplotWidget->widget(0))->setErrorLineNumber(line - 1);
     qobject_cast<ReTextEdit*>(gnuplotWidget->widget(0))->highlightLine();
 }
+
+void GnuplotEditor::setFileTreeWidth(const int dx)
+{
+    const int nextWidth = fileTree->maximumWidth() - dx;
+    if(nextWidth < 0 || nextWidth > 260) return;
+    fileTree->setMaximumWidth(nextWidth);
+}
+
+void GnuplotEditor::setDisplayTabHeight(const int dy)
+{
+    const int nextHeight = displayTab->maximumHeight() + dy;
+    if(nextHeight < 0 || nextHeight > 600) return;
+    displayTab->setMaximumHeight(nextHeight);
+}
+
 
 
 

@@ -14,6 +14,7 @@
 #include "retablewidget.h"
 #include "browserwidget.h"
 #include "windowmenubar.h"
+#include "subwindow/layoutparts.h"
 
 class GnuplotEditor : public QMainWindow
 {
@@ -32,6 +33,8 @@ private slots:
     void executeGnuplot();
     void receiveGnuplotStdOut(const QString& text);
     void receiveGnuplotStdErr(const QString& text, const int line);
+    void setFileTreeWidth(const int dx);
+    void setDisplayTabHeight(const int dy);
 
 private:
     ScriptMenu *scriptMenu;

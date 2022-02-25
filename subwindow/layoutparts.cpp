@@ -123,3 +123,73 @@ void SpinBoxEditLayout::setVisible(bool visible)
     label->setVisible(visible);
     spinBox->setVisible(visible);
 }
+
+
+
+
+
+
+
+HorizontalDragBar::HorizontalDragBar(QWidget *parent)
+    : QPushButton(parent)
+{
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
+    setMaximumHeight(5);
+    setCursor(Qt::CursorShape::SplitVCursor);
+}
+
+void HorizontalDragBar::mousePressEvent(QMouseEvent *event)
+{
+    dragStartPoint = event->pos();
+    QPushButton::mousePressEvent(event);
+}
+
+void HorizontalDragBar::mouseMoveEvent(QMouseEvent *event)
+{
+    emit barDraged((dragStartPoint - event->pos()).y());
+    QPushButton::mouseMoveEvent(event);
+}
+
+
+
+
+VerticalDragBar::VerticalDragBar(QWidget *parent)
+    : QPushButton(parent)
+{
+    setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Expanding);
+    setMaximumWidth(5);
+    setCursor(Qt::CursorShape::SplitHCursor);
+}
+
+void VerticalDragBar::mousePressEvent(QMouseEvent *event)
+{
+    dragStartPoint = event->pos();
+    QPushButton::mousePressEvent(event);
+}
+
+void VerticalDragBar::mouseMoveEvent(QMouseEvent *event)
+{
+    emit barDraged((dragStartPoint - event->pos()).x());
+    QPushButton::mouseMoveEvent(event);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

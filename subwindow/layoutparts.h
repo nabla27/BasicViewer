@@ -14,6 +14,7 @@
 #include <QSpacerItem>
 #include <QSpinBox>
 #include <QPushButton>
+#include <QMouseEvent>
 
 #define SETTING_EDIT_LWIDTH 110
 #define SETTING_EDIT_SWIDTH 35
@@ -215,6 +216,53 @@ public:
 private:
     QSpacerItem *spacer;
 };
+
+
+
+
+
+
+class HorizontalDragBar : public QPushButton
+{
+    Q_OBJECT
+
+public:
+    explicit HorizontalDragBar(QWidget *parent);
+
+protected:
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+
+private:
+    QPoint dragStartPoint;
+
+signals:
+    void barDraged(const int dy);
+};
+
+class VerticalDragBar : public QPushButton
+{
+    Q_OBJECT
+
+public:
+    explicit VerticalDragBar(QWidget *parent);
+
+protected:
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+
+private:
+    QPoint dragStartPoint;
+
+signals:
+    void barDraged(const int dx);
+};
+
+
+
+
+
+
 
 
 
