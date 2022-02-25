@@ -18,112 +18,34 @@
 #include "retablewidget.h"
 #include "io/iofile.h"
 
-class ScriptList : public QObject
+
+
+
+
+
+struct ScriptInfo
 {
-    Q_OBJECT
-
 public:
-    ScriptList(QWidget *parent) : QObject(parent), parentWidget(parent) {}
-
-    class ScriptInfo{
-    public:
-        ScriptInfo(QProcess *process, ReTextEdit *textEditor)
-            : process(process), textEditor(textEditor) {}
-        QProcess *process;
-        ReTextEdit *textEditor;
-    };
-
-public:
-    void addScript(QTreeWidgetItem *parent, const QString& fileName);
-    bool isContains(const QString& fileName) { return fileList.contains(fileName); }
-    ScriptInfo* getScriptInfo(const QString& fileName) { return fileList.value(fileName); }
-    bool loadScript(const QString& folderPath, const QString& fileName);
-    bool loadAllScript(const QString& folderPath);
-    bool saveScript(const QString& folderPath, const QString& fileName);
-    bool saveAllScript(const QString& folderPath);
+    ScriptInfo(QProcess *process = nullptr, ReTextEdit *editor = nullptr)
+        : process(process), editor(editor) {}
+    QProcess *process;
+    ReTextEdit *editor;
     static QString format;
-
-private:
-    QWidget *parentWidget;
-    QHash<QString, ScriptInfo*> fileList;
 };
 
-
-
-
-
-
-
-class SheetList : public QObject
+struct SheetInfo
 {
-    Q_OBJECT
-
 public:
-    SheetList(QWidget *parent) : QObject(parent), parentWidget(parent) {}
-
-public:
-    void addSheet(QTreeWidgetItem *parent, const QString& fileName);
-    bool isContains(const QString& fileName) { return fileList.contains(fileName); }
-    ReTableWidget* getSheet(const QString& fileName) const { return fileList.value(fileName); }
-    bool loadSheet(const QString& folderPath, const QString& fileName);
-    bool loadAllSheet(const QString& folderPath);
-    bool saveSheet(const QString& folderPath, const QString& fileName);
-    bool saveAllSheet(const QString& folderPath);
+    SheetInfo(ReTableWidget *table = nullptr) : table(table) {}
+    ReTableWidget *table;
     static QString format;
-
-private:
-    QWidget *parentWidget;
-    QHash<QString, ReTableWidget*> fileList;
 };
 
-
-
-
-
-
-
-class OtherList : public QObject
+struct OtherInfo
 {
-    Q_OBJECT
-
 public:
-    OtherList(QObject *parent) : QObject(parent) {}
-
-public:
-    void addOther(QTreeWidgetItem *parent, const QString& fileName);
-    bool isContains(const QString& fileName) { return fileList.contains(fileName); }
-
-private:
-    QSet<QString> fileList;
+    OtherInfo() {}
 };
-
-
-
-
-
-
-class CustomList : public QObject
-{
-    Q_OBJECT
-
-public:
-    CustomList(QObject *parent, const QString& format) : QObject(parent), format(format) {}
-
-public:
-    void addCustom(QTreeWidgetItem *parent, const QString& fileName);
-    bool isContains(const QString& fileName) { return fileList.contains(fileName); }
-    QString format;
-
-private:
-    QSet<QString> fileList;
-};
-
-
-
-
-
-
-
 
 
 
@@ -146,15 +68,20 @@ public:
     ReFileTree(QWidget *parent);
 
 public:
-    ScriptList scriptList;
-    SheetList sheetList;
-    OtherList otherList;
-
-public:
     void loadFileTree();
     void updateFileTree();
     void setFolderPath(const QString& folderPath);
-    const QString& getFolderPath() const { return folderPath; }
+    void addScript(const QString& fileName);
+    void addSheet(const QString& fileName);
+    void addOther(const QString& fileName);
+    bool loadScript(const QString& fileName);
+    bool saveScript(const QString& fileName);
+    bool loadSheet(const QString& sheetName);
+    bool saveSheet(const QString& sheetName);
+    bool loadAllScript();
+    bool saveAllScript();
+    bool loadAllSheet();
+    bool saveAllSheet();
 
 private slots:
     void pushClickedItem(QTreeWidgetItem *item, int column);
@@ -166,12 +93,16 @@ private:
     QTreeWidgetItem *sheetTree;
     QTreeWidgetItem *otherTree;
     QFileSystemWatcher *dirWatcher;
+    QHash<QString, ScriptInfo> scriptList;
+    QHash<QString, SheetInfo> sheetList;
+    QHash<QString, OtherInfo> otherList;
 
     QMenu *normalMenu;
 
 signals:
-    void scriptSelected(const QString& fileName, ReTextEdit *editor, QProcess *process);
-    void sheetSelected(const QString& fileName, ReTableWidget *sheet);
+    void scriptSelected(const QString& fileName, const ScriptInfo& info);
+    void sheetSelected(const QString& fileName, const SheetInfo& info);
+    void otherSelected(const QString& fileName, const OtherInfo& info);
 };
 
 #endif // FILETREE_H

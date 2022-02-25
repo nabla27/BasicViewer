@@ -1,144 +1,13 @@
 #include "refiletree.h"
 
-QString ScriptList::format = ".txt";
-void ScriptList::addScript(QTreeWidgetItem *parent, const QString& fileName)
-{
-    /* ファイルツリーへの追加 */
-    QTreeWidgetItem *item = new QTreeWidgetItem(parent);
-    item->setText(0, fileName);
-
-    /* リストへの追加 */
-    fileList.insert(fileName, new ScriptInfo(new QProcess(), new ReTextEdit()));
-}
-
-bool ScriptList::loadScript(const QString &folderPath, const QString &fileName)
-{
-    const QString text = readFileTxt(folderPath + fileName);
-
-    if(text == "\0") return false;
-
-    fileList.value(fileName)->textEditor->setPlainText(text);
-
-    return true;
-}
-
-bool ScriptList::loadAllScript(const QString &folderPath)
-{
-    const QList<QString> list = fileList.keys();
-    for(const QString& fileName : list)
-    {
-        const bool success = loadScript(folderPath, fileName);
-        if(!success) return false;
-    }
-
-    return true;
-}
-
-bool ScriptList::saveScript(const QString &folderPath, const QString &fileName)
-{
-    if(!fileList.contains(fileName)) return false;
-
-    return toFileTxt(folderPath + fileName, fileList.value(fileName)->textEditor->toPlainText());
-}
-
-bool ScriptList::saveAllScript(const QString &folderPath)
-{
-    const QList<QString> list = fileList.keys();
-    for(const QString& fileName : list)
-    {
-        const bool success = saveScript(folderPath, fileName);
-        if(!success) return false;
-    }
-
-    return true;
-}
 
 
 
-
-
-
-
-QString SheetList::format = ".csv";
-void SheetList::addSheet(QTreeWidgetItem *parent, const QString &fileName)
-{
-    /* ファイルツリーへの追加 */
-    QTreeWidgetItem *item = new QTreeWidgetItem(parent);
-    item->setText(0, fileName);
-
-    /* リストへの追加 */
-    fileList.insert(fileName, new ReTableWidget());
-}
-
-bool SheetList::loadSheet(const QString &folderPath, const QString &fileName)
-{
-    fileList.value(fileName)->setData<QString>(readFileCsv(folderPath + fileName));
-
-    return true;
-}
-
-bool SheetList::loadAllSheet(const QString &folderPath)
-{
-    const QList<QString> list = fileList.keys();
-    for(const QString& fileName : list)
-        loadSheet(folderPath, fileName);
-
-    return true;
-}
-
-bool SheetList::saveSheet(const QString &folderPath, const QString &fileName)
-{
-    if(!fileList.contains(fileName)) return false;
-
-    return toFileCsv(folderPath + fileName, fileList.value(fileName)->getData<QString>());
-}
-
-bool SheetList::saveAllSheet(const QString &folderPath)
-{
-    const QList<QString> list = fileList.keys();
-    for(const QString& fileName : list)
-    {
-        const bool success = saveSheet(folderPath, fileName);
-        if(!success) return false;
-    }
-
-    return true;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-void OtherList::addOther(QTreeWidgetItem *parent, const QString &fileName)
-{
-    /* ファイルツリーへの追加 */
-    QTreeWidgetItem *item = new QTreeWidgetItem(parent);
-    item->setText(0, fileName);
-
-    /* リストへの追加 */
-    fileList.insert(fileName);
-}
-
-
-
-
-
-
-
-
-
-
-
+QString ScriptInfo::format = ".txt";
+QString SheetInfo::format = ".csv";
 
 ReFileTree::ReFileTree(QWidget *parent)
-    : QTreeWidget(parent), scriptList(parent), sheetList(parent), otherList(parent)
+    : QTreeWidget(parent)/*, scriptList(parent), sheetList(parent), otherList(parent)*/
 {
     /* 右クリックメニューの設定 */
     setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
@@ -191,18 +60,18 @@ void ReFileTree::updateFileTree()
     {
         const QString fileName = fileInfo.fileName();
 
-        if(fileName.contains(scriptList.format) && !scriptList.isContains(fileName)){
-            scriptList.addScript(scriptTree, fileName);
-            scriptList.loadScript(folderPath, fileName);
+        if(fileName.contains(ScriptInfo::format) && !scriptList.contains(fileName)){
+            addScript(fileName);
+            loadScript(fileName);
         }
-        else if(fileName.contains(sheetList.format) && !sheetList.isContains(fileName)){
-            sheetList.addSheet(sheetTree, fileName);
-            sheetList.loadSheet(folderPath, fileName);
+        else if(fileName.contains(SheetInfo::format) && !sheetList.contains(fileName)){
+            addSheet(fileName);
+            loadSheet(fileName);
         }
         else if(fileName == "." || fileName == "..")
             continue;
-        else if(!otherList.isContains(fileName) && !fileName.contains(scriptList.format) && !fileName.contains(sheetList.format))
-            otherList.addOther(otherTree, fileName);
+        else if(!otherList.contains(fileName) && !fileName.contains(ScriptInfo::format) && !fileName.contains(SheetInfo::format))
+            addOther(fileName);
         else
             continue;
     }
@@ -226,17 +95,14 @@ void ReFileTree::pushClickedItem(QTreeWidgetItem *item, int column)
     const QString fileName = item->text(0);
 
     if(folderName == "Script")
-    {
-        emit scriptSelected(fileName,
-                            scriptList.getScriptInfo(fileName)->textEditor,
-                            scriptList.getScriptInfo(fileName)->process);
-    }
+        emit scriptSelected(fileName, scriptList.value(fileName));
     else if(folderName == "Sheet")
-    {
-        emit sheetSelected(fileName,
-                           sheetList.getSheet(fileName));
-    }
+        emit sheetSelected(fileName, sheetList.value(fileName));
+    else if(folderName == "Other")
+        emit otherSelected(fileName, otherList.value(fileName));
 }
+
+
 
 void ReFileTree::onCustomContextMenu(const QPoint& point)
 {
@@ -246,6 +112,112 @@ void ReFileTree::onCustomContextMenu(const QPoint& point)
     normalMenu->exec(viewport()->mapToGlobal(point));
 }
 
+void ReFileTree::addScript(const QString& fileName)
+{
+    /* ツリーへ追加 */
+    QTreeWidgetItem *item = new QTreeWidgetItem(scriptTree);
+    item->setText(0, fileName);
+
+    /* リストへの追加 */
+    scriptList.insert(fileName, ScriptInfo(new QProcess(), new ReTextEdit()));
+}
+
+void ReFileTree::addSheet(const QString& fileName)
+{
+    /* ツリーへ追加 */
+    QTreeWidgetItem *item = new QTreeWidgetItem(sheetTree);
+    item->setText(0, fileName);
+
+    /* リストへの追加 */
+    sheetList.insert(fileName, SheetInfo(new ReTableWidget()));
+}
+
+void ReFileTree::addOther(const QString& fileName)
+{
+    /* ツリーへの追加 */
+    QTreeWidgetItem *item = new QTreeWidgetItem(otherTree);
+    item->setText(0, fileName);
+
+    /* リストへの追加 */
+    otherList.insert(fileName, OtherInfo());
+}
+
+bool ReFileTree::loadScript(const QString& fileName)
+{
+    const QString text = readFileTxt(folderPath + fileName);
+
+    if(text == "\0") return false;
+
+    scriptList.value(fileName).editor->setPlainText(text);
+
+    return true;
+}
+
+bool ReFileTree::loadAllScript()
+{
+    const QStringList list = scriptList.keys();
+    for(const QString& fileName : list)
+    {
+        const bool success = loadScript(fileName);
+        if(!success) return false;
+    }
+
+    return true;
+}
+
+bool ReFileTree::saveScript(const QString& fileName)
+{
+    if(!scriptList.contains(fileName)) return false;
+
+    return toFileTxt(folderPath + fileName, scriptList.value(fileName).editor->toPlainText());
+}
+
+bool ReFileTree::saveAllScript()
+{
+    const QStringList list = scriptList.keys();
+    for(const QString& fileName : list)
+    {
+        const bool success = saveScript(fileName);
+        if(!success) return false;
+    }
+
+    return true;
+}
+
+bool ReFileTree::loadSheet(const QString& fileName)
+{
+    sheetList.value(fileName).table->setData<QString>(readFileCsv(folderPath + fileName));
+
+    return true;
+}
+
+bool ReFileTree::loadAllSheet()
+{
+    const QStringList list = sheetList.keys();
+    for(const QString& fileName : list)
+        loadSheet(fileName);
+
+    return true;
+}
+
+bool ReFileTree::saveSheet(const QString& fileName)
+{
+    if(!sheetList.contains(fileName)) return false;
+
+    return toFileCsv(folderPath + fileName, sheetList.value(fileName).table->getData<QString>());
+}
+
+bool ReFileTree::saveAllSheet()
+{
+    const QStringList list = sheetList.keys();
+    for(const QString& fileName : list)
+    {
+        const bool success = saveSheet(fileName);
+        if(!success) return false;
+    }
+
+    return true;
+}
 
 
 

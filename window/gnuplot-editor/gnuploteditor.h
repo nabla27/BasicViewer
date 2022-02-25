@@ -27,8 +27,9 @@ private:
     void initializeLayout();
 
 private slots:
-    void setEditorWidget(const QString& fileName, ReTextEdit *editor, QProcess *process);
-    void setSheetWidget(const QString& fileName, ReTableWidget *sheet);
+    void setEditorWidget(const QString& fileName, const ScriptInfo& info);
+    void setSheetWidget(const QString& fileName, const SheetInfo& info);
+    void setOtherWidget(const QString& fileName, const OtherInfo& info);
     void setFolderPath(const QString& folderPath);
     void executeGnuplot();
     void receiveGnuplotStdOut(const QString& text);

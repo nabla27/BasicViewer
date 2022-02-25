@@ -16,6 +16,7 @@ GnuplotEditor::GnuplotEditor(QWidget *parent)
 
     connect(fileTree, &ReFileTree::scriptSelected, this, &GnuplotEditor::setEditorWidget);
     connect(fileTree, &ReFileTree::sheetSelected, this, &GnuplotEditor::setSheetWidget);
+    connect(fileTree, &ReFileTree::otherSelected, this, &GnuplotEditor::setOtherWidget);
     connect(gnuplot, &ReGnuplot::standardOutputPassed, this, &GnuplotEditor::receiveGnuplotStdOut);
     connect(gnuplot, &ReGnuplot::standardErrorPassed, this, &GnuplotEditor::receiveGnuplotStdErr);
 }
@@ -39,8 +40,6 @@ void GnuplotEditor::initializeMenuBar()
     menuBar->addMenu(editorMenu);
     menuBar->addMenu(helpMenu);
     menuBar->addAction(blank1);
-    QAction *a = menuBar->addSeparator();
-    menuBar->insertSeparator(a);
     menuBar->addMenu(scriptMenu);
     menuBar->addMenu(sheetMenu);
     menuBar->addAction(blank2);
@@ -110,17 +109,17 @@ void GnuplotEditor::initializeLayout()
     connect(displayTabDragBar, &HorizontalDragBar::barDraged, this, &GnuplotEditor::setDisplayTabHeight);
 }
 
-void GnuplotEditor::setEditorWidget(const QString& fileName, ReTextEdit *editor, QProcess *process)
+void GnuplotEditor::setEditorWidget(const QString& fileName, const ScriptInfo& info)
 {
     /* 前にセットされてたものは削除 */
     if(gnuplotWidget->widget(gnuplotWidget->currentIndex()) != nullptr)
         gnuplotWidget->removeWidget(gnuplotWidget->currentWidget());
 
     /* 新しくセット */
-    gnuplotWidget->addWidget(editor);       //editorのparentは自動的にgnuplotWidgetとなる
+    gnuplotWidget->addWidget(info.editor);       //editorのparentは自動的にgnuplotWidgetとなる
 
     /* プロセスをセット */
-    gnuplotProcess = process;
+    gnuplotProcess = info.process;
 
     /* タブをGnuplotに設定 */
     editorTab->setCurrentIndex(0);
@@ -129,14 +128,14 @@ void GnuplotEditor::setEditorWidget(const QString& fileName, ReTextEdit *editor,
     scriptMenu->setTitle(fileName);
 }
 
-void GnuplotEditor::setSheetWidget(const QString& fileName, ReTableWidget *sheet)
+void GnuplotEditor::setSheetWidget(const QString& fileName, const SheetInfo& info)
 {
     /* 前にセットされてたものは削除 */
     if(sheetWidget->widget(sheetWidget->currentIndex()) != nullptr)
         sheetWidget->removeWidget(sheetWidget->currentWidget());
 
     /* 新しくセット */
-    sheetWidget->addWidget(sheet);
+    sheetWidget->addWidget(info.table);
 
     /* タブをSheetに設定 */
     editorTab->setCurrentIndex(1);
@@ -145,10 +144,14 @@ void GnuplotEditor::setSheetWidget(const QString& fileName, ReTableWidget *sheet
     sheetMenu->setTitle(fileName);
 }
 
+void GnuplotEditor::setOtherWidget(const QString& fileName, const OtherInfo& info)
+{
+
+}
+
 void GnuplotEditor::setFolderPath(const QString& folderPath)
 {
     fileTree->setFolderPath(folderPath);
-    fileTree->loadFileTree();
 
     gnuplot->setWorkingPath(folderPath);
 }
@@ -163,8 +166,8 @@ void GnuplotEditor::executeGnuplot()
     qobject_cast<ReTextEdit*>(gnuplotWidget->widget(0))->highlightLine();
 
     /* ファイルの保存 */
-    fileTree->scriptList.saveScript(fileTree->getFolderPath(), scriptMenu->title());
-    fileTree->scriptList.saveScript(fileTree->getFolderPath(), sheetMenu->title());
+    fileTree->saveScript(scriptMenu->title());
+    fileTree->saveSheet(sheetMenu->title());
 
     /* gnuplotにコマンドを渡す */
     gnuplot->exc(gnuplotProcess, QList<QString>() << "load '" + scriptMenu->title() + "'");
