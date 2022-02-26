@@ -27,9 +27,10 @@ private:
     void initializeLayout();
 
 private slots:
-    void setEditorWidget(const QString& fileName, const ScriptInfo& info);
-    void setSheetWidget(const QString& fileName, const SheetInfo& info);
-    void setOtherWidget(const QString& fileName, const OtherInfo& info);
+    void setEditorWidget(const QString& fileName, const ScriptInfo* info);
+    void setSheetWidget(const QString& fileName, const SheetInfo* info);
+    void setOtherWidget(const QString& fileName, const OtherInfo* info);
+    void setMenuBarTitle(const QString& oldName, const QString& newName);
     void setFolderPath(const QString& folderPath);
     void executeGnuplot();
     void receiveGnuplotStdOut(const QString& text);

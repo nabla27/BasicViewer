@@ -28,6 +28,7 @@ struct ScriptInfo
 public:
     ScriptInfo(QProcess *process = nullptr, ReTextEdit *editor = nullptr)
         : process(process), editor(editor) {}
+    ~ScriptInfo() { delete process; process = nullptr; delete editor; editor = nullptr; }
     QProcess *process;
     ReTextEdit *editor;
     static QString format;
@@ -37,6 +38,7 @@ struct SheetInfo
 {
 public:
     SheetInfo(ReTableWidget *table = nullptr) : table(table) {}
+    ~SheetInfo() { delete table; table = nullptr; }
     ReTableWidget *table;
     static QString format;
 };
@@ -45,6 +47,7 @@ struct OtherInfo
 {
 public:
     OtherInfo() {}
+    ~OtherInfo() {}
 };
 
 
@@ -66,8 +69,9 @@ class ReFileTree : public QTreeWidget
 
 public:
     ReFileTree(QWidget *parent);
+    ~ReFileTree();
 
-public:
+public slots:
     void loadFileTree();
     void updateFileTree();
     void setFolderPath(const QString& folderPath);
@@ -83,6 +87,16 @@ public:
     bool loadAllSheet();
     bool saveAllSheet();
 
+    void addFile();
+    void newFile();
+    void renameFile();
+    void removeFile();
+    void exportFile();
+
+private:
+    void initializeContextMenu();
+    bool containsFile(const QString& fileName) const { return scriptList.contains(fileName) || sheetList.contains(fileName) || otherList.contains(fileName); }
+
 private slots:
     void pushClickedItem(QTreeWidgetItem *item, int column);
     void onCustomContextMenu(const QPoint& point);
@@ -93,16 +107,20 @@ private:
     QTreeWidgetItem *sheetTree;
     QTreeWidgetItem *otherTree;
     QFileSystemWatcher *dirWatcher;
-    QHash<QString, ScriptInfo> scriptList;
-    QHash<QString, SheetInfo> sheetList;
-    QHash<QString, OtherInfo> otherList;
+    QHash<QString, ScriptInfo*> scriptList;
+    QHash<QString, SheetInfo*> sheetList;
+    QHash<QString, OtherInfo*> otherList;
 
     QMenu *normalMenu;
 
 signals:
-    void scriptSelected(const QString& fileName, const ScriptInfo& info);
-    void sheetSelected(const QString& fileName, const SheetInfo& info);
-    void otherSelected(const QString& fileName, const OtherInfo& info);
+    void scriptSelected(const QString& fileName, const ScriptInfo* info);
+    void sheetSelected(const QString& fileName, const SheetInfo* info);
+    void otherSelected(const QString& fileName, const OtherInfo* info);
+    void fileNameChanged(const QString& oldName, const QString newName);
+    void scriptRemoved(const QString& fileName, const ScriptInfo* info);
+    void sheetRemoved(const QString& fileName, const SheetInfo* info);
+    void otherRemoved(const QString& fileName, const OtherInfo* info);
 };
 
 #endif // FILETREE_H

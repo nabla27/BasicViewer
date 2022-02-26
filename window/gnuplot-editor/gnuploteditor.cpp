@@ -17,13 +17,17 @@ GnuplotEditor::GnuplotEditor(QWidget *parent)
     connect(fileTree, &ReFileTree::scriptSelected, this, &GnuplotEditor::setEditorWidget);
     connect(fileTree, &ReFileTree::sheetSelected, this, &GnuplotEditor::setSheetWidget);
     connect(fileTree, &ReFileTree::otherSelected, this, &GnuplotEditor::setOtherWidget);
+    connect(fileTree, &ReFileTree::scriptRemoved, this, &GnuplotEditor::setEditorWidget);
+    connect(fileTree, &ReFileTree::sheetRemoved, this, &GnuplotEditor::setSheetWidget);
+    connect(fileTree, &ReFileTree::otherRemoved, this, &GnuplotEditor::setOtherWidget);
+    connect(fileTree, &ReFileTree::fileNameChanged, this, &GnuplotEditor::setMenuBarTitle);
     connect(gnuplot, &ReGnuplot::standardOutputPassed, this, &GnuplotEditor::receiveGnuplotStdOut);
     connect(gnuplot, &ReGnuplot::standardErrorPassed, this, &GnuplotEditor::receiveGnuplotStdErr);
 }
 
 void GnuplotEditor::initializeMenuBar()
 {
-    if(menuBar() != nullptr) delete menuBar();
+    if(menuBar()) delete menuBar();
 
     WindowMenuBar *menuBar = new WindowMenuBar(this);
 
@@ -31,8 +35,8 @@ void GnuplotEditor::initializeMenuBar()
     EditorMenu *const editorMenu = new EditorMenu("Editor", menuBar);
     HelpMenu *const helpMenu = new HelpMenu("Help", menuBar);
     QAction *const blank1 = new QAction("         ", menuBar);
-    scriptMenu = new ScriptMenu("Script", menuBar);
-    sheetMenu = new SheetMenu("Sheet", menuBar);
+    scriptMenu = new ScriptMenu("      ", menuBar);
+    sheetMenu = new SheetMenu("     ", menuBar);
     QAction *const blank2 = new QAction("         ", menuBar);
     QAction *const runAction = new QAction("&Run", menuBar);
 
@@ -52,7 +56,7 @@ void GnuplotEditor::initializeMenuBar()
 
 void GnuplotEditor::initializeLayout()
 {
-    if(centralWidget() != nullptr) delete centralWidget();
+    if(centralWidget()) delete centralWidget();
 
     setCentralWidget(new QWidget(this));
 
@@ -109,17 +113,22 @@ void GnuplotEditor::initializeLayout()
     connect(displayTabDragBar, &HorizontalDragBar::barDraged, this, &GnuplotEditor::setDisplayTabHeight);
 }
 
-void GnuplotEditor::setEditorWidget(const QString& fileName, const ScriptInfo& info)
+void GnuplotEditor::setEditorWidget(const QString& fileName, const ScriptInfo* info)
 {
+    if(!info){  //infoがnullptr(ツリーから消された場合など)なら
+        if(scriptMenu->title() == fileName) scriptMenu->setTitle("      ");
+        return;
+    }
+
     /* 前にセットされてたものは削除 */
-    if(gnuplotWidget->widget(gnuplotWidget->currentIndex()) != nullptr)
+    if(gnuplotWidget->widget(gnuplotWidget->currentIndex()))
         gnuplotWidget->removeWidget(gnuplotWidget->currentWidget());
 
     /* 新しくセット */
-    gnuplotWidget->addWidget(info.editor);       //editorのparentは自動的にgnuplotWidgetとなる
+    gnuplotWidget->addWidget(info->editor);       //editorのparentは自動的にgnuplotWidgetとなる
 
     /* プロセスをセット */
-    gnuplotProcess = info.process;
+    gnuplotProcess = info->process;
 
     /* タブをGnuplotに設定 */
     editorTab->setCurrentIndex(0);
@@ -128,14 +137,19 @@ void GnuplotEditor::setEditorWidget(const QString& fileName, const ScriptInfo& i
     scriptMenu->setTitle(fileName);
 }
 
-void GnuplotEditor::setSheetWidget(const QString& fileName, const SheetInfo& info)
+void GnuplotEditor::setSheetWidget(const QString& fileName, const SheetInfo* info)
 {
+    if(!info){ //infoがnullptr(ツリーから消された場合など)
+        if(sheetMenu->title() == fileName) sheetMenu->setTitle("     ");
+        return;
+    }
+
     /* 前にセットされてたものは削除 */
-    if(sheetWidget->widget(sheetWidget->currentIndex()) != nullptr)
+    if(sheetWidget->widget(sheetWidget->currentIndex()))
         sheetWidget->removeWidget(sheetWidget->currentWidget());
 
     /* 新しくセット */
-    sheetWidget->addWidget(info.table);
+    sheetWidget->addWidget(info->table);
 
     /* タブをSheetに設定 */
     editorTab->setCurrentIndex(1);
@@ -144,9 +158,15 @@ void GnuplotEditor::setSheetWidget(const QString& fileName, const SheetInfo& inf
     sheetMenu->setTitle(fileName);
 }
 
-void GnuplotEditor::setOtherWidget(const QString& fileName, const OtherInfo& info)
+void GnuplotEditor::setOtherWidget(const QString& fileName, const OtherInfo* info)
 {
 
+}
+
+void GnuplotEditor::setMenuBarTitle(const QString& oldName, const QString& newName)
+{
+    if(scriptMenu->title() == oldName) scriptMenu->setTitle(newName);
+    else if(sheetMenu->title() == oldName) sheetMenu->setTitle(newName);
 }
 
 void GnuplotEditor::setFolderPath(const QString& folderPath)

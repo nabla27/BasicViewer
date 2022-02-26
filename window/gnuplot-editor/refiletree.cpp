@@ -2,7 +2,7 @@
 
 
 
-
+//formatを変更する際には、editorやtableに変換できるようなものや、変換する関数を用意する
 QString ScriptInfo::format = ".txt";
 QString SheetInfo::format = ".csv";
 
@@ -11,8 +11,8 @@ ReFileTree::ReFileTree(QWidget *parent)
 {
     /* 右クリックメニューの設定 */
     setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
-    normalMenu = new QMenu(this);
     connect(this, &ReFileTree::customContextMenuRequested, this, &ReFileTree::onCustomContextMenu);
+    initializeContextMenu();
 
     /* ファイルの変更があれば更新するようにする */
     dirWatcher = new QFileSystemWatcher(QStringList() << folderPath);
@@ -22,6 +22,40 @@ ReFileTree::ReFileTree(QWidget *parent)
     loadFileTree();
 
     connect(this, &ReFileTree::itemDoubleClicked, this, &ReFileTree::pushClickedItem);
+}
+
+ReFileTree::~ReFileTree()
+{
+    saveAllScript();
+    saveAllSheet();
+    foreach(ScriptInfo *info, scriptList.values()) delete info;
+    foreach(SheetInfo *info, sheetList.values()) delete info;
+    foreach(OtherInfo *info, otherList.values()) delete info;
+}
+
+void ReFileTree::initializeContextMenu()
+{
+    if(!normalMenu) delete normalMenu;
+
+    normalMenu = new QMenu(this);
+
+    QAction *const actAdd = new QAction("Add", normalMenu);
+    QAction *const actNew = new QAction("New", normalMenu);
+    QAction *const actRename = new QAction("Rename", normalMenu);
+    QAction *const actRemove = new QAction("Remove", normalMenu);
+    QAction *const actExport = new QAction("Export", normalMenu);
+
+    normalMenu->addAction(actAdd);
+    normalMenu->addAction(actNew);
+    normalMenu->addAction(actRename);
+    normalMenu->addAction(actRemove);
+    normalMenu->addAction(actExport);
+
+    connect(actAdd, &QAction::triggered, this, &ReFileTree::addFile);
+    connect(actNew, &QAction::triggered, this, &ReFileTree::newFile);
+    connect(actRename, &QAction::triggered, this, &ReFileTree::renameFile);
+    connect(actRemove, &QAction::triggered, this, &ReFileTree::removeFile);
+    connect(actExport, &QAction::triggered, this, &ReFileTree::exportFile);
 }
 
 void ReFileTree::loadFileTree()
@@ -119,7 +153,7 @@ void ReFileTree::addScript(const QString& fileName)
     item->setText(0, fileName);
 
     /* リストへの追加 */
-    scriptList.insert(fileName, ScriptInfo(new QProcess(), new ReTextEdit()));
+    scriptList.insert(fileName, new ScriptInfo(new QProcess(), new ReTextEdit()));
 }
 
 void ReFileTree::addSheet(const QString& fileName)
@@ -129,7 +163,7 @@ void ReFileTree::addSheet(const QString& fileName)
     item->setText(0, fileName);
 
     /* リストへの追加 */
-    sheetList.insert(fileName, SheetInfo(new ReTableWidget()));
+    sheetList.insert(fileName, new SheetInfo(new ReTableWidget()));
 }
 
 void ReFileTree::addOther(const QString& fileName)
@@ -139,7 +173,7 @@ void ReFileTree::addOther(const QString& fileName)
     item->setText(0, fileName);
 
     /* リストへの追加 */
-    otherList.insert(fileName, OtherInfo());
+    otherList.insert(fileName, new OtherInfo());
 }
 
 bool ReFileTree::loadScript(const QString& fileName)
@@ -148,15 +182,14 @@ bool ReFileTree::loadScript(const QString& fileName)
 
     if(text == "\0") return false;
 
-    scriptList.value(fileName).editor->setPlainText(text);
+    scriptList.value(fileName)->editor->setPlainText(text);
 
     return true;
 }
 
 bool ReFileTree::loadAllScript()
 {
-    const QStringList list = scriptList.keys();
-    for(const QString& fileName : list)
+    foreach(const QString& fileName, scriptList.keys())
     {
         const bool success = loadScript(fileName);
         if(!success) return false;
@@ -169,13 +202,12 @@ bool ReFileTree::saveScript(const QString& fileName)
 {
     if(!scriptList.contains(fileName)) return false;
 
-    return toFileTxt(folderPath + fileName, scriptList.value(fileName).editor->toPlainText());
+    return toFileTxt(folderPath + fileName, scriptList.value(fileName)->editor->toPlainText());
 }
 
 bool ReFileTree::saveAllScript()
 {
-    const QStringList list = scriptList.keys();
-    for(const QString& fileName : list)
+    foreach(const QString& fileName, scriptList.keys())
     {
         const bool success = saveScript(fileName);
         if(!success) return false;
@@ -186,15 +218,14 @@ bool ReFileTree::saveAllScript()
 
 bool ReFileTree::loadSheet(const QString& fileName)
 {
-    sheetList.value(fileName).table->setData<QString>(readFileCsv(folderPath + fileName));
+    sheetList.value(fileName)->table->setData<QString>(readFileCsv(folderPath + fileName));
 
     return true;
 }
 
 bool ReFileTree::loadAllSheet()
 {
-    const QStringList list = sheetList.keys();
-    for(const QString& fileName : list)
+    foreach(const QString& fileName, sheetList.keys())
         loadSheet(fileName);
 
     return true;
@@ -204,13 +235,12 @@ bool ReFileTree::saveSheet(const QString& fileName)
 {
     if(!sheetList.contains(fileName)) return false;
 
-    return toFileCsv(folderPath + fileName, sheetList.value(fileName).table->getData<QString>());
+    return toFileCsv(folderPath + fileName, sheetList.value(fileName)->table->getData<QString>());
 }
 
 bool ReFileTree::saveAllSheet()
 {
-    const QStringList list = sheetList.keys();
-    for(const QString& fileName : list)
+    foreach(const QString& fileName, sheetList.keys())
     {
         const bool success = saveSheet(fileName);
         if(!success) return false;
@@ -219,6 +249,191 @@ bool ReFileTree::saveAllSheet()
     return true;
 }
 
+/* 既存のファイルをインポートする */
+void ReFileTree::addFile()
+{
+    /* ファイルダイアログの表示とファイル名の取得 */
+    const QStringList filePath = QFileDialog::getOpenFileNames(this);  //選択された(複数可)ファイルのフルパスを取得
+
+    /* 選択されたファイルを一つずつ処理 */
+    for(const QString& fullPath : filePath)
+    {
+        const QString fileName = (fullPath.split('/')).constLast();    //選択されたファイル名
+
+        if(!containsFile(fileName))                                    //もし同名のファイルがなければ
+        {
+            const bool success = QFile::copy(fullPath, folderPath + fileName);                         //コピーしてもってくる
+            if(!success) { QMessageBox::critical(this, "Error", "could not copy the " + fileName); }   //コピー失敗時のエラーメッセージ
+        }
+        else                                                           //もし同名のファイルがあれば、エラーメッセージの表示
+            QMessageBox::critical(this, "Error", "Same name \"" + fileName + "\" already exists!!");
+    }
+}
+
+void ReFileTree::newFile()
+{
+    /* 追加するファイルの項目名(Script or Sheet or Other)を取得 */
+    QString parentTitle;
+    if(this->selectedItems().takeAt(0)->parent() == nullptr)               //項目名がクリックされた場合(=その親treeはなし)
+        parentTitle = this->selectedItems().takeAt(0)->text(0);
+    else                                                                   //ファイル名がクリックされた場合(=その親treeが存在)
+        parentTitle = this->selectedItems().takeAt(0)->parent()->text(0);  //親treeの名前を取得
+
+    /* デフォルトで表示するテキスト */
+    QString defaultStr;
+    if(parentTitle == "Script") defaultStr = ScriptInfo::format;
+    else if(parentTitle == "Sheet") defaultStr = SheetInfo::format;
+
+    /* 新規ファイルの名前を入力するダイアログを表示 */
+    QString newFileName;
+    for(;;)                                                            //有効なファイル名が入力されるまでループ
+    {
+        bool isok = false;
+        newFileName = QInputDialog::getText(this, "FileTree", "new file name", QLineEdit::EchoMode::Normal, defaultStr, &isok);
+
+        if(!isok || newFileName.isEmpty()) return;                     //×ボタンでnewFileキャンセルされたら抜ける
+
+        if(!newFileName.contains('.'))                                 //ファイル名に拡張子が含まれていない場合、エラーメッセージを表示
+            QMessageBox::critical(this, "Error", "extension is not included.");
+        else if(containsFile(newFileName))                             //すでに同じ名前のファイルがあればエラーメッセージを表示
+            QMessageBox::critical(this, "Error", "Same name \"" + newFileName + "\" already exists!!");
+        else
+            break;                                                     //同じ名前がなければ決定
+    }
+
+    /* ファイルの作成 */
+    QFile file(folderPath + newFileName);
+    const bool success = file.open(QIODevice::OpenModeFlag::NewOnly);  //ファイルの作成
+
+    /* ファイルをリストへ追加 */
+    if(success)
+    {
+        if(newFileName.contains(ScriptInfo::format))
+            addScript(newFileName);
+        else if(newFileName.contains(SheetInfo::format))
+            addSheet(newFileName);
+        else
+            addOther(newFileName);
+    }
+    else //ファイルの作成に失敗したらエラーメッセージ
+        QMessageBox::critical(this, "Error", "could not create file.");
+}
+
+void ReFileTree::renameFile()
+{
+    /* ファイル名でなく、項目名(Script,Sheet,Other)が押された場合は無視 */
+    if(selectedItems().takeAt(0)->parent() == nullptr) return;
+
+    /* renameするファイルの元の名前 */
+    const QString oldFileName = selectedItems().takeAt(0)->text(0);
+
+    bool isok = false;
+    const QString message = "new file name";
+    QString newFileName;
+
+    /* ファイル名を入力するダイアログの表示。有効な名前が入力されるまでループ */
+    for(;;)
+    {
+        newFileName = QInputDialog::getText(this, "rename", message, QLineEdit::EchoMode::Normal, oldFileName, &isok);
+
+        if(!isok || newFileName.isEmpty()) return;                     //×などウィンドウが閉じられたら中断
+
+        if(!newFileName.contains('.'))                                 //拡張子が含まれていない場合はエラー
+            QMessageBox::critical(this, "Error", "extension is not included.");
+        else if(containsFile(newFileName))                             //すでに同じ名前があればエラー
+            QMessageBox::critical(this, "Error", "Same name \"" + newFileName + "\" already exists!!");
+        else if(oldFileName.mid(oldFileName.lastIndexOf('.')) != newFileName.mid(newFileName.lastIndexOf('.')))  //拡張子が変わればエラー
+            QMessageBox::critical(this, "Error", "extension is changed.");
+        else
+            break;
+    }
+
+    /* ディレクトリのファイル名とfileTreeのファイル名を変更 */
+    QDir dir(folderPath);
+    dir.rename(oldFileName, newFileName);
+    selectedItems().takeAt(0)->setText(0, newFileName);
+
+    /* リストの変更 */
+    if(newFileName.contains(ScriptInfo::format)){
+        ScriptInfo *info = scriptList.take(oldFileName);
+        scriptList.insert(newFileName, info);
+    }
+    else if(newFileName.contains(SheetInfo::format)){
+        SheetInfo *info = sheetList.take(oldFileName);
+        sheetList.insert(newFileName, info);
+    }
+    else{
+        OtherInfo *info = otherList.take(oldFileName);
+        otherList.insert(newFileName, info);
+    }
+
+    emit fileNameChanged(oldFileName, newFileName);
+}
+
+void ReFileTree::removeFile()
+{
+    /* ファイル名ではなく、項目名(Script,Sheet,Other)が選択された場合は無視 */
+    if(selectedItems().takeAt(0)->parent() == nullptr) return;
+
+    const QString parentTitle = selectedItems().takeAt(0)->parent()->text(0);                      //選択されたファイルの項目名
+    const QString selectedFile = selectedItems().takeAt(0)->text(0);                               //選択されたファイルの名前
+    const QString message = "Are you want to remove this \"" + selectedFile + "\" ??   ";          //ダイアログメッセージ
+
+    /* 確認のためのメッセージボックス */
+    QMessageBox::StandardButton reply = QMessageBox::question(this, "remove", message, QMessageBox::Yes | QMessageBox::No);
+
+    /* 確認してNoまたは×ボタンが押されたらなら無効 */
+    if(reply == QMessageBox::No) return;
+
+    /* リストの削除 */
+    if(parentTitle == "Script"){
+        delete scriptList.value(selectedFile);
+        scriptList.remove(selectedFile);
+        emit scriptRemoved(selectedFile, scriptList.value(selectedFile));
+    }
+    else if(parentTitle == "Sheet"){
+        delete sheetList.value(selectedFile);
+        sheetList.remove(selectedFile);
+        emit sheetRemoved(selectedFile, sheetList.value(selectedFile));
+    }
+    else if(parentTitle == "Other"){
+        delete otherList.value(selectedFile);
+        otherList.remove(selectedFile);
+        emit otherRemoved(selectedFile, otherList.value(selectedFile));
+    }
+
+    /* ファイルの削除 */
+    QDir dir(folderPath);
+    dir.remove(selectedFile);
+
+    /* リストからファイルを削除 */
+    selectedItems().takeAt(0)->parent()->removeChild(selectedItems().takeAt(0));
+}
+
+void ReFileTree::exportFile()
+{
+    /* ファイル名以外が選択された場合は無視 */
+    if(selectedItems().takeAt(0)->parent() == nullptr) return;
+
+    /* ディレクトリダイアログの表示と保存するフォルダーのフルパス取得 */
+    const QString pathForSave = QFileDialog::getExistingDirectory(this);
+
+    /* ディレクトリが選択されなければ無効 */
+    if(pathForSave.isEmpty()) return;
+
+    /* 選択されたファイルの名前 */
+    const QString fileName = this->selectedItems().takeAt(0)->text(0);
+
+    /* コピーする前に保存 */
+    if(fileName.contains(ScriptInfo::format)) saveScript(fileName);
+    else if(fileName.contains(SheetInfo::format)) saveSheet(fileName);
+
+    /* ファイルをコピーして保存 */
+    QFile::copy(folderPath + fileName, pathForSave + "/" + fileName);
+
+    /* ファイルの削除とその確認 */
+    removeFile();
+}
 
 
 
