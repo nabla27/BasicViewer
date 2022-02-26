@@ -3,8 +3,8 @@
 
 
 //formatを変更する際には、editorやtableに変換できるようなものや、変換する関数を用意する
-QString ScriptInfo::format = ".txt";
-QString SheetInfo::format = ".csv";
+QStringList ScriptInfo::formatList = QStringList() << ".txt";
+QStringList SheetInfo::formatList = QStringList() << ".csv";
 
 ReFileTree::ReFileTree(QWidget *parent)
     : QTreeWidget(parent)/*, scriptList(parent), sheetList(parent), otherList(parent)*/
@@ -94,17 +94,19 @@ void ReFileTree::updateFileTree()
     {
         const QString fileName = fileInfo.fileName();
 
-        if(fileName.contains(ScriptInfo::format) && !scriptList.contains(fileName)){
+        if(ScriptInfo::isValidFormat(fileName) && !scriptList.contains(fileName)){
             addScript(fileName);
             loadScript(fileName);
         }
-        else if(fileName.contains(SheetInfo::format) && !sheetList.contains(fileName)){
+        else if(SheetInfo::isValidFormat(fileName) && !sheetList.contains(fileName)){
             addSheet(fileName);
             loadSheet(fileName);
         }
         else if(fileName == "." || fileName == "..")
             continue;
-        else if(!otherList.contains(fileName) && !fileName.contains(ScriptInfo::format) && !fileName.contains(SheetInfo::format))
+        else if(!otherList.contains(fileName) &&
+                !ScriptInfo::isValidFormat(fileName) &&
+                !SheetInfo::isValidFormat(fileName))
             addOther(fileName);
         else
             continue;
@@ -281,8 +283,8 @@ void ReFileTree::newFile()
 
     /* デフォルトで表示するテキスト */
     QString defaultStr;
-    if(parentTitle == "Script") defaultStr = ScriptInfo::format;
-    else if(parentTitle == "Sheet") defaultStr = SheetInfo::format;
+    if(parentTitle == "Script") defaultStr = ScriptInfo::formatList.constFirst();
+    else if(parentTitle == "Sheet") defaultStr = SheetInfo::formatList.constFirst();
 
     /* 新規ファイルの名前を入力するダイアログを表示 */
     QString newFileName;
@@ -308,9 +310,9 @@ void ReFileTree::newFile()
     /* ファイルをリストへ追加 */
     if(success)
     {
-        if(newFileName.contains(ScriptInfo::format))
+        if(ScriptInfo::isValidFormat(newFileName))
             addScript(newFileName);
-        else if(newFileName.contains(SheetInfo::format))
+        else if(SheetInfo::isValidFormat(newFileName))
             addSheet(newFileName);
         else
             addOther(newFileName);
@@ -354,11 +356,11 @@ void ReFileTree::renameFile()
     selectedItems().takeAt(0)->setText(0, newFileName);
 
     /* リストの変更 */
-    if(newFileName.contains(ScriptInfo::format)){
+    if(ScriptInfo::isValidFormat(newFileName)){
         ScriptInfo *info = scriptList.take(oldFileName);
         scriptList.insert(newFileName, info);
     }
-    else if(newFileName.contains(SheetInfo::format)){
+    else if(SheetInfo::isValidFormat(newFileName)){
         SheetInfo *info = sheetList.take(oldFileName);
         sheetList.insert(newFileName, info);
     }
@@ -425,8 +427,8 @@ void ReFileTree::exportFile()
     const QString fileName = this->selectedItems().takeAt(0)->text(0);
 
     /* コピーする前に保存 */
-    if(fileName.contains(ScriptInfo::format)) saveScript(fileName);
-    else if(fileName.contains(SheetInfo::format)) saveSheet(fileName);
+    if(ScriptInfo::isValidFormat(fileName)) saveScript(fileName);
+    else if(SheetInfo::isValidFormat(fileName)) saveSheet(fileName);
 
     /* ファイルをコピーして保存 */
     QFile::copy(folderPath + fileName, pathForSave + "/" + fileName);

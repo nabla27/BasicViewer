@@ -29,9 +29,15 @@ public:
     ScriptInfo(QProcess *process = nullptr, ReTextEdit *editor = nullptr)
         : process(process), editor(editor) {}
     ~ScriptInfo() { delete process; process = nullptr; delete editor; editor = nullptr; }
+
+    static bool isValidFormat(const QString& fileName){
+        for(const QString& format : formatList) if(fileName.contains(format)) return true;
+        return false;
+    }
+
     QProcess *process;
     ReTextEdit *editor;
-    static QString format;
+    static QStringList formatList;
 };
 
 struct SheetInfo
@@ -39,8 +45,14 @@ struct SheetInfo
 public:
     SheetInfo(ReTableWidget *table = nullptr) : table(table) {}
     ~SheetInfo() { delete table; table = nullptr; }
+
+    static bool isValidFormat(const QString& fileName){
+        for(const QString& format : formatList) if(fileName.contains(format)) return true;
+        return false;
+    }
+
     ReTableWidget *table;
-    static QString format;
+    static QStringList formatList;
 };
 
 struct OtherInfo
