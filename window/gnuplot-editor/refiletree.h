@@ -95,14 +95,14 @@ public slots:
     void addScript(const QString& fileName);
     void addSheet(const QString& fileName);
     void addOther(const QString& fileName);
-    bool loadScript(const QString& fileName);
-    bool saveScript(const QString& fileName);
-    bool loadSheet(const QString& sheetName);
-    bool saveSheet(const QString& sheetName);
-    bool loadAllScript();
-    bool saveAllScript();
-    bool loadAllSheet();
-    bool saveAllSheet();
+    void loadScript(const QString& fileName);
+    void saveScript(const QString& fileName);
+    void loadSheet(const QString& sheetName);
+    void saveSheet(const QString& sheetName);
+    void loadAllScript();
+    void saveAllScript();
+    void loadAllSheet();
+    void saveAllSheet();
     void clearAllList();
 
     void addFile();

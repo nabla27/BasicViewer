@@ -188,7 +188,10 @@ void GnuplotEditor::setFolderPath(const QString& folderPath)
 void GnuplotEditor::executeGnuplot()
 {
     //ファイルが選ばれていない場合は無効
-    if(gnuplotWidget->count() < 1) return;
+    if(gnuplotWidget->count() < 1) {
+        browserWidget->outputText("scripts are not selected.", BrowserWidget::MessageType::SystemErr);
+        return;
+    }
 
     /* エラー行のリセット */
     qobject_cast<ReTextEdit*>(gnuplotWidget->widget(0))->setErrorLineNumber(-1);

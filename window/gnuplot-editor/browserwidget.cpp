@@ -40,7 +40,7 @@ BrowserWidget::~BrowserWidget()
 void BrowserWidget::outputText(const QString &text, const MessageType messageType)
 {
     insertPlainText("[ " + enumToString(messageType) + " ]\n");
-    insertPlainText(text);
+    insertPlainText(text + "\n");
 }
 
 

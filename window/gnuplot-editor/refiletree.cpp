@@ -179,77 +179,60 @@ void ReFileTree::addOther(const QString& fileName)
     otherList.insert(fileName, new OtherInfo());
 }
 
-bool ReFileTree::loadScript(const QString& fileName)
+void ReFileTree::loadScript(const QString& fileName)
 {
     const QString text = readFileTxt(folderPath + "/" + fileName);
 
-    if(text == "\0") return false;
+    if(text == "\0") emit errorCaused("failed to load the file \"" + fileName + "\"", BrowserWidget::MessageType::FileSystemErr);
 
     scriptList.value(fileName)->editor->setPlainText(text);
-
-    return true;
 }
 
-bool ReFileTree::loadAllScript()
+void ReFileTree::loadAllScript()
 {
     foreach(const QString& fileName, scriptList.keys())
-    {
-        const bool success = loadScript(fileName);
-        if(!success) return false;
-    }
-
-    return true;
+        loadScript(fileName);
 }
 
-bool ReFileTree::saveScript(const QString& fileName)
+void ReFileTree::saveScript(const QString& fileName)
 {
-    if(!scriptList.contains(fileName)) return false;
+    if(!scriptList.contains(fileName)) return;
 
-    return toFileTxt(folderPath + "/" + fileName, scriptList.value(fileName)->editor->toPlainText());
+    const bool success =  toFileTxt(folderPath + "/" + fileName, scriptList.value(fileName)->editor->toPlainText());
+
+    if(!success) emit errorCaused("failed to save the file \"" + fileName + "\"", BrowserWidget::MessageType::FileSystemErr);
 }
 
-bool ReFileTree::saveAllScript()
+void ReFileTree::saveAllScript()
 {
     foreach(const QString& fileName, scriptList.keys())
-    {
-        const bool success = saveScript(fileName);
-        if(!success) return false;
-    }
-
-    return true;
+        saveScript(fileName);
 }
 
-bool ReFileTree::loadSheet(const QString& fileName)
+void ReFileTree::loadSheet(const QString& fileName)
 {
     sheetList.value(fileName)->table->setData<QString>(readFileCsv(folderPath + "/" + fileName));
-
-    return true;
 }
 
-bool ReFileTree::loadAllSheet()
+void ReFileTree::loadAllSheet()
 {
     foreach(const QString& fileName, sheetList.keys())
         loadSheet(fileName);
-
-    return true;
 }
 
-bool ReFileTree::saveSheet(const QString& fileName)
+void ReFileTree::saveSheet(const QString& fileName)
 {
-    if(!sheetList.contains(fileName)) return false;
+    if(!sheetList.contains(fileName)) return;
 
-    return toFileCsv(folderPath + "/" + fileName, sheetList.value(fileName)->table->getData<QString>());
+    const bool success = toFileCsv(folderPath + "/" + fileName, sheetList.value(fileName)->table->getData<QString>());
+
+    if(!success) emit errorCaused("failed to save the file \"" + fileName + "\"", BrowserWidget::MessageType::FileSystemErr);
 }
 
-bool ReFileTree::saveAllSheet()
+void ReFileTree::saveAllSheet()
 {
-    foreach(const QString& fileName, sheetList.keys())
-    {
-        const bool success = saveSheet(fileName);
-        if(!success) return false;
-    }
-
-    return true;
+    foreach(const QString& fileName, sheetList.keys())   
+        saveSheet(fileName);
 }
 
 void ReFileTree::clearAllList()
