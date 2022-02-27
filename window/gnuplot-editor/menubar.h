@@ -2,6 +2,7 @@
 #define MENUBAR_H
 #include <QMenu>
 #include <QAction>
+#include <QFileDialog>
 
 class FileMenu : public QMenu
 {
@@ -11,13 +12,14 @@ public:
     FileMenu(const QString& title, QWidget *parent);
 
 private slots:
-    void importFolderAction();
-    void importFileAction();
-    void openFolderAction();
-    void removeAddFileAction();
-    void reloadFolderAction();
+    void openFolder();
 
 signals:
+    void openFolderPushed(const QString& folderPath);
+    void addFolderPushed();
+    void saveFolderPushed();
+    void updateFolderPushed();
+    void reloadFolderPushed();
 };
 
 

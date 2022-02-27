@@ -4,46 +4,37 @@
 FileMenu::FileMenu(const QString& title, QWidget *parent)
     : QMenu(title, parent)
 {
-    QAction *const importFolder = new QAction("import folder", this);
-    addAction(importFolder);
-
-    QAction *const importFile = new QAction("import file", this);
-    addAction(importFile);
-
-    QAction *const openFolder = new QAction("open folder", this);
+    QAction *openFolder = new QAction("Open folder", this);
     addAction(openFolder);
+    connect(openFolder, &QAction::triggered, this, &FileMenu::openFolder);
 
-    QAction *const removeAllFile = new QAction("remove all file", this);
-    addAction(removeAllFile);
+    QAction *addFolder = new QAction("Add folder", this);
+    addAction(addFolder);
+    connect(addFolder, &QAction::triggered, this, &FileMenu::addFolderPushed);
 
-    QAction *const reloadFolder = new QAction("reload folder", this);
+    QAction *saveFolder = new QAction("Save folder", this);
+    addAction(saveFolder);
+    connect(saveFolder, &QAction::triggered, this, &FileMenu::saveFolderPushed);
+
+    QAction *updateFolder = new QAction("Update folder", this);
+    addAction(updateFolder);
+    connect(updateFolder, &QAction::triggered, this, &FileMenu::updateFolderPushed);
+
+    QAction *reloadFolder = new QAction("Reload folder", this);
     addAction(reloadFolder);
+    connect(reloadFolder, &QAction::triggered, this, &FileMenu::reloadFolderPushed);
 }
 
-void FileMenu::importFolderAction()
+void FileMenu::openFolder()
 {
+    /* フォルダーの選択 */
+    const QString folderPath = QFileDialog::getExistingDirectory(this);
 
+    if(folderPath.isEmpty()) return;
+
+    emit openFolderPushed(folderPath);
 }
 
-void FileMenu::importFileAction()
-{
-
-}
-
-void FileMenu::openFolderAction()
-{
-
-}
-
-void FileMenu::removeAddFileAction()
-{
-
-}
-
-void FileMenu::reloadFolderAction()
-{
-
-}
 
 
 

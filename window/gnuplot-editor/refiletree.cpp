@@ -28,9 +28,7 @@ ReFileTree::~ReFileTree()
 {
     saveAllScript();
     saveAllSheet();
-    foreach(ScriptInfo *info, scriptList.values()) delete info;
-    foreach(SheetInfo *info, sheetList.values()) delete info;
-    foreach(OtherInfo *info, otherList.values()) delete info;
+    clearAllList();
 }
 
 void ReFileTree::initializeContextMenu()
@@ -63,6 +61,13 @@ void ReFileTree::loadFileTree()
     /* treeをクリア */
     clear();
 
+    /* セーブ */
+    saveAllScript();
+    saveAllSheet();
+
+    /* リストをクリア */
+    clearAllList();
+
     /* ヘッダーを非表示 */
     setHeaderHidden(true);
 
@@ -87,26 +92,22 @@ void ReFileTree::updateFileTree()
 {
     /* ディレクトリのファイル情報を取得 */
     QDir dir(folderPath);
-    QFileInfoList fileList = dir.entryInfoList();
+    QFileInfoList fileList = dir.entryInfoList(QDir::Filter::NoDotAndDotDot | QDir::Filter::Files);
 
     /* ファイルを順に捜査して、拡張子ごとにフォルダーに分ける。 */
     for(const QFileInfo& fileInfo : fileList)
     {
         const QString fileName = fileInfo.fileName();
 
-        if(ScriptInfo::isValidFormat(fileName) && !scriptList.contains(fileName)){
-            addScript(fileName);
+        if(ScriptInfo::isValidFormat(fileName)){
+            if(!scriptList.contains(fileName)) addScript(fileName);
             loadScript(fileName);
         }
-        else if(SheetInfo::isValidFormat(fileName) && !sheetList.contains(fileName)){
-            addSheet(fileName);
+        else if(SheetInfo::isValidFormat(fileName)){
+            if(!sheetList.contains(fileName)) addSheet(fileName);
             loadSheet(fileName);
         }
-        else if(fileName == "." || fileName == "..")
-            continue;
-        else if(!otherList.contains(fileName) &&
-                !ScriptInfo::isValidFormat(fileName) &&
-                !SheetInfo::isValidFormat(fileName))
+        else if(!otherList.contains(fileName))
             addOther(fileName);
         else
             continue;
@@ -180,7 +181,7 @@ void ReFileTree::addOther(const QString& fileName)
 
 bool ReFileTree::loadScript(const QString& fileName)
 {
-    const QString text = readFileTxt(folderPath + fileName);
+    const QString text = readFileTxt(folderPath + "/" + fileName);
 
     if(text == "\0") return false;
 
@@ -204,7 +205,7 @@ bool ReFileTree::saveScript(const QString& fileName)
 {
     if(!scriptList.contains(fileName)) return false;
 
-    return toFileTxt(folderPath + fileName, scriptList.value(fileName)->editor->toPlainText());
+    return toFileTxt(folderPath + "/" + fileName, scriptList.value(fileName)->editor->toPlainText());
 }
 
 bool ReFileTree::saveAllScript()
@@ -220,7 +221,7 @@ bool ReFileTree::saveAllScript()
 
 bool ReFileTree::loadSheet(const QString& fileName)
 {
-    sheetList.value(fileName)->table->setData<QString>(readFileCsv(folderPath + fileName));
+    sheetList.value(fileName)->table->setData<QString>(readFileCsv(folderPath + "/" + fileName));
 
     return true;
 }
@@ -237,7 +238,7 @@ bool ReFileTree::saveSheet(const QString& fileName)
 {
     if(!sheetList.contains(fileName)) return false;
 
-    return toFileCsv(folderPath + fileName, sheetList.value(fileName)->table->getData<QString>());
+    return toFileCsv(folderPath + "/" + fileName, sheetList.value(fileName)->table->getData<QString>());
 }
 
 bool ReFileTree::saveAllSheet()
@@ -249,6 +250,16 @@ bool ReFileTree::saveAllSheet()
     }
 
     return true;
+}
+
+void ReFileTree::clearAllList()
+{
+    foreach(const ScriptInfo *info, scriptList) { delete info; info = nullptr; }
+    foreach(const SheetInfo *info, sheetList) { delete info; info = nullptr; }
+    foreach(const OtherInfo *info, otherList) { delete info; info = nullptr; }
+    scriptList.clear();
+    sheetList.clear();
+    otherList.clear();
 }
 
 /* 既存のファイルをインポートする */
@@ -264,8 +275,8 @@ void ReFileTree::addFile()
 
         if(!containsFile(fileName))                                    //もし同名のファイルがなければ
         {
-            const bool success = QFile::copy(fullPath, folderPath + fileName);                         //コピーしてもってくる
-            if(!success) { QMessageBox::critical(this, "Error", "could not copy the " + fileName); }   //コピー失敗時のエラーメッセージ
+            const bool success = QFile::copy(fullPath, folderPath + "/" + fileName);                         //コピーしてもってくる
+            if(!success) { QMessageBox::critical(this, "Error", "could not copy the " + fileName); }         //コピー失敗時のエラーメッセージ
         }
         else                                                           //もし同名のファイルがあれば、エラーメッセージの表示
             QMessageBox::critical(this, "Error", "Same name \"" + fileName + "\" already exists!!");
@@ -304,7 +315,7 @@ void ReFileTree::newFile()
     }
 
     /* ファイルの作成 */
-    QFile file(folderPath + newFileName);
+    QFile file(folderPath + "/" + newFileName);
     const bool success = file.open(QIODevice::OpenModeFlag::NewOnly);  //ファイルの作成
 
     /* ファイルをリストへ追加 */
@@ -431,13 +442,50 @@ void ReFileTree::exportFile()
     else if(SheetInfo::isValidFormat(fileName)) saveSheet(fileName);
 
     /* ファイルをコピーして保存 */
-    QFile::copy(folderPath + fileName, pathForSave + "/" + fileName);
+    QFile::copy(folderPath + "/" + fileName, pathForSave + "/" + fileName);
 
     /* ファイルの削除とその確認 */
     removeFile();
 }
 
+void ReFileTree::addFolder()
+{
+    /* フォルダーの選択 */
+    const QString& folder = QFileDialog::getExistingDirectory(this);
 
+    /* 選択したフォルダー内のファイルを取得 */
+    const QDir dir(folder);
+    const QFileInfoList fileList = dir.entryInfoList(QDir::Filter::NoDotAndDotDot | QDir::Filter::Files);
+
+    /* コピーしてもってくる */
+    for(const QFileInfo& info : fileList)
+    {
+        const QString fileName = info.fileName();
+        const bool success = QFile::copy(folder + "/" + fileName, folderPath + "/" + fileName);
+        if(!success) emit errorPushed("could not copy a file \"" + info.absoluteFilePath() + "\"", BrowserWidget::MessageType::FileSystemErr);
+    }
+
+    /* ファイルツリーの更新 */
+    updateFileTree();
+}
+
+void ReFileTree::saveFolder()
+{
+    /* フォルダーの選択 */
+    const QString& folder = QFileDialog::getExistingDirectory(this);
+
+    /* 作業ディレクトリのファイル情報 */
+    const QDir dir(folderPath);
+    const QFileInfoList fileList = dir.entryInfoList(QDir::Filter::NoDotAndDotDot | QDir::Filter::Files);
+
+    /* コピーする */
+    for(const QFileInfo& info : fileList)
+    {
+        const QString& fileName = info.fileName();
+        const bool success = QFile::copy(folderPath + "/" +  fileName, folder + "/" + fileName);
+        if(!success) emit errorPushed("could not copy a file \"" + info.absoluteFilePath() + "\"", BrowserWidget::MessageType::FileSystemErr);
+    }
+}
 
 
 

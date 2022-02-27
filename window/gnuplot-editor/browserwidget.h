@@ -14,7 +14,7 @@ public:
     explicit BrowserWidget(QWidget *parent = nullptr);
     ~BrowserWidget();
 
-    enum class MessageType { GnuplotStdOut, GnuplotStdErr, Unknown };
+    enum class MessageType { GnuplotStdOut, GnuplotStdErr, FileSystemErr, Unknown };
     Q_ENUM(MessageType)
 
 public:

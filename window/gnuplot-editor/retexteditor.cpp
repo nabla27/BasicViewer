@@ -32,8 +32,7 @@ ReTextEdit::ReTextEdit(QWidget *parent)
 
 ReTextEdit::~ReTextEdit()
 {
-    delete lineNumberArea;
-    delete c;
+
 }
 
 

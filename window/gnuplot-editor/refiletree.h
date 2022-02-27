@@ -17,6 +17,7 @@
 #include "retexteditor.h"
 #include "retablewidget.h"
 #include "io/iofile.h"
+#include "browserwidget.h"
 
 
 
@@ -28,7 +29,10 @@ struct ScriptInfo
 public:
     ScriptInfo(QProcess *process = nullptr, ReTextEdit *editor = nullptr)
         : process(process), editor(editor) {}
-    ~ScriptInfo() { delete process; process = nullptr; delete editor; editor = nullptr; }
+    ~ScriptInfo() {
+        delete process; process = nullptr;
+        delete editor; editor = nullptr;
+    }
 
     static bool isValidFormat(const QString& fileName){
         for(const QString& format : formatList) if(fileName.contains(format)) return true;
@@ -87,6 +91,7 @@ public slots:
     void loadFileTree();
     void updateFileTree();
     void setFolderPath(const QString& folderPath);
+
     void addScript(const QString& fileName);
     void addSheet(const QString& fileName);
     void addOther(const QString& fileName);
@@ -98,12 +103,15 @@ public slots:
     bool saveAllScript();
     bool loadAllSheet();
     bool saveAllSheet();
+    void clearAllList();
 
     void addFile();
     void newFile();
     void renameFile();
     void removeFile();
     void exportFile();
+    void addFolder();
+    void saveFolder();
 
 private:
     void initializeContextMenu();
@@ -133,6 +141,7 @@ signals:
     void scriptRemoved(const QString& fileName, const ScriptInfo* info);
     void sheetRemoved(const QString& fileName, const SheetInfo* info);
     void otherRemoved(const QString& fileName, const OtherInfo* info);
+    void errorPushed(const QString& message, const BrowserWidget::MessageType type);
 };
 
 #endif // FILETREE_H

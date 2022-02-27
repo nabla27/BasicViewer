@@ -6,11 +6,11 @@ GnuplotEditor::GnuplotEditor(QWidget *parent)
     //ウィンドウをスクリーン画面に対して(0.4,0.5)の比率サイズに設定
     setGeometry(getRectFromScreenRatio(screen()->size(), 0.4f, 0.5f));
 
-    //メニュバーの生成
-    initializeMenuBar();
-
     //レイアウト生成
     initializeLayout();
+
+    //メニュバーの生成
+    initializeMenuBar();
 
     gnuplot = new ReGnuplot(this);
 
@@ -21,8 +21,10 @@ GnuplotEditor::GnuplotEditor(QWidget *parent)
     connect(fileTree, &ReFileTree::sheetRemoved, this, &GnuplotEditor::setSheetWidget);
     connect(fileTree, &ReFileTree::otherRemoved, this, &GnuplotEditor::setOtherWidget);
     connect(fileTree, &ReFileTree::fileNameChanged, this, &GnuplotEditor::setMenuBarTitle);
+    connect(fileTree, &ReFileTree::errorPushed, browserWidget, &BrowserWidget::outputText);
     connect(gnuplot, &ReGnuplot::standardOutputPassed, this, &GnuplotEditor::receiveGnuplotStdOut);
     connect(gnuplot, &ReGnuplot::standardErrorPassed, this, &GnuplotEditor::receiveGnuplotStdErr);
+    connect(browserWidget, &BrowserWidget::textChanged, [this](){ displayTab->setCurrentIndex(1); });
 }
 
 void GnuplotEditor::initializeMenuBar()
@@ -51,6 +53,11 @@ void GnuplotEditor::initializeMenuBar()
 
     setMenuBar(menuBar);
 
+    connect(fileMenu, &FileMenu::reloadFolderPushed, fileTree, &ReFileTree::loadFileTree);
+    connect(fileMenu, &FileMenu::updateFolderPushed, fileTree, &ReFileTree::updateFileTree);
+    connect(fileMenu, &FileMenu::openFolderPushed, fileTree, &ReFileTree::setFolderPath);
+    connect(fileMenu, &FileMenu::addFolderPushed, fileTree, &ReFileTree::addFolder);
+    connect(fileMenu, &FileMenu::saveFolderPushed, fileTree, &ReFileTree::saveFolder);
     connect(runAction, &QAction::triggered, this, &GnuplotEditor::executeGnuplot);
 }
 
@@ -197,18 +204,12 @@ void GnuplotEditor::receiveGnuplotStdOut(const QString& text)
 {
     /* 出力の表示 */
     browserWidget->outputText(text, BrowserWidget::MessageType::GnuplotStdOut);
-
-    /* タブの切り替え */
-    displayTab->setCurrentIndex(1);
 }
 
 void GnuplotEditor::receiveGnuplotStdErr(const QString& text, const int line)
 {
     /* 出力の表示 */
     browserWidget->outputText(text, BrowserWidget::MessageType::GnuplotStdErr);
-
-    /* タブの切り替え */
-    displayTab->setCurrentIndex(1);
 
     /* エラー行の設定とハイライト */
     qobject_cast<ReTextEdit*>(gnuplotWidget->widget(0))->setErrorLineNumber(line - 1);
