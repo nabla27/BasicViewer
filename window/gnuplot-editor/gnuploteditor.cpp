@@ -35,7 +35,7 @@ void GnuplotEditor::initializeMenuBar()
     WindowMenuBar *menuBar = new WindowMenuBar(this);
 
     FileMenu *const fileMenu = new FileMenu("File", menuBar);
-    EditorMenu *const editorMenu = new EditorMenu("Editor", menuBar);
+    WidgetMenu *const widgetMenu = new WidgetMenu("Widget", menuBar);
     HelpMenu *const helpMenu = new HelpMenu("Help", menuBar);
     QAction *const blank1 = new QAction("         ", menuBar);
     scriptMenu = new ScriptMenu("      ", menuBar);
@@ -44,7 +44,7 @@ void GnuplotEditor::initializeMenuBar()
     QAction *const runAction = new QAction("&Run", menuBar);
 
     menuBar->addMenu(fileMenu);
-    menuBar->addMenu(editorMenu);
+    menuBar->addMenu(widgetMenu);
     menuBar->addMenu(helpMenu);
     menuBar->addAction(blank1);
     menuBar->addMenu(scriptMenu);
@@ -59,6 +59,8 @@ void GnuplotEditor::initializeMenuBar()
     connect(fileMenu, &FileMenu::openFolderPushed, fileTree, &ReFileTree::setFolderPath);
     connect(fileMenu, &FileMenu::addFolderPushed, fileTree, &ReFileTree::addFolder);
     connect(fileMenu, &FileMenu::saveFolderPushed, fileTree, &ReFileTree::saveFolder);
+    connect(widgetMenu, &WidgetMenu::clearOutputWindowPushed, browserWidget, &BrowserWidget::clear);
+    //connect(widgetMenu, &WidgetMenu::clearConsoleWindowPushed, consoleWidget, &);
     connect(runAction, &QAction::triggered, this, &GnuplotEditor::executeGnuplot);
 }
 

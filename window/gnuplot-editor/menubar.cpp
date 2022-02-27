@@ -41,10 +41,16 @@ void FileMenu::openFolder()
 
 
 
-EditorMenu::EditorMenu(const QString& title, QWidget *parent)
+WidgetMenu::WidgetMenu(const QString& title, QWidget *parent)
     : QMenu(title, parent)
 {
+    QAction *clearConsoleWindow = new QAction("Clear console window", this);
+    addAction(clearConsoleWindow);
+    connect(clearConsoleWindow, &QAction::triggered, this, &WidgetMenu::clearConsoleWindowPushed);
 
+    QAction *clearOutputWindow = new QAction("Clear output window", this);
+    addAction(clearOutputWindow);
+    connect(clearOutputWindow, &QAction::triggered, this, &WidgetMenu::clearOutputWindowPushed);
 }
 
 

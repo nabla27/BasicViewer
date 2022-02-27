@@ -23,12 +23,16 @@ signals:
 };
 
 
-class EditorMenu : public QMenu
+class WidgetMenu : public QMenu
 {
     Q_OBJECT
 
 public:
-    EditorMenu(const QString& title, QWidget *parent);
+    WidgetMenu(const QString& title, QWidget *parent);
+
+signals:
+    void clearOutputWindowPushed();
+    void clearConsoleWindowPushed();
 };
 
 
