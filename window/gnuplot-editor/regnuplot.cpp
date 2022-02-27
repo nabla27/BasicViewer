@@ -9,7 +9,7 @@ ReGnuplot::ReGnuplot(QObject *parent)
 
 void ReGnuplot::exc(QProcess *process, const QList<QString>& cmdlist)
 {
-    if(process == nullptr) { return; }
+    if(!process)  return;
 
     currentProcess = process;
 
@@ -25,7 +25,7 @@ void ReGnuplot::exc(QProcess *process, const QList<QString>& cmdlist)
         process->start(path, QStringList() << "-persist");
         if(process->error() == QProcess::ProcessError::FailedToStart){
             process->close();
-            emit startProcessFailed();
+            emit errorCaused("failed to start gnuplot process.", BrowserWidget::MessageType::ProcessErr);
         }
     }
 

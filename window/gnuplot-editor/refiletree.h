@@ -141,7 +141,7 @@ signals:
     void scriptRemoved(const QString& fileName, const ScriptInfo* info);
     void sheetRemoved(const QString& fileName, const SheetInfo* info);
     void otherRemoved(const QString& fileName, const OtherInfo* info);
-    void errorPushed(const QString& message, const BrowserWidget::MessageType type);
+    void errorCaused(const QString& message, const BrowserWidget::MessageType type);
 };
 
 #endif // FILETREE_H

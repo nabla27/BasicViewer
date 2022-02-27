@@ -442,7 +442,8 @@ void ReFileTree::exportFile()
     else if(SheetInfo::isValidFormat(fileName)) saveSheet(fileName);
 
     /* ファイルをコピーして保存 */
-    QFile::copy(folderPath + "/" + fileName, pathForSave + "/" + fileName);
+    const bool success = QFile::copy(folderPath + "/" + fileName, pathForSave + "/" + fileName);
+    if(!success) emit errorCaused("could not copy a file \"" + fileName + "\"", BrowserWidget::MessageType::FileSystemErr);
 
     /* ファイルの削除とその確認 */
     removeFile();
@@ -462,7 +463,7 @@ void ReFileTree::addFolder()
     {
         const QString fileName = info.fileName();
         const bool success = QFile::copy(folder + "/" + fileName, folderPath + "/" + fileName);
-        if(!success) emit errorPushed("could not copy a file \"" + info.absoluteFilePath() + "\"", BrowserWidget::MessageType::FileSystemErr);
+        if(!success) emit errorCaused("could not copy a file \"" + info.absoluteFilePath() + "\"", BrowserWidget::MessageType::FileSystemErr);
     }
 
     /* ファイルツリーの更新 */
@@ -483,7 +484,7 @@ void ReFileTree::saveFolder()
     {
         const QString& fileName = info.fileName();
         const bool success = QFile::copy(folderPath + "/" +  fileName, folder + "/" + fileName);
-        if(!success) emit errorPushed("could not copy a file \"" + info.absoluteFilePath() + "\"", BrowserWidget::MessageType::FileSystemErr);
+        if(!success) emit errorCaused("could not copy a file \"" + info.absoluteFilePath() + "\"", BrowserWidget::MessageType::FileSystemErr);
     }
 }
 

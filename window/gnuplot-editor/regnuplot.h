@@ -9,7 +9,7 @@
 #include <QObject>
 #include <QRegularExpressionMatchIterator>
 #include <QDir>
-#include "retextbrowser.h"
+#include "browserwidget.h"
 #include "utility.h"
 
 
@@ -43,6 +43,6 @@ private:
 signals:
     void standardOutputPassed(const QString& out);
     void standardErrorPassed(const QString& out, const int line);
-    void startProcessFailed();
+    void errorCaused(const QString& err, const BrowserWidget::MessageType type);
 };
 #endif // REGNUPLOT_H

@@ -21,9 +21,10 @@ GnuplotEditor::GnuplotEditor(QWidget *parent)
     connect(fileTree, &ReFileTree::sheetRemoved, this, &GnuplotEditor::setSheetWidget);
     connect(fileTree, &ReFileTree::otherRemoved, this, &GnuplotEditor::setOtherWidget);
     connect(fileTree, &ReFileTree::fileNameChanged, this, &GnuplotEditor::setMenuBarTitle);
-    connect(fileTree, &ReFileTree::errorPushed, browserWidget, &BrowserWidget::outputText);
+    connect(fileTree, &ReFileTree::errorCaused, browserWidget, &BrowserWidget::outputText);
     connect(gnuplot, &ReGnuplot::standardOutputPassed, this, &GnuplotEditor::receiveGnuplotStdOut);
     connect(gnuplot, &ReGnuplot::standardErrorPassed, this, &GnuplotEditor::receiveGnuplotStdErr);
+    connect(gnuplot, &ReGnuplot::errorCaused, browserWidget, &BrowserWidget::outputText);
     connect(browserWidget, &BrowserWidget::textChanged, [this](){ displayTab->setCurrentIndex(1); });
 }
 
@@ -157,6 +158,7 @@ void GnuplotEditor::setSheetWidget(const QString& fileName, const SheetInfo* inf
 
     /* 新しくセット */
     sheetWidget->addWidget(info->table);
+    info->table->setGnuplot(gnuplot);
 
     /* タブをSheetに設定 */
     editorTab->setCurrentIndex(1);
