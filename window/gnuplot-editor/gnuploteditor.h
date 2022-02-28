@@ -22,6 +22,7 @@ class GnuplotEditor : public QMainWindow
     Q_OBJECT
 public:
     explicit GnuplotEditor(QWidget *parent = nullptr);
+    ~GnuplotEditor();
 
 private:
     void initializeMenuBar();

@@ -75,6 +75,7 @@ public:
 public:
     void setLabelMinimumWidth(const int width) { label->setMinimumWidth(width); }
     void setComboMaximumWidth(const int width) { combo->setMaximumWidth(width); }
+    void setComboMinimumWidth(const int width) { combo->setMinimumWidth(width); }
     void insertComboItems(int index, const QStringList& texts) { combo->insertItems(index, texts); }
     int currentComboIndex() const { return combo->currentIndex(); }
     QString currentComboText() const { return combo->currentText(); }
@@ -122,11 +123,13 @@ public slots:
 
 signals:
     void lineTextEdited(const QString& text);
+    void lineValueEdited(const double& value);
 
 private:
     QLabel *label;
     QLineEdit *lineEdit;
     QSpacerItem *spacer;
+    void lineStrToDouble(const QString& text);
 };
 
 
@@ -162,6 +165,31 @@ private:
     QSpacerItem *spacer;
 };
 
+
+
+
+
+
+class CheckBoxLayout : public QHBoxLayout
+{
+    Q_OBJECT
+
+public:
+    explicit CheckBoxLayout(QWidget *parent, const QString& text = "");
+
+public:
+    void setLabelMinimumWidth(const int width) { label->setMinimumWidth(width); }
+    void setChecked(const bool checked) { checkBox->setChecked(checked); }
+    void setVisible(const bool visible);
+
+signals:
+    void checkBoxToggled(const bool checked);
+
+private:
+    QLabel *label;
+    QCheckBox *checkBox;
+    QSpacerItem *spacer;
+};
 
 
 

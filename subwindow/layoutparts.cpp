@@ -67,7 +67,7 @@ ComboEditLayout::ComboEditLayout(QWidget *parent, const QString& text)
     addItem(spacer);
 
     setLabelMinimumWidth(SETTING_LABEL_WIDTH);
-    setComboMaximumWidth(SETTING_EDIT_LWIDTH);
+    setComboMinimumWidth(SETTING_EDIT_LWIDTH);
 
     connect(combo, &QComboBox::currentIndexChanged, [this](){ emit currentComboIndexChanged(combo->currentIndex()); });
 }
@@ -93,12 +93,18 @@ LineEditLayout::LineEditLayout(QWidget *parent, const QString& text)
     setLineEditMaximumWidth(SETTING_EDIT_LWIDTH);
 
     connect(lineEdit, &QLineEdit::textEdited, [this](){ emit lineTextEdited(lineEdit->text()); });
+    connect(lineEdit, &QLineEdit::textEdited, this, &LineEditLayout::lineStrToDouble);
 }
 
 void LineEditLayout::setVisible(bool visible)
 {
     label->setVisible(visible);
     lineEdit->setVisible(visible);
+}
+
+void LineEditLayout::lineStrToDouble(const QString &text)
+{
+    emit lineValueEdited(text.toDouble());
 }
 
 
@@ -122,6 +128,27 @@ void SpinBoxEditLayout::setVisible(bool visible)
 {
     label->setVisible(visible);
     spinBox->setVisible(visible);
+}
+
+CheckBoxLayout::CheckBoxLayout(QWidget *parent, const QString& text)
+{
+    label = new QLabel(text, parent);
+    checkBox = new QCheckBox(parent);
+    spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
+
+    addWidget(label);
+    addWidget(checkBox);
+    addItem(spacer);
+
+    setLabelMinimumWidth(SETTING_LABEL_WIDTH);
+
+    connect(checkBox, &QCheckBox::toggled, this, &CheckBoxLayout::checkBoxToggled);
+}
+
+void CheckBoxLayout::setVisible(const bool visible)
+{
+    label->setVisible(visible);
+    checkBox->setVisible(visible);
 }
 
 

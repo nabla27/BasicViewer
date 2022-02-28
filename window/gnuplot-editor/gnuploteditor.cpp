@@ -6,14 +6,14 @@ GnuplotEditor::GnuplotEditor(QWidget *parent)
     //ウィンドウをスクリーン画面に対して(0.4,0.5)の比率サイズに設定
     setGeometry(getRectFromScreenRatio(screen()->size(), 0.4f, 0.5f));
 
+    gnuplot = new ReGnuplot(this);
+    editorSetting = new EditorSettingWidget(nullptr);
+
     //レイアウト生成
     initializeLayout();
 
     //メニュバーの生成
     initializeMenuBar();
-
-    gnuplot = new ReGnuplot(this);
-    editorSetting = new EditorSettingWidget(this);
 
     connect(fileTree, &ReFileTree::scriptSelected, this, &GnuplotEditor::setEditorWidget);
     connect(fileTree, &ReFileTree::sheetSelected, this, &GnuplotEditor::setSheetWidget);
@@ -27,6 +27,12 @@ GnuplotEditor::GnuplotEditor(QWidget *parent)
     connect(gnuplot, &ReGnuplot::standardErrorPassed, this, &GnuplotEditor::receiveGnuplotStdErr);
     connect(gnuplot, &ReGnuplot::errorCaused, browserWidget, &BrowserWidget::outputText);
     connect(browserWidget, &BrowserWidget::textChanged, [this](){ displayTab->setCurrentIndex(1); });
+}
+
+GnuplotEditor::~GnuplotEditor()
+{
+    editorSetting->hide();
+    delete editorSetting;
 }
 
 void GnuplotEditor::initializeMenuBar()
@@ -61,8 +67,8 @@ void GnuplotEditor::initializeMenuBar()
     connect(fileMenu, &FileMenu::addFolderPushed, fileTree, &ReFileTree::addFolder);
     connect(fileMenu, &FileMenu::saveFolderPushed, fileTree, &ReFileTree::saveFolder);
     connect(widgetMenu, &WidgetMenu::clearOutputWindowPushed, browserWidget, &BrowserWidget::clear);
-    connect(widgetMenu, &WidgetMenu::editorSettingOpened, editorSetting, &EditorSettingWidget::show);
     //connect(widgetMenu, &WidgetMenu::clearConsoleWindowPushed, consoleWidget, &);
+    connect(widgetMenu, &WidgetMenu::editorSettingOpened, editorSetting, &EditorSettingWidget::show);
     connect(runAction, &QAction::triggered, this, &GnuplotEditor::executeGnuplot);
 }
 
