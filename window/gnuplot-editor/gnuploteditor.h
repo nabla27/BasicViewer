@@ -15,6 +15,7 @@
 #include "browserwidget.h"
 #include "windowmenubar.h"
 #include "subwindow/layoutparts.h"
+#include "editorsettingwidget.h"
 
 class GnuplotEditor : public QMainWindow
 {
@@ -43,6 +44,8 @@ private:
     SheetMenu *sheetMenu;
 
     ReGnuplot *gnuplot;
+
+    EditorSettingWidget *editorSetting;
 
     ReFileTree *fileTree;
     QTabWidget *editorTab;

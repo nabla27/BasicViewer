@@ -33,6 +33,7 @@ public:
 signals:
     void clearOutputWindowPushed();
     void clearConsoleWindowPushed();
+    void editorSettingOpened();
 };
 
 

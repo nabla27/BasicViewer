@@ -51,6 +51,10 @@ WidgetMenu::WidgetMenu(const QString& title, QWidget *parent)
     QAction *clearOutputWindow = new QAction("Clear output window", this);
     addAction(clearOutputWindow);
     connect(clearOutputWindow, &QAction::triggered, this, &WidgetMenu::clearOutputWindowPushed);
+
+    QAction *openEditorSetting = new QAction("Editor Setting", this);
+    addAction(openEditorSetting);
+    connect(openEditorSetting, &QAction::triggered, this, &WidgetMenu::editorSettingOpened);
 }
 
 

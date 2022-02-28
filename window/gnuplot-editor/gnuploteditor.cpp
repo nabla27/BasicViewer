@@ -13,6 +13,7 @@ GnuplotEditor::GnuplotEditor(QWidget *parent)
     initializeMenuBar();
 
     gnuplot = new ReGnuplot(this);
+    editorSetting = new EditorSettingWidget(this);
 
     connect(fileTree, &ReFileTree::scriptSelected, this, &GnuplotEditor::setEditorWidget);
     connect(fileTree, &ReFileTree::sheetSelected, this, &GnuplotEditor::setSheetWidget);
@@ -60,6 +61,7 @@ void GnuplotEditor::initializeMenuBar()
     connect(fileMenu, &FileMenu::addFolderPushed, fileTree, &ReFileTree::addFolder);
     connect(fileMenu, &FileMenu::saveFolderPushed, fileTree, &ReFileTree::saveFolder);
     connect(widgetMenu, &WidgetMenu::clearOutputWindowPushed, browserWidget, &BrowserWidget::clear);
+    connect(widgetMenu, &WidgetMenu::editorSettingOpened, editorSetting, &EditorSettingWidget::show);
     //connect(widgetMenu, &WidgetMenu::clearConsoleWindowPushed, consoleWidget, &);
     connect(runAction, &QAction::triggered, this, &GnuplotEditor::executeGnuplot);
 }
