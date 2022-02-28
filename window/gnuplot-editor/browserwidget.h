@@ -2,6 +2,8 @@
 #define BROWSERWIDGET_H
 #include <QTextBrowser>
 #include <QSyntaxHighlighter>
+#include <QTextCharFormat>
+#include <QScrollBar>
 #include "utility.h"
 
 class BrowserSyntaxHighlighter;
@@ -24,6 +26,7 @@ public:
 
 public:
     void outputText(const QString& text, const MessageType messageType);
+    void grayOutAll();
 
 private:
     BrowserSyntaxHighlighter *highlighter;
@@ -46,8 +49,6 @@ public:
 public:
     void highlightBlock(const QString& text) override;
 
-private:
-    BrowserWidget::MessageType messageType = BrowserWidget::MessageType::Unknown;
 };
 
 #endif // BROWSERWIDGET_H

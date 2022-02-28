@@ -25,7 +25,7 @@ void ReGnuplot::exc(QProcess *process, const QList<QString>& cmdlist)
         process->start(path, QStringList() << "-persist");
         if(process->error() == QProcess::ProcessError::FailedToStart){
             process->close();
-            emit errorCaused("failed to start gnuplot process.", BrowserWidget::MessageType::ProcessErr);
+            emit errorCaused("failed to start the gnuplot process.", BrowserWidget::MessageType::ProcessErr);
         }
     }
 
@@ -66,11 +66,16 @@ void ReGnuplot::readStandardOutput()
 
 void ReGnuplot::readStandardError()
 {
-    const QString err = currentProcess->readAllStandardError();
+    const QString output = currentProcess->readAllStandardError();
 
-    if(err.isEmpty()) return;
+    if(output.isEmpty()) return;
 
-    const int errLine = getErrorLineNumber(err);
+    const int errLine = getErrorLineNumber(output); //エラー行を示す表現が見つけられなかったら-1を返す
 
-    emit standardErrorPassed(err, errLine);
+    if(errLine == -1)
+        emit standardOutputPassed(output);          //エラーじゃない標準出力でもreadAllStandardError()で拾われてしまう
+    else
+        emit standardErrorPassed(output, errLine);
 }
+
+

@@ -189,7 +189,10 @@ void GnuplotEditor::setFolderPath(const QString& folderPath)
 
 void GnuplotEditor::executeGnuplot()
 {
-    //ファイルが選ばれていない場合は無効
+    /* browserの過去の出力をグレイアウト */
+    browserWidget->grayOutAll();
+
+    /* ファイルが選ばれていない場合は無効 */
     if(gnuplotWidget->count() < 1) {
         browserWidget->outputText("scripts are not selected.", BrowserWidget::MessageType::SystemErr);
         return;
