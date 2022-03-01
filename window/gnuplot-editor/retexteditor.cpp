@@ -327,7 +327,7 @@ void ReTextEdit::highlightLine()
     {
         QTextEdit::ExtraSelection currentSelection;          //カーソル行のハイライト
 
-        currentSelection.format.setBackground(QColor(50, 50, 50));
+        currentSelection.format.setBackground(cursorLineColor);
         currentSelection.format.setProperty(QTextFormat::FullWidthSelection, true);
         currentSelection.cursor = textCursor();
         currentSelection.cursor.clearSelection();

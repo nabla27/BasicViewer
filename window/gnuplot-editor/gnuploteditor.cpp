@@ -131,6 +131,22 @@ void GnuplotEditor::initializeLayout()
     connect(displayTabDragBar, &HorizontalDragBar::barDraged, this, &GnuplotEditor::setDisplayTabHeight);
 }
 
+void GnuplotEditor::connectEditorSetting(ReTextEdit *const editor)
+{
+    connect(editorSetting, &EditorSettingWidget::backgroundColorSet, editor, &ReTextEdit::setBackgroundColor);
+    connect(editorSetting, &EditorSettingWidget::textColorSet, editor, &ReTextEdit::setTextColor);
+    connect(editorSetting, &EditorSettingWidget::textSizeSet, editor, &ReTextEdit::setTextSize);
+    connect(editorSetting, &EditorSettingWidget::tabSpaceSet, editor, &ReTextEdit::setTabSpace);
+    connect(editorSetting, &EditorSettingWidget::checkWrapSet, editor, &ReTextEdit::setWrap);
+    connect(editorSetting, &EditorSettingWidget::checkItaricSet, editor, &ReTextEdit::setItaric);
+    connect(editorSetting, &EditorSettingWidget::checkBoldSet, editor, &ReTextEdit::setBold);
+    connect(editorSetting, &EditorSettingWidget::mainCmdColorSet, editor, &ReTextEdit::setMainCmdColor);
+    connect(editorSetting, &EditorSettingWidget::commentColorSet, editor, &ReTextEdit::setCommentColor);
+    connect(editorSetting, &EditorSettingWidget::cursorLineColorSet, editor, &ReTextEdit::setCursorLineColor);
+    connect(editorSetting, &EditorSettingWidget::stringColorSet, editor, &ReTextEdit::setStringColor);
+    editorSetting->set(editor);
+}
+
 void GnuplotEditor::setEditorWidget(const QString& fileName, const ScriptInfo* info)
 {
     if(!info){  //infoがnullptr(ツリーから消された場合など)なら
@@ -144,6 +160,7 @@ void GnuplotEditor::setEditorWidget(const QString& fileName, const ScriptInfo* i
 
     /* 新しくセット */
     gnuplotWidget->addWidget(info->editor);       //editorのparentは自動的にgnuplotWidgetとなる
+    connectEditorSetting(info->editor);
 
     /* プロセスをセット */
     gnuplotProcess = info->process;

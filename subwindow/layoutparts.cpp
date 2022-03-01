@@ -30,6 +30,8 @@ void RGBEditLayout::setColor(const QColor& color)
     rEdit->setText(QString::number(color.red()));
     gEdit->setText(QString::number(color.green()));
     bEdit->setText(QString::number(color.blue()));
+
+    emit colorEdited(color);
 }
 
 void RGBEditLayout::setColor(int eNum)
@@ -38,6 +40,8 @@ void RGBEditLayout::setColor(int eNum)
     rEdit->setText(QString::number(color.red()));
     gEdit->setText(QString::number(color.green()));
     bEdit->setText(QString::number(color.blue()));
+
+    emit colorEdited(QColor(Qt::GlobalColor(eNum)));
 }
 
 void RGBEditLayout::setVisible(bool visible)
@@ -53,6 +57,16 @@ void RGBEditLayout::setReadOnly(bool readOnly)
     rEdit->setReadOnly(readOnly);
     gEdit->setReadOnly(readOnly);
     bEdit->setReadOnly(readOnly);
+}
+
+void RGBEditLayout::setColorAndEditable(const int index)
+{
+    if(index > QT_GLOBAL_COLOR_COUNT){
+        setReadOnly(false); return;
+    }
+
+    setReadOnly(true);
+    setColor(index);
 }
 
 

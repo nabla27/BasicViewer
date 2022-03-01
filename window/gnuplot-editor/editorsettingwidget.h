@@ -2,22 +2,32 @@
 #define EDITORSETTINGWIDGET_H
 
 #include <QWidget>
+#include <QFile>
+#include <QDir>
 #include "subwindow/layoutparts.h"
+#include "utility.h"
+#include "browserwidget.h"
+#include "retexteditor.h"
+#include <boost/property_tree/xml_parser.hpp>
+#include <boost/lexical_cast.hpp>
 
 class EditorSettingWidget : public QWidget
 {
     Q_OBJECT
+
 public:
     explicit EditorSettingWidget(QWidget *parent = nullptr);
+    ~EditorSettingWidget();
+    void loadXmlSetting();
+    void saveXmlSetting();
+    void set(ReTextEdit *const editor);
 
 private:
     void initializeLayout();
-
-private:
-    void setBackgroundColorComboEditable(const int index);
-    void setTextColorComboEditable(const int index);
-    void setHighlightColorComboEditable(const int index);
-    void setCommentColorComboEditable(const int index);
+    void showEvent(QShowEvent*) override { loadXmlSetting(); }
+    void closeEvent(QCloseEvent*) override { saveXmlSetting(); }
+    void loadDefaultSetting();
+    static const QString settingFolderPath;
 
 private:
     ComboEditLayout *backgroundColorCombo;
@@ -25,27 +35,32 @@ private:
     ComboEditLayout *textColorCombo;
     RGBEditLayout *textColorRgb;
     SpinBoxEditLayout *textSizeSpin;
-    ComboEditLayout *fontCombo;
     LineEditLayout *tabSpaceEdit;
     CheckBoxLayout *checkWrap;
     CheckBoxLayout *checkItaric;
     CheckBoxLayout *checkBold;
-    ComboEditLayout *highlightColorCombo;
-    RGBEditLayout *highlightColorRgb;
+    ComboEditLayout *mainCmdColorCombo;
+    RGBEditLayout *mainCmdColorRgb;
     ComboEditLayout *commentColorCombo;
     RGBEditLayout *commentColorRgb;
+    ComboEditLayout *cursorLineColorCombo;
+    RGBEditLayout *cursorLineColorRgb;
+    ComboEditLayout *stringColorCombo;
+    RGBEditLayout *stringColorRgb;
 
 signals:
     void backgroundColorSet(const QColor& color);
     void textColorSet(const QColor& color);
     void textSizeSet(const int ps);
-    void textFontSet(const int index);
     void tabSpaceSet(const double& space);
     void checkWrapSet(const bool wrap);
     void checkItaricSet(const bool iraric);
     void checkBoldSet(const bool bold);
-    void highlightColorSet(const QColor& color);
+    void mainCmdColorSet(const QColor& color);
     void commentColorSet(const QColor& color);
+    void cursorLineColorSet(const QColor& color);
+    void stringColorSet(const QColor& color);
+    void errorCaused(const QString& text, const BrowserWidget::MessageType type);
 };
 
 #endif // EDITORSETTINGWIDGET_H

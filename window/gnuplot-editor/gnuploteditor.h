@@ -27,6 +27,7 @@ public:
 private:
     void initializeMenuBar();
     void initializeLayout();
+    void connectEditorSetting(ReTextEdit *const editor);
 
 private slots:
     void setEditorWidget(const QString& fileName, const ScriptInfo* info);

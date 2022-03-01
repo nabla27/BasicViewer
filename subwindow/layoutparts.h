@@ -37,18 +37,20 @@ public:
     void setEditMaximumWidth(const int width) { rEdit->setMaximumWidth(width);
                                                 gEdit->setMaximumWidth(width);
                                                 bEdit->setMaximumWidth(width); }
+    int getColorR() const { return rEdit->text().toInt(); }
+    int getColorG() const { return gEdit->text().toInt(); }
+    int getColorB() const { return bEdit->text().toInt(); }
+    QColor getColor() const { return QColor(rEdit->text().toInt(), gEdit->text().toInt(), bEdit->text().toInt()); }
 
 public slots:
     void setColor(const QColor& color);
     void setColor(int eNum);
     void setVisible(bool visible);
     void setReadOnly(bool readOnly);
+    void setColorAndEditable(const int index);
 
 signals:
     void colorEdited(const QColor& color);
-
-private:
-    QColor getColor() { return QColor(rEdit->text().toInt(), gEdit->text().toInt(), bEdit->text().toInt()); }
 
 private:
     QLabel *label;
@@ -181,6 +183,7 @@ public:
     void setLabelMinimumWidth(const int width) { label->setMinimumWidth(width); }
     void setChecked(const bool checked) { checkBox->setChecked(checked); }
     void setVisible(const bool visible);
+    bool isChecked() const { return checkBox->isChecked(); }
 
 signals:
     void checkBoxToggled(const bool checked);
