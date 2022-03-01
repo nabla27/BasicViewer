@@ -50,6 +50,7 @@ BrowserWidget::BrowserWidget(QWidget *parent)
     : QTextBrowser(parent)
 {
     highlighter = new BrowserSyntaxHighlighter(document());
+    setFrameShape(QFrame::Shape::NoFrame);
 }
 
 BrowserWidget::~BrowserWidget()

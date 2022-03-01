@@ -103,7 +103,7 @@ void GnuplotEditor::initializeLayout()
     /* 各ウィジェット内のアイテムの初期化 */
     gnuplotWidget = new QStackedWidget(editorTab);
     sheetWidget = new QStackedWidget(editorTab);
-    consoleWidget = new QWidget(displayTab);
+    consoleWidget = new ConsoleWidget(displayTab);
     browserWidget = new BrowserWidget(displayTab);
     /* 配置 */
     editorTab->addTab(gnuplotWidget, "&Gnuplot");
@@ -117,7 +117,6 @@ void GnuplotEditor::initializeLayout()
 
     centralWidget()->layout()->setContentsMargins(0, 0, 0, 0);
     displayTab->setTabPosition(QTabWidget::TabPosition::South);
-    browserWidget->setFrameShape(QFrame::Shape::NoFrame);
 
     /* 配色設定 */
     //setPalette(QPalette(QPalette::Window, Qt::black));
