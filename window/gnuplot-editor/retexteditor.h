@@ -49,8 +49,8 @@ private:
     QString textUnderCursor() const;                            //予測変換を出すために参照するテキスト
     void bracketCompletion(QKeyEvent *e, const QChar nextChar); //括弧の補完 [ ( ' "
     void changeCompleterModel();                                //入力コマンドから予測変換候補を変更
-private:
 
+private:
     QCompleter *c = nullptr;
     int cursorMoveCount = 0;
     QString firstCmd = "";

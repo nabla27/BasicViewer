@@ -6,6 +6,10 @@
 #include <QCompleter>
 #include <QAbstractItemView>
 #include <QScrollBar>
+#include <QPainter>
+#include <QTextBlock>
+#include <QCursor>
+#include <QKeyEvent>
 
 class ConsoleWidget : public QPlainTextEdit
 {
@@ -28,6 +32,63 @@ private:
 
 private:
     QCompleter *c = nullptr;
+
+
+
+public:
+    void leftAreaPaintEvent(QPaintEvent *event);
+    int leftAreaWidth();
+
+protected:
+    void resizeEvent(QResizeEvent *event) override;
+
+private slots:
+    void updateLeftAreaWidth(int newBlockCount);
+    void updateLeftArea(const QRect& rect, int dy);
+
+private:
+    QWidget *leftArea;
 };
+
+
+
+class LeftArea : public QWidget
+{
+public:
+    LeftArea(ConsoleWidget *console) : QWidget(console), console(console) {}
+    ~LeftArea() {}
+
+public:
+    QSize sizeHint() const override{
+        return QSize(console->leftAreaWidth(), 0);
+    }
+
+protected:
+    void paintEvent(QPaintEvent *event) override{
+        console->leftAreaPaintEvent(event);
+    }
+
+private:
+    ConsoleWidget *console;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #endif // CONSOLEWIDGET_H

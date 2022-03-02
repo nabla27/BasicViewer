@@ -9,6 +9,11 @@ ConsoleWidget::ConsoleWidget(QWidget *parent)
     setPalette(palette);
 
     setFrameShape(QFrame::Shape::NoFrame);
+
+    leftArea = new LeftArea(this);
+    updateLeftAreaWidth(0);
+    connect(this, &ConsoleWidget::blockCountChanged, this, &ConsoleWidget::updateLeftAreaWidth);
+    connect(this, &ConsoleWidget::updateRequest, this, &ConsoleWidget::updateLeftArea);
 }
 
 void ConsoleWidget::setCompleter(QCompleter *completer)
@@ -47,8 +52,27 @@ void ConsoleWidget::keyPressEvent(QKeyEvent *e)
         }
     }
 
+    bool isInvalidInput = false;
+    const QTextCursor tc = textCursor();
+    switch(e->key())
+    {
+    case Qt::Key_Left:
+    case Qt::Key_Right:
+    case Qt::Key_Up:
+    case Qt::Key_Down:
+    case Qt::Key_Home:
+    case Qt::Key_End:
+        break;
+    case Qt::Key_Backspace:
+        isInvalidInput = isInvalidInput || tc.selectedText().contains('?') || (tc.positionInBlock() == 0 && tc.selectedText().isEmpty()) || (tc.blockNumber() != blockCount() - 1);
+        break;
+    default:
+        isInvalidInput = isInvalidInput || (tc.blockNumber() != blockCount() - 1);
+        break;
+    }
+
     const bool isShortcut = (e->modifiers().testFlag(Qt::ControlModifier) && e->key() == Qt::Key_E); //ctrl + E
-    if(!c || !isShortcut) QPlainTextEdit::keyPressEvent(e);
+    if((!c || !isShortcut) && !isInvalidInput) QPlainTextEdit::keyPressEvent(e);
 
     const bool ctr10rShift = e->modifiers().testFlag(Qt::ControlModifier) || e->modifiers().testFlag(Qt::ShiftModifier);
     if(!c || (ctr10rShift && e->text().isEmpty())) return;
@@ -105,3 +129,83 @@ QString ConsoleWidget::textUnderCursor() const
 
     return tc.selectedText();
 }
+
+
+
+
+
+
+
+
+
+
+int ConsoleWidget::leftAreaWidth()
+{
+    int space = 1 + fontMetrics().horizontalAdvance(QLatin1Char('>'));
+
+    return space;
+}
+
+void ConsoleWidget::updateLeftAreaWidth(int)
+{
+    setViewportMargins(leftAreaWidth(), 0, 0, 0);
+}
+
+void ConsoleWidget::updateLeftArea(const QRect& rect, int dy)
+{
+    if(dy)
+        leftArea->scroll(0, dy);
+    else
+        leftArea->update(0, rect.y(), leftArea->width(), rect.height());
+
+    if(rect.contains(viewport()->rect()))
+        updateLeftAreaWidth(0);
+}
+
+void ConsoleWidget::resizeEvent(QResizeEvent *event)
+{
+    QPlainTextEdit::resizeEvent(event);
+
+    const QRect cr = contentsRect();
+    leftArea->setGeometry(QRect(cr.left(), cr.top(), leftAreaWidth(), cr.height()));
+}
+
+void ConsoleWidget::leftAreaPaintEvent(QPaintEvent *event)
+{
+    QPainter painter(leftArea);
+    painter.fillRect(event->rect(), QColor(0, 0, 0));
+
+    QTextBlock block = firstVisibleBlock();
+    int blockNumber = block.blockNumber();
+    int top = qRound(blockBoundingRect(block).translated(contentOffset()).top());
+    int bottom = top + qRound(blockBoundingRect(block).height());
+
+    while(block.isValid() && top <= event->rect().bottom())
+    {
+        if(block.isVisible() && top >= event->rect().top()){
+            painter.setPen(Qt::cyan);
+            painter.drawText(0, top, leftArea->width(), fontMetrics().height(), Qt::AlignLeft, "$");
+        }
+
+        block = block.next();
+        top = bottom;
+        bottom = top + qRound(blockBoundingRect(block).height());
+        ++blockNumber;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
