@@ -8,10 +8,9 @@ SerialMonitor::SerialMonitor(QWidget *parent)
 
     initializeMenuBar();
     initializeLayout();
+    addTextBrowserTab();
 
     setGeometry(getRectFromScreenRatio(screen()->size(), 0.3f, 0.4f));
-
-    graph1D = new SerialPlot1D(nullptr);
 }
 
 void SerialMonitor::initializeMenuBar()
@@ -43,12 +42,15 @@ void SerialMonitor::initializeLayout()
     setCentralWidget(new QWidget(this));
 
     QVBoxLayout *layout = new QVBoxLayout(centralWidget());
-    browser = new QTextBrowser(centralWidget());
+    tab = new SerialViewTab(centralWidget());
 
     centralWidget()->setLayout(layout);
-    layout->addWidget(browser);
+    layout->addWidget(tab);
 
     layout->setContentsMargins(0, 0, 0, 0);
+
+    connect(tab, &SerialViewTab::addTextBrowserSelected, this, &SerialMonitor::addTextBrowserTab);
+    connect(tab, &SerialViewTab::addGraph2dSelected, this, &SerialMonitor::addGraph1dTab);
 }
 
 void SerialMonitor::setPort(const QSerialPortInfo& info)
@@ -61,8 +63,10 @@ void SerialMonitor::openPort()
 {
     if(serialPort->open(QIODevice::ReadOnly))
     {
-        readSerialConnection = connect(serialPort, &QSerialPort::readyRead, this, &SerialMonitor::readSerial);
-        graph1D->show();
+        serialPort->setBaudRate(settingWidget->getBaudRateSetting());
+        serialPort->setDataBits(settingWidget->getDataBitsSetting());
+        serialPort->setParity(settingWidget->getParityCheckSetting());
+        serialPort->setStopBits(settingWidget->getStopBitsSetting());
     }
     else
     {
@@ -73,26 +77,30 @@ void SerialMonitor::openPort()
 void SerialMonitor::closePort()
 {
     serialPort->close();
-    disconnect(readSerialConnection);
 }
 
-void SerialMonitor::readSerial()
+void SerialMonitor::addTextBrowserTab()
 {
-    const QString data = serialPort->readAll();
-    _buffer.append(data);
-
-    browser->insertPlainText(data);
-
-    if(_buffer.contains(','))
-    {
-        const QStringList sepaletedData = _buffer.split(',');
-        for(const QString& value : sepaletedData){
-            if(!value.isEmpty())
-                graph1D->addData(value.toDouble());
-                //qDebug() << value.toDouble();
-        }
+    if(browser){
+        tab->setCurrentWidget(browser);
+        return;
     }
+
+    browser = new SerialTextBrowser(tab);
+    tab->addTab(browser, "TextBrowser");
 }
+
+void SerialMonitor::addGraph1dTab()
+{
+    if(graph1D){
+        tab->setCurrentWidget(graph1D);
+        return;
+    }
+
+    graph1D = new SerialPlot1D(tab);
+    tab->addTab(graph1D, "Graph1D");
+}
+
 
 
 

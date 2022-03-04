@@ -14,6 +14,8 @@
 #include "serialmenubar.h"
 #include "serialsettingwidget.h"
 #include "serialplot1d.h"
+#include "serialviewtab.h"
+#include "serialtextbrowser.h"
 
 class SerialMonitor : public QMainWindow
 {
@@ -28,18 +30,21 @@ private slots:
     void setPort(const QSerialPortInfo& info);
     void openPort();
     void closePort();
+    void addTextBrowserTab();
+    void addGraph1dTab();
 
 private:
-    QMetaObject::Connection readSerialConnection;
-    void readSerial();
+    QMetaObject::Connection serialBrowserConnection;
+    QMetaObject::Connection serialGraph1dConnection;
 
 private:
     QSerialPort *serialPort;
     SerialSettingWidget *settingWidget;
-    QTextBrowser *browser;
     PortOpeMenu *portOpeMenu;
-    SerialPlot1D *graph1D;
-    QString _buffer = "";
+
+    SerialViewTab *tab;
+    SerialTextBrowser *browser = nullptr;
+    SerialPlot1D *graph1D = nullptr;
 
 signals:
 

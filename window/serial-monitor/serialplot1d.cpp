@@ -32,19 +32,7 @@ SerialPlot1D::~SerialPlot1D()
     delete axisY;
 }
 
-void SerialPlot1D::addData(const QList<double> &data)
+void SerialPlot1D::initializeLayout()
 {
-    for(const double& value : data)
-        addData(value);
-}
 
-void SerialPlot1D::addData(const double& value)
-{
-    series->append(dataCount, value); qDebug() << __LINE__ << dataCount << value;
-    dataCount++; qDebug() << __LINE__ << "Debug";
-
-    axisX->setMax(dataCount);
-    axisX->setMin(dataCount - 100);
-    if(axisY->max() < value) { axisY->setMax(value); }
-    if(axisY->min() > value) { axisY->setMin(value); }
 }

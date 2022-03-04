@@ -14,8 +14,8 @@ class SerialPlot1D : public QWidget
 public:
     explicit SerialPlot1D(QWidget *parent = nullptr);
     ~SerialPlot1D();
-    void addData(const QList<double>& data);
-    void addData(const double& value);
+
+    void initializeLayout();
 
 private:
     QChart *graph;
