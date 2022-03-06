@@ -10,6 +10,7 @@
 #include <QVBoxLayout>
 #include <QScreen>
 #include <QComboBox>
+#include <QThread>
 #include "utility.h"
 #include "serialmenubar.h"
 #include "serialsettingwidget.h"

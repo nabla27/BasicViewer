@@ -97,7 +97,7 @@ void SerialMonitor::addGraph1dTab()
         return;
     }
 
-    graph1D = new SerialPlot1D(tab);
+    graph1D = new SerialPlot1D(serialPort, nullptr);
     tab->addTab(graph1D, "Graph1D");
 }
 
